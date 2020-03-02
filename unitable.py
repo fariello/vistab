@@ -336,7 +336,6 @@ class UniTable:
             "nse-:---w": "╊",
         }
     }
-    # --- gfariello -- End -- Added to support new styles.
 
     def __init__(self, rows=None, max_width=80):
         """Constructor.
