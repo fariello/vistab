@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # texttable - module for creating simple ASCII tables
 # Copyright (C) 2003-2019 Gerome Fournier <jef(at)foutaise.org>
