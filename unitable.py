@@ -600,11 +600,11 @@ class UniTable:
         self._check_row_size(array)
         try:
             array = list(map(int, array))
-            if reduce(min, array) <= 0:
-                raise ValueError
         except ValueError:
             sys.stderr.write("Wrong argument in column width specification\n")
             raise
+        if reduce(min, array) <= 0:
+            raise ValueError("Values less than or equal to zero not allowed. Input: %s" % array)
         self._width = array
         return self
 
@@ -1003,7 +1003,7 @@ def row_for_style(style):
     table = UniTable([["Hd1", "Hd2"], ["Ce1", "Ce2"], ["Ce3", "Ce4"], ])
     table.set_style(style)
     return [
-        style,
+        "set_style('%s')" % style,
         table.draw(),
         table.set_padding(0).draw(),
         table.set_padding(2).draw(),
@@ -1014,7 +1014,7 @@ def row_for_style(style):
 def show_styles():
     """Show the styles."""
     style_list = sorted(UniTable.STYLES.keys())
-    t1 = UniTable().add_row(["Style", "Default\nPadding", "No\nPadding", "Padding\nof Two", "decoration\nHEADER"])
+    t1 = UniTable().add_row(["Style", "Default", "set_padding(0)", "set_padding(2)", "set_deco(UniTable.HEADER)"])
     t1.set_max_width(0)
     t1.set_cols_align("lcccc")
     t1.set_cols_valign("mtttt")
