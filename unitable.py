@@ -206,14 +206,14 @@ class UniTable:
     MIDDLE = 1
     BOTTOM = 2
     STYLES = {
+        "ascii": "-|+-",
+        "ascii2": "-|+=",
         "bold": "━┃┏┓┗┛┣┫┳┻╋━┣┫╋",
-        "default": "-|+=",
         "double": "═║╔╗╚╝╠╣╦╩╬═╠╣╬",
-        "very_light": "─│┌┐└┘├┤┬┴┼─├┤┼",
         "light": "─│┌┐└┘├┤┬┴┼═╞╡╪",
         "round": "─│╭╮╰╯├┤┬┴┼─├┤┼",
         "round2": "─│╭╮╰╯├┤┬┴┼═╞╡╪",
-        "simple": "-|+-",
+        "very_light": "─│┌┐└┘├┤┬┴┼─├┤┼",
     }
     STYLE_MAPPER = {
         "heavy": {
@@ -357,7 +357,7 @@ class UniTable:
 
         self._deco = UniTable.VLINES | UniTable.HLINES | UniTable.BORDER | \
             UniTable.HEADER
-        self.set_style("default")
+        self.set_style("ascii2")
         self._pad = 1
         self.reset()
         # --- gfariello -- Start -- Added to support rows arg (i.e., adding
@@ -678,6 +678,10 @@ class UniTable:
         for row in rows:
             self.add_row(row)
         return self
+
+    def set_rows(self, rows, header=True):
+        self._rows = []
+        return self.add_rows(rows, header)
 
     def draw(self):
         """Draw the table and return as string."""
