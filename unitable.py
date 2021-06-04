@@ -579,6 +579,7 @@ class UniTable:
             * "f": treat as float in decimal format
             * "e": treat as float in exponential format
             * "i": treat as int
+            * "I": treat as int, but print with commas separating thousands
             * a callable: should return formatted string for any value given
 
         - by default, automatic datatyping is used for each column
@@ -727,6 +728,14 @@ class UniTable:
         return str(int(round(cls._to_float(x))))
 
     @classmethod
+    def _fmt_comma_int(cls, x, **kw):
+        """Integer formatting class-method.
+
+        - x will be float-converted and then used.
+        """
+        return f"{int(round(cls._to_float(x))):,d}"
+
+    @classmethod
     def _fmt_float(cls, x, **kw):
         """Float formatting class-method.
 
@@ -781,6 +790,7 @@ class UniTable:
         format_map = {
             'a': self._fmt_auto,
             'i': self._fmt_int,
+            'I': self._fmt_comma_int,
             'f': self._fmt_float,
             'e': self._fmt_exp,
             't': self._fmt_text,
