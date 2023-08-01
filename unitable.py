@@ -17,7 +17,7 @@ Example:
     print table.draw() + "\\n"
 
     table = UniTable()
-    table.set_deco(UniTable.HEADER)
+    table.set_decorations(UniTable.HEADER)
     table.set_cols_dtype(['t',  # text
                           'f',  # float (decimal)
                           'e',  # float (exponent)
@@ -58,8 +58,13 @@ Result:
 """
 
 from __future__ import division
+from wcwidth import wcswidth
+import re
+import sys
+from typing import List, Optional, Iterable, Any
+from functools import reduce
 
-__all__ = ["UniTable", "ArraySizeError"]
+__all__ = ["UniTable", "ArraySizeError", "StringLengthCalculator"]
 
 __author__ = 'Gerome Fournier <jef(at)foutaise.org>'
 __license__ = 'MIT'
@@ -94,9 +99,6 @@ gfariello:
     - Added unicode box border options, made errors more informative, corrected typos
 """
 
-import sys
-import unicodedata
-
 # define a text wrapping function to wrap some text
 # to a specific width:
 # - use cjkwrap if available (better CJK support)
@@ -116,61 +118,92 @@ except ImportError:
         sys.stderr.write("Can't import textwrap module!\n")
         raise
 
-# define a function to calculate the rendering width of a unicode character
-# - use wcwidth if available
-# - fallback to unicodedata information otherwise
-try:
-    import wcwidth
 
-    def uchar_width(c):
-        """Return the rendering width of a unicode character."""
-        return max(0, wcwidth.wcwidth(c))
-except ImportError:
+class StringLengthCalculator:
+    """
+    A class to calculate the visible length of a string, excluding ANSI escape sequences.
 
-    def uchar_width(c):
-        """Return the rendering width of a unicode character."""
-        if unicodedata.east_asian_width(c) in 'WF':
-            return 2
-        elif unicodedata.combining(c):
-            return 0
-        else:
-            return 1
+    Example:
+    --------
+    ```
+    calculator = StringLengthCalculator()
+    colored_string = "\033[1;31mRed text\033[0m"
+    length = calculator.visible_length(colored_string)
+    print(length)  # Outputs: 8
+    ```
+    """
+    def __init__(self):
+        # Regular expression to match ANSI escape sequences
+        self.ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 
-from functools import reduce
+    def len(self, string: str) -> int:
+        """
+        Calculate the visible length of a string, excluding ANSI escape sequences.
 
-if sys.version_info >= (3, 0):
-    unicode_type = str
-    bytes_type = bytes
-    str_class = str
-else:
-    unicode_type = unicode
-    bytes_type = str
-    str_class = basestring
+        Args:
+        s (str): The string whose visible length should be calculated.
+
+        Returns:
+        int: The visible length of the string.
+        """
+        # Remove ANSI escape sequences
+        visible_string = self.ansi_escape.sub('', string)
+
+        # Return the length of the visible string
+        return wcswidth(visible_string)
+
+    pass
+
+
+class ColorAwareWrapper:
+    """
+    Class to wrap text to a specified width, excluding ANSI escape sequences.
+    """
+    def __init__(self):
+        self.calculator = StringLengthCalculator()
+
+    def wrap(self, text: str, width: int) -> str:
+        """
+        Wraps text to the specified width, ignoring ANSI escape sequences.
+        """
+        # Split the text into words
+        words = text.split()
+
+        # Initialize an empty line and an empty result
+        line, result = [], []
+
+        # Iterate over the words
+        for word in words:
+            # Calculate the length of the current line and the next word
+            line_length = self.calculator.visible_length(' '.join(line))
+            word_length = self.calculator.visible_length(word)
+
+            # If adding the next word to the line would exceed the width...
+            if line_length + word_length + len(line) > width:  # +len(line) for spaces
+                # ...then add the current line to the result and start a new line
+                result.append(' '.join(line))
+                line = []
+
+            # Add the word to the current line
+            line.append(word)
+
+        # If there are any words left in the line, add the line to the result
+        if line:
+            result.append(' '.join(line))
+
+        # Join the lines in the result with line breaks
+        return '\n'.join(result)
+
     pass
 
 
 def obj2unicode(obj):
     """Return a unicode representation of a python object."""
-    if isinstance(obj, unicode_type):
+    if isinstance(obj, str):
         return obj
-    elif isinstance(obj, bytes_type):
-        try:
-            return unicode_type(obj, 'utf-8')
-        except UnicodeDecodeError as strerror:
-            sys.stderr.write("UnicodeDecodeError exception for string '%s': %s\n" % (obj, strerror))
-            return unicode_type(obj, 'utf-8', 'replace')
-    else:
-        return unicode_type(obj)
-    pass
-
-
-def len(iterable):
-    """Redefining len here so it will be able to work with non-ASCII characters."""
-    if isinstance(iterable, bytes_type) or isinstance(iterable, unicode_type):
-        return sum([uchar_width(c) for c in obj2unicode(iterable)])
-    else:
-        return iterable.__len__()
-    pass
+    elif isinstance(obj, bytes):
+        return obj.decode()
+    return str(obj)
 
 
 class ArraySizeError(Exception):
@@ -195,7 +228,17 @@ class FallbackToText(Exception):
 
 
 class UniTable:
-    """The glorious UniTable class."""
+    """
+    A class that provides functionality for creating and manipulating ASCII tables.
+
+    Example usage:
+    ```
+    table = UniTable()
+    table.set_cols_align(["l", "r", "c"])
+    table.add_rows([["Name", "Age"], ["Alice", 25], ["Bob", 30]])
+    print(table.draw())
+    ```
+    """
 
     BORDER = 1
     HEADER = 1 << 1
@@ -210,10 +253,12 @@ class UniTable:
         "ascii2": "-|+=",
         "bold": "━┃┏┓┗┛┣┫┳┻╋━┣┫╋",
         "double": "═║╔╗╚╝╠╣╦╩╬═╠╣╬",
-        "light": "─│┌┐└┘├┤┬┴┼═╞╡╪",
+        "light2": "─│┌┐└┘├┤┬┴┼═╞╡╪",
         "round": "─│╭╮╰╯├┤┬┴┼─├┤┼",
         "round2": "─│╭╮╰╯├┤┬┴┼═╞╡╪",
-        "very_light": "─│┌┐└┘├┤┬┴┼─├┤┼",
+        "light": "─│┌┐└┘├┤┬┴┼─├┤┼",
+        "none": ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ],
+        "none2": ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ],
     }
     STYLE_MAPPER = {
         "heavy": {
@@ -233,7 +278,7 @@ class UniTable:
             "nse-": "┣",
             "nsew": "╋",
         },
-        "light": {
+        "light2": {
             "---w": " ",
             "--e-": " ",
             "--ew": "-",
@@ -338,11 +383,30 @@ class UniTable:
         }
     }
 
-    def __init__(self, rows=None, max_width=80):
-        """Constructor.
+    def __init__(self, rows: Optional[Iterable[Iterable]] = None, max_width: int = 80,
+                 style: str = 'light', padding: int = 1, alignment: str = None):
+        """
+        Initializes a new instance of the UniTable class.
 
-        - max_width is an integer, specifying the maximum width of the table
-        - if set to 0, size is unlimited, therefore cells won't be wrapped
+        Args:
+        rows (optional): An iterable containing rows to be added to the table.
+                         Each row should be an iterable of cell values. Default is None.
+        max_width (optional): The maximum width of the table. Default is 80. If this
+                         is set to 0, no wrapping will occur.
+        style (optional): The style of the table. Default is 'light' See set_style().
+        padding (optional): The amount of padding (left and right) for the cells. The
+                          default is 1. See set_padding()
+        alignment (optional): Set the alignment. See set_cols_align()
+
+        Example:
+        --------
+        ```
+        # creates a new UniTable instance with initial rows and a maximum width of 100
+        table = UniTable(rows=[["Name", "Age"], ["Alice", 25], ["Bob", 30]], max_width=100)
+        print(table.draw())
+        ```
+
+        If no rows are provided during initialization, they can be added later using the `add_row` or `add_rows` methods.
         """
         self._has_border = True
         self._has_header = True
@@ -352,14 +416,10 @@ class UniTable:
         self._has_vline_between_headers = True
         self._has_vline_header_2_cell = True
         self._has_vline_between_cells = True
-        self.set_max_width(max_width)
-        self._precision = 3
-
-        self._deco = UniTable.VLINES | UniTable.HLINES | UniTable.BORDER | \
-            UniTable.HEADER
-        self.set_style("ascii2")
-        self._pad = 1
+        self._vislen = StringLengthCalculator()
+        self._cwrap = ColorAwareWrapper()
         self.reset()
+        self._precision = 3
         # --- gfariello -- Start -- Added to support rows arg (i.e., adding
         # entire table definition in initilization). NOTE: This changed the
         # order (max_width is now one arg later) and therefore has a chance of
@@ -370,11 +430,31 @@ class UniTable:
         if rows is not None:
             self.add_rows(rows)
             pass
+        self.set_max_width(max_width)
         # --- gfariello -- End -- Added to support rows arg.
+        # Match an ANSI reset sequence if it is not followed by a non-reset seqeunce
+        self.no_end_reset = re.compile(r'\033\[0m(?!.*\033\[((?!0m)[0-?]*[ -/]*[@-~]))')
+        self.non_reset_sequence = re.compile(r'\033\[((?!0m)[0-?]*[ -/]*[@-~])')
+        self.non_reset_not_followed_by_reset = re.compile(r'(\033\[(?:(?!0m)[0-?]*[ -/]*[@-~]))(?!.*\033\[0m)')
+        self.ansi_norm = "\033[0m"
+
+        self._deco = UniTable.VLINES | UniTable.HLINES | UniTable.BORDER | \
+            UniTable.HEADER
+        self.set_style(style)
+        self.set_padding(padding)
+        if alignment is not None:
+            self.set_cols_align(alignment)
+            pass
         pass
 
+    def vislen(self, iterable: Iterable) -> int:
+        """Calculate the visible legnth of strings or the length for anythine else."""
+        if isinstance(iterable, bytes) or isinstance(iterable, str):
+            return self._vislen.len(iterable)
+        return iterable.__len__()
+
     @property
-    def has_border(self):
+    def has_border(self) -> bool:
         """Get is this has a border."""
         return self._has_border
 
@@ -402,6 +482,7 @@ class UniTable:
         self._row_size = None
         self._header = []
         self._rows = []
+        self._style = "light"
         return self
 
     @property
@@ -413,7 +494,7 @@ class UniTable:
     def max_width(self, val):
         self.set_max_width(val)
 
-    def set_max_width(self, max_width):
+    def set_max_width(self, max_width: int) -> 'UniTable':
         """Set the maximum width of the table.
 
         - max_width is an integer, specifying the maximum width of the table
@@ -422,7 +503,7 @@ class UniTable:
         self._max_width = max_width if max_width > 0 else False
         return self
 
-    def set_style(self, style="light"):
+    def set_style(self, style: str = "light") -> 'UniTable':
         """Set the characters used to draw lines between rows and columns to one of defined types.
 
         Examples:
@@ -433,15 +514,16 @@ class UniTable:
         Default if none provided is "light"
 
         """
+        self._style = style
         if style in UniTable.STYLES:
-            self.set_chars(UniTable.STYLES[style])
+            self.set_table_lines(UniTable.STYLES[style])
             return self
         raise ValueError("style must be one of '%s' not '%s'" % ("', '".join(sorted(UniTable.STYLES.keys())), style))
 
-    def _set_chars(self, array):
+    def _set_table_lines(self, table_lines: str) -> 'UniTable':
         """Set the characters used to draw lines between rows and columns.
 
-        The array is in the following format:
+        The table_lines is in the following format:
         [
           ew,    # The character connecting east and west to use for a horizantal line (e.g. "-" or "─" )
           ns,    # The character connecting north and south to use for a vertical line (e.g. "|" or "|" )
@@ -461,8 +543,8 @@ class UniTable:
         ]
         For legacy default it would be "-|+++++++++=+++"
         """
-        if len(array) != 15:
-            raise ArraySizeError("string/array should contain 15 characters not %d as in '%s'" % (len(array), array))
+        if len(table_lines) != 15:
+            raise ArraySizeError("string/array should contain 15 characters not %d as in '%s'" % (len(table_lines), table_lines))
         (
             self._char_ew,
             self._char_ns,
@@ -479,32 +561,33 @@ class UniTable:
             self._char_hnse,
             self._char_hnsw,
             self._char_hnsew,
-        ) = array
+        ) = table_lines
         return self
 
-    def set_chars(self, array):
+    def set_table_lines(self, table_lines: str) -> 'UniTable':
         """Set the characters used to draw lines between rows and columns.
 
-        - the array should contain 4 fields:
+        - the table_lines should contain either 4 fields or 15. For 4:
 
             [horizontal, vertical, corner, header]
 
-        - default is set to:
+        - default is set to (both are the same):
 
-            ['-', '|', '+', '=']
+            "-|+="
+            "-|+++++++++=+++"
         """
-        if len(array) == 15:
-            return self._set_chars(array)
-        if len(array) != 4:
-            raise ArraySizeError("string/array should contain either 4 or 15 characters not %d as in '%s'" % (len(array), array))
-        (hor, ver, cor, hea) = array
-        self._set_chars([hor, ver, cor, cor, cor, cor, cor, cor, cor, cor, cor, hea, cor, cor, cor])
+        if len(table_lines) == 15:
+            return self._set_table_lines(table_lines)
+        if len(table_lines) != 4:
+            raise ArraySizeError("string/array should contain either 4 or 15 characters not %d as in '%s'" % (len(table_lines), table_lines))
+        (hor, ver, cor, hea) = table_lines
+        self._set_table_lines([hor, ver, cor, cor, cor, cor, cor, cor, cor, cor, cor, hea, cor, cor, cor])
         return self
 
-    def set_deco(self, deco):
+    def set_decorations(self, decorations: int) -> 'UniTable':
         """Set the table decoration.
 
-        - 'deco' can be a combinasion of:
+        - 'decorations' can be a combinasion of:
 
             UniTable.BORDER: Border around the table
             UniTable.HEADER: Horizontal line below the header
@@ -517,10 +600,10 @@ class UniTable:
 
             UniTable.BORDER | UniTable.HEADER
         """
-        self._deco = deco
+        self._deco = decorations
         return self
 
-    def set_header_align(self, array):
+    def set_header_align(self, array: str) -> 'UniTable':
         """Set the desired header alignment.
 
         - the elements of the array should be either "l", "c" or "r":
@@ -536,7 +619,7 @@ class UniTable:
         self._header_align = array
         return self
 
-    def set_cols_align(self, array):
+    def set_cols_align(self, array: str) -> 'UniTable':
         """Set the desired columns alignment.
 
         - the elements of the array should be either "l", "c" or "r":
@@ -552,7 +635,7 @@ class UniTable:
         self._align = array
         return self
 
-    def set_cols_valign(self, array):
+    def set_cols_valign(self, array: str) -> 'UniTable':
         """Set the desired columns vertical alignment.
 
         - the elements of the array should be either "t", "m" or "b":
@@ -568,8 +651,21 @@ class UniTable:
         self._valign = array
         return self
 
-    def set_cols_dtype(self, array):
-        """Set the desired columns datatype for the cols.
+    def set_cols_dtype(self, array: str) -> 'UniTable':
+        """
+        Sets the data types for the columns in the table.
+
+        Args:
+        array (List[str]): A list of strings representing the data types for the columns.
+                           Acceptable values are: 't' (text), 'f' (float, decimal),
+                           'e' (float, exponent), 'i' (integer), and 'a' (automatic).
+
+        Example usage:
+        ```
+        table = UniTable()
+        table.set_cols_dtype("ti")  # one text column, one integer column
+        table.set_cols_dtype(['t', 'i'])
+        ```
 
         - the elements of the array should be either a callable or any of
           "a", "t", "f", "e" or "i":
@@ -591,7 +687,7 @@ class UniTable:
         self._dtype = array
         return self
 
-    def set_cols_width(self, array):
+    def set_cols_width(self, array: str) -> 'UniTable':
         """Set the desired columns width.
 
         - the elements of the array should be integers, specifying the
@@ -609,7 +705,7 @@ class UniTable:
         self._width = array
         return self
 
-    def set_precision(self, width):
+    def set_precision(self, width: int) -> 'UniTable':
         """Set the desired precision for float/exponential formats.
 
         - width must be an integer >= 0
@@ -621,15 +717,17 @@ class UniTable:
         return self
 
     @property
-    def padding(self):
-        """Get the padding string."""
+    def padding(self) -> int:
+        """Get the amount of padding."""
         return self._pad
 
     @padding.setter
-    def padding(self, val):
+    def padding(self, val: int) -> 'UniTable':
+        """Set the amount of padding."""
         self.set_padding(val)
+        return self
 
-    def set_padding(self, amount):
+    def set_padding(self, amount: int) -> 'UniTable':
         """Set the amount of spaces to pad cells (right and left, we don't do top bottom padding).
 
         - width must be an integer >= 0
@@ -640,13 +738,13 @@ class UniTable:
         self._pad = amount
         return self
 
-    def header(self, array):
+    def header(self, array: List[Any]) -> 'UniTable':
         """Specify the header of the table."""
         self._check_row_size(array)
         self._header = list(map(obj2unicode, array))
         return self
 
-    def add_row(self, array):
+    def add_row(self, array: List[str]) -> 'UniTable':
         """Add a row in the rows stack.
 
         - cells can contain newlines and tabs
@@ -660,7 +758,7 @@ class UniTable:
         self._rows.append(cells)
         return self
 
-    def add_rows(self, rows, header=True):
+    def add_rows(self, rows, header=True) -> 'UniTable':
         """Add several rows in the rows stack.
 
         - The 'rows' argument can be either an iterator returning arrays,
@@ -680,7 +778,8 @@ class UniTable:
             self.add_row(row)
         return self
 
-    def set_rows(self, rows, header=True):
+    def set_rows(self, rows, header=True) -> 'UniTable':
+        """Replace all rows in the table with the provided rows."""
         self._rows = []
         return self.add_rows(rows, header)
 
@@ -835,6 +934,8 @@ class UniTable:
 
     def _build_hline(self, is_header=False, location=MIDDLE):
         """Return a string used to separated rows or separate header from rows."""
+        if self._style == "none":
+            return ""
         horiz_char = self._char_hew if is_header else self._char_ew
         if UniTable.TOP == location:
             left, mid, right = self._char_se, self._char_sew, self._char_sw
@@ -872,7 +973,7 @@ class UniTable:
             length = 0
             parts = line.split('\t')
             for part, i in zip(parts, list(range(1, len(parts) + 1))):
-                length = length + len(part)
+                length = length + self.vislen(part)
                 if i < len(parts):
                     length = (length // 8 + 1) * 8
             maxi = max(maxi, length)
@@ -903,7 +1004,7 @@ class UniTable:
             # content too wide to fit the expected max_width
             # let's recompute maximum cell width for each cell
             if self._max_width < (ncols + deco_width):
-                raise ValueError('max_width too low to render data')
+                raise ValueError(f"max_width ({self._max_width}) too low to render data. The minimum for this table would be {ncols + deco_width}.")
             available_width = self._max_width - deco_width
             newmaxi = [0] * ncols
             i = 0
@@ -933,14 +1034,14 @@ class UniTable:
         space = " "
         out = ""
         # topmost, leftmost = True, True
-        for i in range(len(line[0])):
+        for i in range(self.vislen(line[0])):
             if self.has_border:
                 out += "%s%s" % (self._char_ns, " " * self._pad)
             length = 0
             for cell, width, align in zip(line, self._width, self._align):
                 length += 1
                 cell_line = cell[i]
-                fill = width - len(cell_line)
+                fill = width - self.vislen(cell_line)
                 if isheader:
                     align = self._header_align[length - 1]
                 if align == "r":
@@ -949,7 +1050,7 @@ class UniTable:
                     out += (int(fill / 2) * space + cell_line + int(fill / 2 + fill % 2) * space)
                 else:
                     out += cell_line + fill * space
-                if length < len(line):
+                if length < self.vislen(line):
                     out += "%s%s%s" % (" " * self._pad, [space, self._char_ns][self.has_vlines()], " " * self._pad)
             out += "%s\n" % ['', " " * self._pad + self._char_ns][self.has_border]
         return out
@@ -974,72 +1075,123 @@ class UniTable:
             if isheader:
                 valign = "t"
             if valign == "m":
-                missing = max_cell_lines - len(cell)
+                missing = max_cell_lines - self.vislen(cell)
                 cell[:0] = [""] * int(missing / 2)
                 cell.extend([""] * int(missing / 2 + missing % 2))
             elif valign == "b":
-                cell[:0] = [""] * (max_cell_lines - len(cell))
+                cell[:0] = [""] * (max_cell_lines - self.vislen(cell))
             else:
-                cell.extend([""] * (max_cell_lines - len(cell)))
-        return line_wrapped
+                cell.extend([""] * (max_cell_lines - self.vislen(cell)))
+                pass
+            pass
+        return self._process_lines(line_wrapped)
+
+    def _process_lines(self, lines_2d: List[List[str]]) -> List[List[str]]:
+        """
+        Process a list of lines to ensure all ANSI escape sequences are
+        properly terminated and continued onto the next line if necessary.
+
+        Parameters:
+        lines (List[str]): The lines to process.
+
+        Returns:
+        List[str]: The processed lines.
+        """
+        # Initialize a variable to hold the last sequence
+        unterminated_sequences = ""
+        # print(f"START lines_2d={lines_2d}")
+        for lines in lines_2d:
+            for i in range(len(lines)):
+                # If there was a non-reset sequence in the last line, prepend it to this line
+                if unterminated_sequences:
+                    lines[i] = unterminated_sequences + lines[i]
+                    unterminated_sequences = ""
+                    pass
+                # Save any ANSI escape sequences that are not terminated by a reset sequence
+                unterminated_sequences = "".join(self.non_reset_not_followed_by_reset.findall(lines[i]))
+                if unterminated_sequences:
+                    # print(f"unterminated_sequences={unterminated_sequences}")
+                    # Add a reset sequence to the end of the line
+                    lines[i] += "\033[0m"
+                    pass
+                pass
+            pass
+        # print(f"ENDS lines_2d={lines_2d}\033[0m")
+        return lines_2d
 
 
-def show_old_styles():
-    """Show the old styles."""
-    table = UniTable()
-    table.set_cols_align(["l", "r", "c"])
-    table.set_cols_valign(["t", "m", "b"])
-    table.add_rows([["Name", "Age", "Nickname"],
-                    ["Mr\nXavier\nHuon", 32, "Xav'"],
-                    ["Mr\nBaptiste\nClement", 1, "Baby"],
-                    ["Mme\nLouise\nBourgeau", 28, "Lou\n \nLoue"]])
-    print(table.draw() + "\n")
+def split_list(input_list, split_length, fill_value=None):
+    """
+    Split a list into sub-lists of a specified length.
 
-    table = UniTable()
-    table.set_deco(UniTable.HEADER)
-    table.set_cols_dtype(['t',   # text
-                          'f',   # float (decimal)
-                          'e',   # float (exponent)
-                          'i',   # integer
-                          'a'])  # automatic
-    table.set_cols_align(["l", "r", "r", "r", "l"])
-    table.add_rows([["text", "float", "exp", "int", "auto"],
-                    ["abcd", "67", 654, 89, 128.001],
-                    ["efghijk", 67.5434, .654, 89.6, 12800000000000000000000.00023],
-                    ["lmn", 5e-78, 5e-78, 89.4, .000000000000128],
-                    ["opqrstu", .023, 5e+78, 92., 12800000000000000000000]])
-    print(table.draw())
-    pass
+    If the last sub-list is shorter than the specified length, it will be filled
+    with the specified fill value.
+
+    Parameters:
+    input_list (list): The list to split.
+    split_length (int): The length of the sub-lists.
+    fill_value (optional): The value to fill the last sub-list with. Default is None.
+
+    Returns:
+    list: A list of sub-lists.
+    """
+    # Calculate the number of chunks
+    num_chunks = (len(input_list) + split_length - 1) // split_length
+    # Create the chunks
+    chunks = [input_list[i*split_length:(i+1)*split_length] for i in range(num_chunks)]
+    # Fill the last chunk if necessary
+    if len(chunks[-1]) < split_length:
+        chunks[-1] += [fill_value] * (split_length - len(chunks[-1]))
+    return chunks
 
 
-def row_for_style(style):
-    """Create one row for this style."""
-    table = UniTable([["Hd1", "Hd2"], ["Ce1", "Ce2"], ["Ce3", "Ce4"], ])
-    table.set_style(style)
-    return [
-        "set_style('%s')" % style,
-        table.draw(),
-        table.set_padding(0).draw(),
-        table.set_padding(2).draw(),
-        table.set_padding(1).set_deco(UniTable.HEADER).draw(),
-    ]
-
-
-def show_styles():
-    """Show the styles."""
-    style_list = sorted(UniTable.STYLES.keys())
-    t1 = UniTable().add_row(["Style", "Default", "set_padding(0)", "set_padding(2)", "set_deco(UniTable.HEADER)"])
-    t1.set_max_width(0)
-    t1.set_cols_align("lcccc")
-    t1.set_cols_valign("mtttt")
-    t1.set_style("light")
-    for style in style_list:
-        t1.add_row(row_for_style(style))
-        pass
-    print(t1.draw() + "\n")
-    pass
+def example_table(style: str, padding: int = 1):
+    return UniTable([["Hd1", "Hd2"], ["Ce1", "Ce2"], ["Ce3", "Ce4"], ], style=style, padding=padding).draw()
 
 
 if __name__ == '__main__':
-    show_styles()
+    print("\033[1m\033[1;31mANSI\033[0m\033[1m Color / Escape Sequence Aware Text-Based Tables\033[0m:")
+    t1 = UniTable([
+        ["Test 1", "Test 2", "Test 3", "Test 4"],
+        [
+            "This is some \033[1;31mRed text\033[0m to show the ability to wrap \033[38;5;226mcolored text\033[0m correctly.",
+            "\033[4mThis text is underlined, \033[1mbold, and \033[34mblue.\033[0m This is not.",
+            "This is some normal text in the middle to ensure that it is working properly.",
+            "Some \033[1;31mRed mandarin: 这是一个 美好的世界！\033[0m for testing.",
+        ]
+    ])
+    t1.set_max_width(80)
+    print(t1.draw())
+    import textwrap3
+    width = 18
+    print("-" * width)
+    for line in textwrap3.wrap("This is some Red text to show the ability to wrap colored text correctly.", width):
+        print(line)
+        pass
+    print("-" * width)
+    for line in textwrap3.wrap("This is some \033[1;31mRed text\033[0m to show the ability to wrap \033[38;5;226mcolored text\033[0m correctly.", width):
+        print(line)
+        pass
+    print()
+    print("\033[1mAvailable Styles\033[0m (Note: the default is \"light\"):")
+    style_list = sorted(UniTable.STYLES.keys())
+    data = []
+    for row in split_list(style_list, 4):
+        style_row = []
+        tables_row = []
+        for style in row:
+            if style is None:
+                style_row.append("")
+                tables_row.append("")
+            else:
+                style_row.append(style)
+                tables_row.append(example_table(style))
+                pass
+            pass
+        data.append(style_row)
+        data.append(tables_row)
+        data.append(["", "", "", ""])
+        pass
+    t1 = UniTable(data, max_width=120, style="none", alignment="cccc")
+    print(t1.draw())
     exit()
