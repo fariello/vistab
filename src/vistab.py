@@ -57,8 +57,6 @@ Result:
     delta   0.045     1.000e+10   92        8.900e+13
 """
 
-# TODO: Verify which if these are still needed in Python 3
-from __future__ import division  # Ensure division works the same in Python 2 and 3
 try:
     from wcwidth import wcswidth  # For calculating the display width of unicode characters
 except ImportError:
@@ -74,13 +72,25 @@ from functools import reduce  # Higher-order function for performing cumulative 
 __all__ = ["Vistab", "ArraySizeError", "StringLengthCalculator"]
 
 __author__ = 'Gabriele Fariello <gfariello@fariel.com>'
-__license__ = 'MIT'
-__version__ = '1.0.0'
+__license__ = 'BSD'
+__version__ = '3 Clause 2026'
 __credits__ = """\
+Gabriele Fariello <gfariello@fariel.com>
+    - Wrote this module adding robust handling for unicode characters and ANSI escape sequences
+    - Added support for CJK characters
+    - Added support for right-to-left languages
+    - Added support for right-to-left languages
+    - Added color support
+    - Added unicode table border support
+    - Added ability to limit large tables
+    - Added ability to format rows and columns
+    - Added copious other features
+    - Fixed a few bugs in the original code having to do with edge cases
 Gerome Fournier <jef(at)foutaise.org>
     - Inspiration from his TextTable Python module from which
       this takes a LOT.
-Others who contributed to Gerome's work and therefore mine:
+Others who contributed to Gerome's work and therefore mine, so I'm including them
+from when I copied the file around 2018 or so:
 
 Jeff Kowalczyk:
     - textwrap improved import
