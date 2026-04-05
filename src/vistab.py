@@ -1971,7 +1971,7 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     
-    parser.add_argument("-l", "--list-styles", action="store_true", help="Print all available built-in rendering styles")
+    parser.add_argument("-L", "--list-styles", action="store_true", help="Print all available built-in rendering styles")
     parser.add_argument("-T", "--test", action="store_true", help="Print a demonstration of color-wrapping and complex unicode characters")
     parser.add_argument("-D", "--demo-styling", action="store_true", help="Print a demonstration of coordinate-based row, column, and cell styling")
     parser.add_argument("-i", "--input", type=str, help="Auto-detect and format a delimited structural file (CSV, TSV, etc.)")
