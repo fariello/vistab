@@ -105,44 +105,36 @@ frinkelpi:
 # Attempt to define a text wrapping function to wrap text to a specific width
 # - Use cjkwrap if available (provides better support for CJK characters)
 # - Fallback to textwrap if cjkwrap is not available
-try:
-    import cjkwrap  # Try importing cjkwrap for better CJK character support
+_cjkwrap_available = None
 
-    def textwrapper(txt, width):
-        """
-        Wrap text to a specified width using cjkwrap.
+def textwrapper(txt, width):
+    """
+    Wrap text to a specified width. If cjkwrap is available, it handles Asian characters properly.
+    Otherwise, it warns the user (once) and falls back to textwrap.
 
-        Args:
+    Args:
         txt (str): The text to wrap.
         width (int): The maximum width of each line.
 
-        Returns:
+    Returns:
         List[str]: A list of wrapped lines.
-        """
+    """
+    global _cjkwrap_available
+    if _cjkwrap_available is None:
+        try:
+            import cjkwrap
+            _cjkwrap_available = True
+        except ImportError:
+            _cjkwrap_available = False
+            import sys
+            sys.stderr.write("[\033[1;33mWARN\033[0m] For correct Asian/CJK characters wrapping, the cjkwrap library is needed. Please use `pip install vistab[cjk]` to fix this issue.\n")
+            
+    if _cjkwrap_available:
+        import cjkwrap
         return cjkwrap.wrap(txt, width)
-    pass  # Close block to ensure proper indentation
-except ImportError:  # If cjkwrap is not available, fallback to textwrap
-    try:
-        import textwrap  # Try importing textwrap for text wrapping
-
-        def textwrapper(txt, width):
-            """
-            Wrap text to a specified width using textwrap.
-
-            Args:
-            txt (str): The text to wrap.
-            width (int): The maximum width of each line.
-
-            Returns:
-            List[str]: A list of wrapped lines.
-            """
-            return textwrap.wrap(txt, width)
-        pass  # Close block to ensure proper indentation
-    except ImportError:  # If both cjkwrap and textwrap are unavailable, raise an error
-        sys.stderr.write("Can't import textwrap module!\n")
-        raise  # Raise an ImportError if textwrap cannot be imported
-    pass  # Close block to ensure proper indentation
-pass  # Close block to ensure proper indentation
+    else:
+        import textwrap
+        return textwrap.wrap(txt, width)
 
 
 class StringLengthCalculator:
@@ -1616,21 +1608,28 @@ if __name__ == '__main__':
     t1.set_max_width(80)  # Set the maximum width of the table
     print(t1.draw())  # Draw and print the table
 
-    import textwrap3  # Import the textwrap3 module for wrapping text
+    try:
+        import textwrap3  # Import the textwrap3 module for wrapping text
+        wrapper_module = textwrap3
+    except ImportError:
+        import textwrap
+        print("[\033[1;33mWARN\033[0m] For the textwrap3 feature demonstration, the textwrap3 library is needed. Please use `pip install textwrap3` to fix this issue.")
+        wrapper_module = textwrap
+        
     width = 18  # Set the width for wrapping text
 
     # Print a separator line
     print("-" * width)
 
     # Wrap and print plain text
-    for line in textwrap3.wrap("This is some Red text to show the ability to wrap colored text correctly.", width):
+    for line in wrapper_module.wrap("This is some Red text to show the ability to wrap colored text correctly.", width):
         print(line)
 
     # Print another separator line
     print("-" * width)
 
     # Wrap and print colored text
-    for line in textwrap3.wrap("This is some \033[1;31mRed text\033[0m to show the ability to wrap \033[38;5;226mcolored text\033[0m correctly.", width):
+    for line in wrapper_module.wrap("This is some \033[1;31mRed text\033[0m to show the ability to wrap \033[38;5;226mcolored text\033[0m correctly.", width):
         print(line)
 
     print()

@@ -19,8 +19,10 @@ classifiers = [
 ]
 dependencies = [
     "wcwidth",
-    # "cjkwrap" # Optional, mentioned in code but can fall back to textwrap
 ]
+
+[project.optional-dependencies]
+cjk = ["cjkwrap"]
 
 [tool.setuptools]
 package-dir = {"" = "src"}
