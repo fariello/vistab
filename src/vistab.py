@@ -59,7 +59,13 @@ Result:
 
 # TODO: Verify which if these are still needed in Python 3
 from __future__ import division  # Ensure division works the same in Python 2 and 3
-from wcwidth import wcswidth  # For calculating the display width of unicode characters
+try:
+    from wcwidth import wcswidth  # For calculating the display width of unicode characters
+except ImportError:
+    import sys
+    sys.stderr.write("[\033[1;33mWARN\033[0m] For accurate terminal rendering alignment with wide characters, the wcwidth library is needed. Please use `pip install wcwidth` to fix this issue.\n")
+    def wcswidth(text):
+        return sum(1 for _ in text)
 import re  # Regular expressions for text processing
 import sys  # System-specific parameters and functions
 from typing import List, Optional, Iterable, Any  # Type hints for better code clarity
@@ -635,6 +641,38 @@ class Vistab:
         self._header = []
         self._rows = []
         self._style = "light"
+        self._max_rows = 0
+        self._max_cols = 0
+        return self
+
+    def set_max_rows(self, max_rows: int) -> 'Vistab':
+        """Set the maximum number of rows to render.
+
+        Args:
+            max_rows (int): The maximum rows. 0 means infinite.
+
+        Returns:
+            Vistab: The instance for method chaining.
+
+        Example:
+            table.set_max_rows(100)
+        """
+        self._max_rows = max_rows if max_rows > 0 else 0
+        return self
+
+    def set_max_cols(self, max_cols: int) -> 'Vistab':
+        """Set the maximum number of columns to render.
+
+        Args:
+            max_cols (int): The maximum columns. 0 means infinite.
+
+        Returns:
+            Vistab: The instance for method chaining.
+
+        Example:
+            table.set_max_cols(5)
+        """
+        self._max_cols = max_cols if max_cols > 0 else 0
         return self
 
     @property
@@ -1037,27 +1075,53 @@ class Vistab:
         """
         if not self._header and not self._rows:
             return
-        self._compute_cols_width()
-        self._check_align()
-        out = ""
-        if self.has_border:
-            out += self._hline(location=Vistab.TOP)
-        if self._header:
-            out += self._draw_line(self._header, isheader=True)
-            if self.has_header:
-                out += self._hline_header(location=Vistab.MIDDLE)
+            
+        # Back up original data to handle max_rows and max_cols dynamically
+        original_header = self._header.copy()
+        original_rows = self._rows.copy()
+        original_row_size = self._row_size
+        
+        # Apply limits securely for rendering
+        if self._max_rows:
+            self._rows = self._rows[:self._max_rows]
+            
+        if self._max_cols:
+            self._header = self._header[:self._max_cols]
+            self._rows = [row[:self._max_cols] for row in self._rows]
+            self._row_size = self._max_cols
+            
+            # Force cache refresh so dynamic widths don't mismatch
+            for cached_prop in ["_width", "_align", "_valign", "_header_align"]:
+                if hasattr(self, cached_prop):
+                    delattr(self, cached_prop)
+
+        try:
+            self._compute_cols_width()
+            self._check_align()
+            out = ""
+            if self.has_border:
+                out += self._hline(location=Vistab.TOP)
+            if self._header:
+                out += self._draw_line(self._header, isheader=True)
+                if self.has_header:
+                    out += self._hline_header(location=Vistab.MIDDLE)
+                    pass
                 pass
-            pass
-        num = 0
-        length = len(self._rows)
-        for row in self._rows:
-            num += 1
-            out += self._draw_line(row)
-            if self.has_hlines() and num < length:
-                out += self._hline(location=Vistab.MIDDLE)
-        if self._has_border:
-            out += self._hline(location=Vistab.BOTTOM)
-        return out[:-1]
+            num = 0
+            length = len(self._rows)
+            for row in self._rows:
+                num += 1
+                out += self._draw_line(row)
+                if self.has_hlines() and num < length:
+                    out += self._hline(location=Vistab.MIDDLE)
+            if self._has_border:
+                out += self._hline(location=Vistab.BOTTOM)
+            return out[:-1]
+        finally:
+            # Safely restore original data post-render
+            self._header = original_header
+            self._rows = original_rows
+            self._row_size = original_row_size
 
     @classmethod
     def _to_float(cls, x):
@@ -1591,11 +1655,8 @@ def example_table(style: str, padding: int = 1) -> str:
     return Vistab([["Hd1", "Hd2"], ["Ce1", "Ce2"], ["Ce3", "Ce4"]], style=style, padding=padding).draw()
 
 
-if __name__ == '__main__':
-    # Print a heading for the demo
+def print_test_demo():
     print("\033[1m\033[1;31mANSI\033[0m\033[1m Color / Escape Sequence Aware Text-Based Tables\033[0m:")
-
-    # Create a Vistab instance with initial rows
     t1 = Vistab([
         ["Test 1", "Test 2", "Test 3", "Test 4"],
         [
@@ -1605,46 +1666,33 @@ if __name__ == '__main__':
             "Some \033[1;31mRed mandarin: 这是一个 美好的世界！\033[0m for testing.",
         ]
     ])
-    t1.set_max_width(80)  # Set the maximum width of the table
-    print(t1.draw())  # Draw and print the table
+    t1.set_max_width(80)
+    print(t1.draw())
 
     try:
-        import textwrap3  # Import the textwrap3 module for wrapping text
+        import textwrap3
         wrapper_module = textwrap3
     except ImportError:
         import textwrap
         print("[\033[1;33mWARN\033[0m] For the textwrap3 feature demonstration, the textwrap3 library is needed. Please use `pip install textwrap3` to fix this issue.")
         wrapper_module = textwrap
         
-    width = 18  # Set the width for wrapping text
-
-    # Print a separator line
+    width = 18
     print("-" * width)
-
-    # Wrap and print plain text
     for line in wrapper_module.wrap("This is some Red text to show the ability to wrap colored text correctly.", width):
         print(line)
-
-    # Print another separator line
     print("-" * width)
-
-    # Wrap and print colored text
     for line in wrapper_module.wrap("This is some \033[1;31mRed text\033[0m to show the ability to wrap \033[38;5;226mcolored text\033[0m correctly.", width):
         print(line)
-
     print()
 
-    # Print a heading for the available styles
+def print_styles_list():
     print("\033[1mAvailable Styles\033[0m (Note: the default is \"light\"):")
-    style_list = sorted(Vistab.STYLES.keys())  # Get the list of available styles
+    style_list = sorted(Vistab.STYLES.keys())
     data = []
-
-    # Split the list of styles into rows of 4 styles each
     for row in split_list(style_list, 4):
         style_row = []
         tables_row = []
-
-        # Generate example tables for each style in the row
         for style in row:
             if style is None:
                 style_row.append("")
@@ -1652,12 +1700,87 @@ if __name__ == '__main__':
             else:
                 style_row.append(style)
                 tables_row.append(example_table(style))
-
         data.append(style_row)
         data.append(tables_row)
-        data.append(["", "", "", ""])  # Add an empty row for spacing
-
-    # Create a Vistab with the data and draw it
+        data.append(["", "", "", ""])
     t1 = Vistab(data, max_width=120, style="none", alignment="cccc")
     print(t1.draw())
-    exit()
+
+def main():
+    import argparse
+    import sys
+    import csv
+    
+    parser = argparse.ArgumentParser(
+        prog="vistab",
+        description="A zero-dependency Python utility for rendering rich terminal tables with ANSI color awareness.",
+        epilog=(
+            "Notes on Extensibility:\n"
+            "  * Vistab gracefully uses standard built-in libraries safely.\n"
+            "  * Install `pip install vistab[cjk]` to safely wrap Asian/CJK language multi-space characters.\n"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    
+    parser.add_argument("-l", "--list-styles", action="store_true", help="Print all available built-in rendering styles")
+    parser.add_argument("-T", "--test", action="store_true", help="Print a demonstration of color-wrapping and complex unicode characters")
+    parser.add_argument("-i", "--input", type=str, help="Auto-detect and format a delimited structural file (CSV, TSV, etc.)")
+    parser.add_argument("-s", "--style", type=str, default="light", help="Override the visual rendering style (default: 'light')")
+    parser.add_argument("-w", "--max-width", type=int, default=0, help="Maximum table width before wrapping cells (default: 0 / infinite)")
+    parser.add_argument("-r", "--max-rows", type=int, default=0, help="Maximum number of rows to render (default: 0 / infinite)")
+    parser.add_argument("-c", "--max-cols", type=int, default=0, help="Maximum number of columns to render (default: 0 / infinite)")
+    parser.add_argument("-p", "--padding", type=int, default=1, help="Horizontal padding inside cells (default: 1)")
+    parser.add_argument("-a", "--align", type=str, help="Global alignment definition string (e.g. 'lcrc')")
+
+    if len(sys.argv) == 1:
+        parser.print_help(sys.stderr)
+        sys.exit(1)
+        
+    args = parser.parse_args()
+
+    if args.list_styles:
+        print_styles_list()
+        
+    if args.test:
+        if args.list_styles:
+            print("\n" + "="*40 + "\n")
+        print_test_demo()
+        
+    if args.input:
+        if args.test or args.list_styles:
+            print("\n" + "="*40 + "\n")
+        try:
+            with open(args.input, "r", encoding="utf8") as f:
+                sample = f.read(1024)
+                f.seek(0)
+                try:
+                    dialect = csv.Sniffer().sniff(sample)
+                    reader = csv.reader(f, dialect)
+                except csv.Error:
+                    # Sniffer fails on single-column or un-delimitered text. Fallback to generic parsing.
+                    reader = csv.reader(f)
+                
+                rows = list(reader)
+                if not rows:
+                    print("Error: The provided input file is empty.")
+                    sys.exit(1)
+                    
+                table = Vistab(
+                    style=args.style,
+                    max_width=args.max_width,
+                    padding=args.padding
+                )
+                table.set_max_rows(args.max_rows)
+                table.set_max_cols(args.max_cols)
+                
+                if args.align:
+                    table.set_cols_align(args.align)
+                
+                table.set_rows(rows, header=True)
+                print(table.draw())
+        except Exception as e:
+            print(f"Error parsing input file: {e}")
+            sys.exit(1)
+
+if __name__ == '__main__':
+    main()

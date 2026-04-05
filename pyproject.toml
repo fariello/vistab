@@ -24,6 +24,9 @@ dependencies = [
 [project.optional-dependencies]
 cjk = ["cjkwrap"]
 
+[project.scripts]
+vistab = "vistab:main"
+
 [tool.setuptools]
 package-dir = {"" = "src"}
 py-modules = ["vistab"]
