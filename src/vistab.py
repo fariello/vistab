@@ -630,7 +630,13 @@ class Vistab:
     def reset(self):
         """Reset the instance.
 
-        - reset rows and header
+        Clears all row data, header data, and resets the style to default ("light").
+
+        Returns:
+            Vistab: The instance for method chaining.
+
+        Example:
+            table.reset()
         """
         self._hline_string = None
         self._row_size = None
@@ -651,8 +657,15 @@ class Vistab:
     def set_max_width(self, max_width: int) -> 'Vistab':
         """Set the maximum width of the table.
 
-        - max_width is an integer, specifying the maximum width of the table
-        - if set to 0, size is unlimited, therefore cells won't be wrapped
+        Args:
+            max_width (int): The maximum width of the table in characters. If set to 0, 
+                             size is unlimited, therefore cells won't be wrapped.
+
+        Returns:
+            Vistab: The instance for method chaining.
+
+        Example:
+            table.set_max_width(120)
         """
         self._max_width = max_width if max_width > 0 else False
         return self
@@ -660,13 +673,20 @@ class Vistab:
     def set_style(self, style: str = "light") -> 'Vistab':
         """Set the characters used to draw lines between rows and columns to one of defined types.
 
-        Examples:
-            "light": Use unicode light box borders (─│┌┐└┘├┤┬┴┼)
-            "bold":  Use unicode bold box borders (━┃┏┓┗┛┣┫┳┻╋)
-            "double": Use unicode double box borders (═║╔╗╚╝╠╣╦╩╬)
+        Args:
+            style (str): The requested style name. Default is "light".
+                         Available options include:
+                           * "light": Use unicode light box borders
+                           * "bold":  Use unicode bold box borders
+                           * "double": Use unicode double box borders
+                           * "ascii": Basic ASCII formatting
+                           * "none": No lines
 
-        Default if none provided is "light"
+        Returns:
+            Vistab: The instance for method chaining.
 
+        Example:
+            table.set_style("double")
         """
         self._style = style
         if style in Vistab.STYLES:
@@ -719,16 +739,19 @@ class Vistab:
         return self
 
     def set_table_lines(self, table_lines: str) -> 'Vistab':
-        """Set the characters used to draw lines between rows and columns.
+        """Set the characters used to draw lines between rows and columns explicitly.
 
-        - the table_lines should contain either 4 fields or 15. For 4:
+        Args:
+            table_lines (str): A string of exactly 4 or 15 characters describing lines.
+                If 4 characters: [horizontal, vertical, corner, header]
+                If 15 characters: each character represents specific connections.
+                Default is 4 chars like "-|+=".
 
-            [horizontal, vertical, corner, header]
+        Returns:
+            Vistab: The instance for method chaining.
 
-        - default is set to (both are the same):
-
-            "-|+="
-            "-|+++++++++=+++"
+        Example:
+            table.set_table_lines("-|+=")
         """
         if len(table_lines) == 15:
             return self._set_table_lines(table_lines)
@@ -739,20 +762,21 @@ class Vistab:
         return self
 
     def set_decorations(self, decorations: int) -> 'Vistab':
-        """Set the table decoration.
+        """Set the table decorations by specifying a bitmask.
 
-        - 'decorations' can be a combinasion of:
+        Args:
+            decorations (int): A bitmask integer specifying which decorations to apply.
+                Can be a bitwise combination of:
+                  * Vistab.BORDER: Border around the table
+                  * Vistab.HEADER: Horizontal line below the header
+                  * Vistab.HLINES: Horizontal lines between rows
+                  * Vistab.VLINES: Vertical lines between columns
 
-            Vistab.BORDER: Border around the table
-            Vistab.HEADER: Horizontal line below the header
-            Vistab.HLINES: Horizontal lines between rows
-            Vistab.VLINES: Vertical lines between columns
+        Returns:
+            Vistab: The instance for method chaining.
 
-           All of them are enabled by default
-
-        - example:
-
-            Vistab.BORDER | Vistab.HEADER
+        Example:
+            table.set_decorations(Vistab.BORDER | Vistab.HEADER)
         """
         self._deco = decorations
         return self
@@ -760,11 +784,17 @@ class Vistab:
     def set_header_align(self, array: str) -> 'Vistab':
         """Set the desired header alignment.
 
-        - the elements of the array should be either "l", "c" or "r":
+        Args:
+            array (str or List[str]): Specifier for how header cells align. Each element must be:
+                * "l": column flushed left
+                * "c": column centered
+                * "r": column flushed right
 
-            * "l": column flushed left
-            * "c": column centered
-            * "r": column flushed right
+        Returns:
+            Vistab: The instance for method chaining.
+
+        Example:
+            table.set_header_align("lcr")
         """
         if isinstance(array, str):
             array = [c for c in array]
@@ -776,11 +806,17 @@ class Vistab:
     def set_cols_align(self, array: str) -> 'Vistab':
         """Set the desired columns alignment.
 
-        - the elements of the array should be either "l", "c" or "r":
+        Args:
+            array (str or List[str]): Specifier for how columns align. Each element must be:
+                * "l": column flushed left
+                * "c": column centered
+                * "r": column flushed right
 
-            * "l": column flushed left
-            * "c": column centered
-            * "r": column flushed right
+        Returns:
+            Vistab: The instance for method chaining.
+
+        Example:
+            table.set_cols_align(["l", "r", "l"])
         """
         if isinstance(array, str):
             array = [c for c in array]
@@ -792,11 +828,17 @@ class Vistab:
     def set_cols_valign(self, array: str) -> 'Vistab':
         """Set the desired columns vertical alignment.
 
-        - the elements of the array should be either "t", "m" or "b":
+        Args:
+            array (str or List[str]): Specifier for how columns align vertically. Each element must be:
+                * "t": column aligned on the top of the cell
+                * "m": column aligned on the middle of the cell
+                * "b": column aligned on the bottom of the cell
 
-            * "t": column aligned on the top of the cell
-            * "m": column aligned on the middle of the cell
-            * "b": column aligned on the bottom of the cell
+        Returns:
+            Vistab: The instance for method chaining.
+
+        Example:
+            table.set_cols_valign(["t", "m", "b"])
         """
         if isinstance(array, str):
             array = [c for c in array]
@@ -842,11 +884,16 @@ class Vistab:
         return self
 
     def set_cols_width(self, array: str) -> 'Vistab':
-        """Set the desired columns width.
+        """Set the desired columns width in characters.
 
-        - the elements of the array should be integers, specifying the
-          width of each column. For example:
-                [10, 20, 5]
+        Args:
+            array (str or List[int]): An array of integers specifying the fixed width of each column.
+
+        Returns:
+            Vistab: The instance for method chaining.
+
+        Example:
+            table.set_cols_width([10, 20, 5])
         """
         self._check_row_size(array)
         try:
@@ -860,10 +907,16 @@ class Vistab:
         return self
 
     def set_precision(self, width: int) -> 'Vistab':
-        """Set the desired precision for float/exponential formats.
+        """Set the desired precision for float and exponential formats.
 
-        - width must be an integer >= 0
-        - default value is set to 3
+        Args:
+            width (int): Decimal string precision. Must be an integer >= 0.
+
+        Returns:
+            Vistab: The instance for method chaining.
+
+        Example:
+            table.set_precision(5)
         """
         if not type(width) is int or width < 0:
             raise ValueError('width must be an integer greater then 0')
@@ -882,10 +935,17 @@ class Vistab:
         return self
 
     def set_padding(self, amount: int) -> 'Vistab':
-        """Set the amount of spaces to pad cells (right and left, we don't do top bottom padding).
+        """Set the amount of spaces to pad cells horizontally.
 
-        - width must be an integer >= 0
-        - default value is set to 1
+        Args:
+            amount (int): The number of spaces to pad the left and right sides of each cell's text.
+                          Top and bottom padding are not supported. Must be an integer >= 0.
+
+        Returns:
+            Vistab: The instance for method chaining.
+
+        Example:
+            table.set_padding(2)
         """
         if not type(amount) is int or amount < 0:
             raise ValueError('padding must be an integer greater then 0')
@@ -893,15 +953,33 @@ class Vistab:
         return self
 
     def header(self, array: List[Any]) -> 'Vistab':
-        """Specify the header of the table."""
+        """Specify the header of the table.
+
+        Args:
+            array (List[Any]): A list of objects/strings to use as the table's header.
+
+        Returns:
+            Vistab: The instance for method chaining.
+
+        Example:
+            table.header(["Name", "Age"])
+        """
         self._check_row_size(array)
         self._header = list(map(obj2unicode, array))
         return self
 
     def add_row(self, array: List[str]) -> 'Vistab':
-        """Add a row in the rows stack.
+        """Add a row to the table.
 
-        - cells can contain newlines and tabs
+        Args:
+            array (List[str]): Extracted strings or display values for each column.
+                               Cells can contain newlines and tabs.
+
+        Returns:
+            Vistab: The instance for method chaining.
+
+        Example:
+            table.add_row(["Gabriele", "Fariello"])
         """
         self._check_row_size(array)
         if not hasattr(self, "_dtype"):
@@ -915,10 +993,16 @@ class Vistab:
     def add_rows(self, rows, header=True) -> 'Vistab':
         """Add several rows in the rows stack.
 
-        - The 'rows' argument can be either an iterator returning arrays,
-          or a by-dimensional array
-        - 'header' specifies if the first row should be used as the header
-          of the table
+        Args:
+            rows (Iterable[List[str]]): An iterator or 2D array of rows to add.
+            header (bool): Specifies if the first row in the sequence should be used as the 
+                           header of the table. Default is True.
+
+        Returns:
+            Vistab: The instance for method chaining.
+
+        Example:
+            table.add_rows([["Name", "Age"], ["Gabriele", 25]])
         """
         # nb: don't use 'iter' on by-dimensional arrays, to get a
         #     usable code for python 2.1
@@ -933,12 +1017,32 @@ class Vistab:
         return self
 
     def set_rows(self, rows, header=True) -> 'Vistab':
-        """Replace all rows in the table with the provided rows."""
+        """Replace all rows in the table with the provided rows.
+
+        Args:
+            rows (Iterable[List[str]]): An iterator or 2D array of rows to replace the current ones.
+            header (bool): Specifies if the first row in the sequence should be used as the 
+                           header of the table. Default is True.
+
+        Returns:
+            Vistab: The instance for method chaining.
+
+        Example:
+            table.set_rows([["Name", "Age"], ["Alice", 25]])
+        """
         self._rows = []
         return self.add_rows(rows, header)
 
     def draw(self):
-        """Draw the table and return as string."""
+        """Draw the table and return as an ASCII/Unicode string.
+
+        Returns:
+            str: The fully rendered string representation of the table.
+                 Returns None if there is no data to draw.
+
+        Example:
+            print(table.draw())
+        """
         if not self._header and not self._rows:
             return
         self._compute_cols_width()
