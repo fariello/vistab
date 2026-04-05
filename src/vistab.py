@@ -7,7 +7,7 @@ r"""module for creating simple ASCII tables.
 
 Example:
 
-    table = UniTable()
+    table = Vistab()
     table.set_cols_align(["l", "r", "c"])
     table.set_cols_valign(["t", "m", "b"])
     table.add_rows([["Name", "Age", "Nickname"],
@@ -16,8 +16,8 @@ Example:
                     ["Dr\\nEmma\\nBrown", 34, "Em"]])
     print(table.draw() + "\\n")
 
-    table = UniTable()
-    table.set_decorations(UniTable.HEADER)
+    table = Vistab()
+    table.set_decorations(Vistab.HEADER)
     table.set_cols_dtype(['t',  # text
                           'f',  # float (decimal)
                           'e',  # float (exponent)
@@ -65,7 +65,7 @@ import sys  # System-specific parameters and functions
 from typing import List, Optional, Iterable, Any  # Type hints for better code clarity
 from functools import reduce  # Higher-order function for performing cumulative operations
 
-__all__ = ["UniTable", "ArraySizeError", "StringLengthCalculator"]
+__all__ = ["Vistab", "ArraySizeError", "StringLengthCalculator"]
 
 __author__ = 'Gabriele Fariello <gfariello@fariel.com>'
 __license__ = 'MIT'
@@ -433,7 +433,7 @@ class FallbackToText(Exception):
     pass  # Close block to ensure proper indentation
 
 
-class UniTable:
+class Vistab:
     """
     A class that provides functionality for creating and manipulating ASCII tables.
 
@@ -464,7 +464,7 @@ class UniTable:
     Example usage:
     --------------
     ```
-    table = UniTable()
+    table = Vistab()
     table.set_cols_align(["l", "r", "c"])
     table.add_rows([["Name", "Age"], ["Alice", 25], ["Bob", 30]])
     print(table.draw())
@@ -529,7 +529,7 @@ class UniTable:
     def __init__(self, rows: Optional[Iterable[Iterable]] = None, max_width: int = 80,
                  style: str = 'light', padding: int = 1, alignment: Optional[str] = None):
         """
-        Initializes a new instance of the UniTable class.
+        Initializes a new instance of the Vistab class.
 
         This constructor sets up the initial state of the table, allowing for optional
         initial rows, maximum width, style, padding, and column alignment.
@@ -550,8 +550,8 @@ class UniTable:
         Example:
         --------
         ```
-        # Creates a new UniTable instance with initial rows and a maximum width of 100
-        table = UniTable(rows=[["Name", "Age"], ["Alice", 25], ["Bob", 30]], max_width=100)
+        # Creates a new Vistab instance with initial rows and a maximum width of 100
+        table = Vistab(rows=[["Name", "Age"], ["Alice", 25], ["Bob", 30]], max_width=100)
         print(table.draw())
         ```
 
@@ -590,7 +590,7 @@ class UniTable:
         self.ansi_norm = "\033[0m"  # ANSI reset sequence
 
         # Set default table decorations (border, header, horizontal and vertical lines)
-        self._deco = UniTable.VLINES | UniTable.HLINES | UniTable.BORDER | UniTable.HEADER
+        self._deco = Vistab.VLINES | Vistab.HLINES | Vistab.BORDER | Vistab.HEADER
 
         self.set_style(style)  # Set the table style
         self.set_padding(padding)  # Set the cell padding
@@ -648,7 +648,7 @@ class UniTable:
     def max_width(self, val):
         self.set_max_width(val)
 
-    def set_max_width(self, max_width: int) -> 'UniTable':
+    def set_max_width(self, max_width: int) -> 'Vistab':
         """Set the maximum width of the table.
 
         - max_width is an integer, specifying the maximum width of the table
@@ -657,7 +657,7 @@ class UniTable:
         self._max_width = max_width if max_width > 0 else False
         return self
 
-    def set_style(self, style: str = "light") -> 'UniTable':
+    def set_style(self, style: str = "light") -> 'Vistab':
         """Set the characters used to draw lines between rows and columns to one of defined types.
 
         Examples:
@@ -669,12 +669,12 @@ class UniTable:
 
         """
         self._style = style
-        if style in UniTable.STYLES:
-            self.set_table_lines(UniTable.STYLES[style])
+        if style in Vistab.STYLES:
+            self.set_table_lines(Vistab.STYLES[style])
             return self
-        raise ValueError("style must be one of '%s' not '%s'" % ("', '".join(sorted(UniTable.STYLES.keys())), style))
+        raise ValueError("style must be one of '%s' not '%s'" % ("', '".join(sorted(Vistab.STYLES.keys())), style))
 
-    def _set_table_lines(self, table_lines: str) -> 'UniTable':
+    def _set_table_lines(self, table_lines: str) -> 'Vistab':
         """Set the characters used to draw lines between rows and columns.
 
         The table_lines is in the following format:
@@ -718,7 +718,7 @@ class UniTable:
         ) = table_lines
         return self
 
-    def set_table_lines(self, table_lines: str) -> 'UniTable':
+    def set_table_lines(self, table_lines: str) -> 'Vistab':
         """Set the characters used to draw lines between rows and columns.
 
         - the table_lines should contain either 4 fields or 15. For 4:
@@ -738,26 +738,26 @@ class UniTable:
         self._set_table_lines([hor, ver, cor, cor, cor, cor, cor, cor, cor, cor, cor, hea, cor, cor, cor])
         return self
 
-    def set_decorations(self, decorations: int) -> 'UniTable':
+    def set_decorations(self, decorations: int) -> 'Vistab':
         """Set the table decoration.
 
         - 'decorations' can be a combinasion of:
 
-            UniTable.BORDER: Border around the table
-            UniTable.HEADER: Horizontal line below the header
-            UniTable.HLINES: Horizontal lines between rows
-            UniTable.VLINES: Vertical lines between columns
+            Vistab.BORDER: Border around the table
+            Vistab.HEADER: Horizontal line below the header
+            Vistab.HLINES: Horizontal lines between rows
+            Vistab.VLINES: Vertical lines between columns
 
            All of them are enabled by default
 
         - example:
 
-            UniTable.BORDER | UniTable.HEADER
+            Vistab.BORDER | Vistab.HEADER
         """
         self._deco = decorations
         return self
 
-    def set_header_align(self, array: str) -> 'UniTable':
+    def set_header_align(self, array: str) -> 'Vistab':
         """Set the desired header alignment.
 
         - the elements of the array should be either "l", "c" or "r":
@@ -773,7 +773,7 @@ class UniTable:
         self._header_align = array
         return self
 
-    def set_cols_align(self, array: str) -> 'UniTable':
+    def set_cols_align(self, array: str) -> 'Vistab':
         """Set the desired columns alignment.
 
         - the elements of the array should be either "l", "c" or "r":
@@ -789,7 +789,7 @@ class UniTable:
         self._align = array
         return self
 
-    def set_cols_valign(self, array: str) -> 'UniTable':
+    def set_cols_valign(self, array: str) -> 'Vistab':
         """Set the desired columns vertical alignment.
 
         - the elements of the array should be either "t", "m" or "b":
@@ -805,7 +805,7 @@ class UniTable:
         self._valign = array
         return self
 
-    def set_cols_dtype(self, array: str) -> 'UniTable':
+    def set_cols_dtype(self, array: str) -> 'Vistab':
         """
         Sets the data types for the columns in the table.
 
@@ -816,7 +816,7 @@ class UniTable:
 
         Example usage:
         ```
-        table = UniTable()
+        table = Vistab()
         table.set_cols_dtype("ti")  # one text column, one integer column
         table.set_cols_dtype(['t', 'i'])
         ```
@@ -841,7 +841,7 @@ class UniTable:
         self._dtype = array
         return self
 
-    def set_cols_width(self, array: str) -> 'UniTable':
+    def set_cols_width(self, array: str) -> 'Vistab':
         """Set the desired columns width.
 
         - the elements of the array should be integers, specifying the
@@ -859,7 +859,7 @@ class UniTable:
         self._width = array
         return self
 
-    def set_precision(self, width: int) -> 'UniTable':
+    def set_precision(self, width: int) -> 'Vistab':
         """Set the desired precision for float/exponential formats.
 
         - width must be an integer >= 0
@@ -876,12 +876,12 @@ class UniTable:
         return self._pad
 
     @padding.setter
-    def padding(self, val: int) -> 'UniTable':
+    def padding(self, val: int) -> 'Vistab':
         """Set the amount of padding."""
         self.set_padding(val)
         return self
 
-    def set_padding(self, amount: int) -> 'UniTable':
+    def set_padding(self, amount: int) -> 'Vistab':
         """Set the amount of spaces to pad cells (right and left, we don't do top bottom padding).
 
         - width must be an integer >= 0
@@ -892,13 +892,13 @@ class UniTable:
         self._pad = amount
         return self
 
-    def header(self, array: List[Any]) -> 'UniTable':
+    def header(self, array: List[Any]) -> 'Vistab':
         """Specify the header of the table."""
         self._check_row_size(array)
         self._header = list(map(obj2unicode, array))
         return self
 
-    def add_row(self, array: List[str]) -> 'UniTable':
+    def add_row(self, array: List[str]) -> 'Vistab':
         """Add a row in the rows stack.
 
         - cells can contain newlines and tabs
@@ -912,7 +912,7 @@ class UniTable:
         self._rows.append(cells)
         return self
 
-    def add_rows(self, rows, header=True) -> 'UniTable':
+    def add_rows(self, rows, header=True) -> 'Vistab':
         """Add several rows in the rows stack.
 
         - The 'rows' argument can be either an iterator returning arrays,
@@ -932,7 +932,7 @@ class UniTable:
             self.add_row(row)
         return self
 
-    def set_rows(self, rows, header=True) -> 'UniTable':
+    def set_rows(self, rows, header=True) -> 'Vistab':
         """Replace all rows in the table with the provided rows."""
         self._rows = []
         return self.add_rows(rows, header)
@@ -945,11 +945,11 @@ class UniTable:
         self._check_align()
         out = ""
         if self.has_border:
-            out += self._hline(location=UniTable.TOP)
+            out += self._hline(location=Vistab.TOP)
         if self._header:
             out += self._draw_line(self._header, isheader=True)
             if self.has_header:
-                out += self._hline_header(location=UniTable.MIDDLE)
+                out += self._hline_header(location=Vistab.MIDDLE)
                 pass
             pass
         num = 0
@@ -958,9 +958,9 @@ class UniTable:
             num += 1
             out += self._draw_line(row)
             if self.has_hlines() and num < length:
-                out += self._hline(location=UniTable.MIDDLE)
+                out += self._hline(location=Vistab.MIDDLE)
         if self._has_border:
-            out += self._hline(location=UniTable.BOTTOM)
+            out += self._hline(location=Vistab.BOTTOM)
         return out[:-1]
 
     @classmethod
@@ -1069,11 +1069,11 @@ class UniTable:
 
     def has_vlines(self):
         """Return a boolean, if vlines are required or not."""
-        return self._deco & UniTable.VLINES > 0
+        return self._deco & Vistab.VLINES > 0
 
     def has_hlines(self):
         """Return a boolean, if hlines are required or not."""
-        return self._deco & UniTable.HLINES > 0
+        return self._deco & Vistab.HLINES > 0
 
     def _hline_header(self, location=MIDDLE):
         """Print header's horizontal line."""
@@ -1091,19 +1091,19 @@ class UniTable:
         if self._style == "none":
             return ""
         horiz_char = self._char_hew if is_header else self._char_ew
-        if UniTable.TOP == location:
+        if Vistab.TOP == location:
             left, mid, right = self._char_se, self._char_sew, self._char_sw
-        elif UniTable.MIDDLE == location:
+        elif Vistab.MIDDLE == location:
             if is_header:
                 left, mid, right = self._char_hnse, self._char_hnsew, self._char_hnsw
             else:
                 left, mid, right = self._char_nse, self._char_nsew, self._char_nsw
                 pass
-        elif UniTable.BOTTOM == location:
+        elif Vistab.BOTTOM == location:
             # NOTE: This will not work as expected if the table is only headers.
             left, mid, right = self._char_ne, self._char_new, self._char_nw
         else:
-            raise ValueError("Unknown location '%s'. Should be one of UniTable.TOP, UniTable.MIDDLE, or UniTable.BOTTOM." % (location))
+            raise ValueError("Unknown location '%s'. Should be one of Vistab.TOP, Vistab.MIDDLE, or Vistab.BOTTOM." % (location))
         # compute cell separator
         cell_sep = "%s%s%s" % (horiz_char * self._pad, [horiz_char, mid][self.has_vlines()], horiz_char * self._pad)
         # build the line
@@ -1151,7 +1151,7 @@ class UniTable:
         Example:
         --------
         ```
-        table = UniTable()
+        table = Vistab()
         table.add_rows([["Name", "Age"], ["Alice", 25], ["Bob", 30]])
         table._compute_cols_width()
         ```
@@ -1220,7 +1220,7 @@ class UniTable:
         Example:
         --------
         ```
-        table = UniTable()
+        table = Vistab()
         table._check_align()
         ```
         """
@@ -1257,7 +1257,7 @@ class UniTable:
         Example:
         --------
         ```
-        table = UniTable()
+        table = Vistab()
         line = ["Name", "Age"]
         print(table._draw_line(line, isheader=True))
         ```
@@ -1331,7 +1331,7 @@ class UniTable:
         Example:
         --------
         ```
-        table = UniTable()
+        table = Vistab()
         line = ["Name", "Age"]
         wrapped_line = table._splitit(line, isheader=True)
         print(wrapped_line)
@@ -1394,7 +1394,7 @@ class UniTable:
         Example:
         --------
         ```
-        table = UniTable()
+        table = Vistab()
         lines_2d = [["\033[1mBold\033[0m", "Text"], ["Normal", "Text"]]
         processed_lines = table._process_lines(lines_2d)
         print(processed_lines)
@@ -1492,15 +1492,15 @@ def example_table(style: str, padding: int = 1) -> str:
     print(example_table("bold"))
     ```
     """
-    return UniTable([["Hd1", "Hd2"], ["Ce1", "Ce2"], ["Ce3", "Ce4"]], style=style, padding=padding).draw()
+    return Vistab([["Hd1", "Hd2"], ["Ce1", "Ce2"], ["Ce3", "Ce4"]], style=style, padding=padding).draw()
 
 
 if __name__ == '__main__':
     # Print a heading for the demo
     print("\033[1m\033[1;31mANSI\033[0m\033[1m Color / Escape Sequence Aware Text-Based Tables\033[0m:")
 
-    # Create a UniTable instance with initial rows
-    t1 = UniTable([
+    # Create a Vistab instance with initial rows
+    t1 = Vistab([
         ["Test 1", "Test 2", "Test 3", "Test 4"],
         [
             "This is some \033[1;31mRed text\033[0m to show the ability to wrap \033[38;5;226mcolored text\033[0m correctly.",
@@ -1533,7 +1533,7 @@ if __name__ == '__main__':
 
     # Print a heading for the available styles
     print("\033[1mAvailable Styles\033[0m (Note: the default is \"light\"):")
-    style_list = sorted(UniTable.STYLES.keys())  # Get the list of available styles
+    style_list = sorted(Vistab.STYLES.keys())  # Get the list of available styles
     data = []
 
     # Split the list of styles into rows of 4 styles each
@@ -1554,7 +1554,7 @@ if __name__ == '__main__':
         data.append(tables_row)
         data.append(["", "", "", ""])  # Add an empty row for spacing
 
-    # Create a UniTable with the data and draw it
-    t1 = UniTable(data, max_width=120, style="none", alignment="cccc")
+    # Create a Vistab with the data and draw it
+    t1 = Vistab(data, max_width=120, style="none", alignment="cccc")
     print(t1.draw())
     exit()
