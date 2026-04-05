@@ -1852,16 +1852,24 @@ def example_table(style: str, padding: int = 1) -> str:
 
 
 def print_test_demo():
-    print("\033[1m\033[1;31mANSI\033[0m\033[1m Color / Escape Sequence Aware Text-Based Tables\033[0m:")
     tdata = [
         ["Test 1", "Test 2", "Test 3", "Test 4"],
         [
             "This is some \033[1;31mRed text\033[0m to show the ability to wrap \033[38;5;226mcolored text\033[0m correctly.",
             "\033[4mThis text is underlined, \033[1mbold, and \033[34mblue.\033[0m This is not.",
             "This is some normal text in the middle to ensure that it is working properly.",
-            "Some \033[1;31mRed mandarin: 这是一个 美好的世界！\033[0m for testing.",
+            "Some \033[1;31mRed mandarin: 这是一个 美好的世界\033[0m for testing.",
         ]
     ]
+
+    # Print the second row of the table outside a table line-by-line.
+    print("\033[1mTest text line-by-line:\033[0m")
+    for phrase in tdata[1]:
+        print(phrase)
+    print()
+
+
+    print("\033[1m\033[1;31mANSI\033[0m\033[1m Color / Escape Sequence Aware Text-Based Tables\033[0m:")
     t1 = Vistab(tdata)
     t1.set_max_width(80)
     print(t1.draw())
