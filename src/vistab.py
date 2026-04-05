@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# texttable - module for creating simple ASCII tables
-# Copyright (C) 2018-2024 Gabriele Fariello where applicable, 2003-2019 Gerome Fournier <jef(at)foutaise.org> everywhere else.
+# This was inspired by texttable, an excellent lightweight module for creating simple ASCII tables by Gerome Fournier <jef(at)foutaise.org>. Thank you for your inspiration.
+# Copyright (C) 2018-2026 Gabriele Fariello where applicable.
 
 r"""module for creating simple ASCII tables.
 
@@ -480,16 +480,36 @@ class Vistab:
     MIDDLE = 1  # Middle position for lines
     BOTTOM = 2  # Bottom border position
 
+    # ANSI Formatting Constants
+    COLORS = {
+        "black": "30", "red": "31", "green": "32", "yellow": "33", 
+        "blue": "34", "magenta": "35", "cyan": "36", "white": "37",
+        "bright_black": "90", "bright_red": "91", "bright_green": "92", "bright_yellow": "93",
+        "bright_blue": "94", "bright_magenta": "95", "bright_cyan": "96", "bright_white": "97"
+    }
+    BG_COLORS = {
+        "black": "40", "red": "41", "green": "42", "yellow": "43", 
+        "blue": "44", "magenta": "45", "cyan": "46", "white": "47",
+        "bright_black": "100", "bright_red": "101", "bright_green": "102", "bright_yellow": "103",
+        "bright_blue": "104", "bright_magenta": "105", "bright_cyan": "106", "bright_white": "107"
+    }
+    TEXT_STYLES = {
+        "bold": "1", "faint": "2", "italic": "3", "underline": "4", 
+        "blink": "5", "reverse": "7", "strike": "9"
+    }
+
     # Dictionary defining various table styles and their corresponding border characters
     STYLES = {
         "ascii": "-|+-",  # Basic ASCII style
         "ascii2": "-|+=",  # ASCII style with different corner characters
-        "bold": "━┃┏┓┗┛┣┫┳┻╋━┣┫╋",  # Bold style with thicker lines
         "double": "═║╔╗╚╝╠╣╦╩╬═╠╣╬",  # Double line style
         "light2": "─│┌┐└┘├┤┬┴┼═╞╡╪",  # Light line style with different corners
         "round": "─│╭╮╰╯├┤┬┴┼─├┤┼",  # Round corners style
         "round2": "─│╭╮╰╯├┤┬┴┼═╞╡╪",  # Another round corners style
         "light": "─│┌┐└┘├┤┬┴┼─├┤┼",  # Light line style
+        "heavy": "━┃┏┓┗┛┣┫┳┻╋━┣┫╋",  # Heavy style (same as bold but discrete name)
+        "dashed": "┄┆┌┐└┘├┤┬┴┼┄├┤┼", # Dashed lines
+        "markdown": " |         -|||", # GitHub Flavored Markdown
         "none": ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ],  # No lines style
         "none2": ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ],  # Another no lines style
     }
@@ -524,8 +544,7 @@ class Vistab:
         }
     }
 
-    def __init__(self, rows: Optional[Iterable[Iterable]] = None, max_width: int = 80,
-                 style: str = 'light', padding: int = 1, alignment: Optional[str] = None):
+    def __init__(self, rows=None, header=None, max_width=0, alignment=None, style=None, padding=None):
         """
         Initializes a new instance of the Vistab class.
 
@@ -536,14 +555,16 @@ class Vistab:
         -----
         rows : Optional[Iterable[Iterable]]
             An iterable containing rows to be added to the table. Each row should be an iterable of cell values. Default is None.
+        header : Optional[Iterable]
+            The header definition for the table.
         max_width : int, optional
-            The maximum width of the table. Default is 80. If this is set to 0, no wrapping will occur.
-        style : str, optional
-            The style of the table. Default is 'light'. See set_style().
-        padding : int, optional
-            The amount of padding (left and right) for the cells. Default is 1. See set_padding().
+            The maximum width of the table. Default is 0.
         alignment : Optional[str], optional
             The alignment of columns. See set_cols_align().
+        style : str, optional
+            The style of the table. Default is 'light' or whatever is in .config/vistab.toml.
+        padding : int, optional
+            The amount of padding (left and right) for the cells. Default is 1 or whatever is in .config/vistab.toml.
 
         Example:
         --------
@@ -569,17 +590,25 @@ class Vistab:
         self._vislen = StringLengthCalculator()  # For calculating visible string length excluding ANSI sequences
         self._cwrap = ColorAwareWrapper()  # For wrapping text with ANSI sequences
 
+        # Set default table decorations (border, header, horizontal and vertical lines)
+        self._deco = Vistab.VLINES | Vistab.HLINES | Vistab.BORDER | Vistab.HEADER
+
         # Reset table properties
         self.reset()
+        
+        # Ingest configuration
+        self._load_config()
 
         self._precision = 3  # Default precision for numeric values
 
         # Added to support rows arg (i.e., adding entire table definition in initialization).
+        if header is not None:
+            self.header(header)
         if rows is not None:
             self.add_rows(rows)  # Add initial rows to the table if provided
-            pass  # Close block to ensure proper indentation
 
-        self.set_max_width(max_width)  # Set the maximum width of the table
+        if max_width > 0:
+            self.set_max_width(max_width)  # Set the maximum width of the table
 
         # Regular expressions for handling ANSI escape sequences in table content
         self.no_end_reset = re.compile(r'\033\[0m(?!.*\033\[((?!0m)[0-?]*[ -/]*[@-~]))')
@@ -587,18 +616,62 @@ class Vistab:
         self.non_reset_not_followed_by_reset = re.compile(r'(\033\[(?:(?!0m)[0-?]*[ -/]*[@-~]))(?!.*\033\[0m)')
         self.ansi_norm = "\033[0m"  # ANSI reset sequence
 
-        # Set default table decorations (border, header, horizontal and vertical lines)
-        self._deco = Vistab.VLINES | Vistab.HLINES | Vistab.BORDER | Vistab.HEADER
+        # Apply explicit user configurations overriding TOML defaults
+        if style is not None:
+            self.set_style(style)  # Set the table style
+        else:
+            self.set_style(self._style) # Ensure char boundaries map out cleanly
 
-        self.set_style(style)  # Set the table style
-        self.set_padding(padding)  # Set the cell padding
-
+        if padding is not None:
+            self.set_padding(padding)  # Set the cell padding
         if alignment is not None:
             self.set_cols_align(alignment)  # Set the column alignment if provided
             pass  # Close block to ensure proper indentation
 
         pass  # Close block to ensure proper indentation
 
+    def _load_config(self):
+        """Internal routine loading default attributes natively from vistab.toml settings"""
+        import sys
+        # Attempt to import built-in TOML parser based on python version constraint
+        try:
+            if sys.version_info >= (3, 11):
+                import tomllib
+            else:
+                import tomli as tomllib
+        except ImportError:
+            # Silent fallback if TOML library dependencies are completely unfulfilled
+            return
+
+        from pathlib import Path
+
+        # Standard recursive application configurations directory map
+        search_paths = [
+            Path(__file__).parent / "vistab.toml",
+            Path.home() / ".vistab.toml",
+            Path.home() / ".config" / "vistab.toml",
+            Path.cwd() / "vistab.toml",
+            Path.cwd() / ".vistab.toml",
+            Path.cwd() / ".config" / "vistab.toml",
+        ]
+
+        # Ingest latest relevant TOML config
+        for p in reversed(search_paths):
+            if p.exists():
+                try:
+                    with open(p, "rb") as f:
+                        data = tomllib.load(f)
+                        if "vistab" in data:
+                            v = data["vistab"]
+                            if "style" in v: self.set_style(v["style"])
+                            if "padding" in v: self.set_padding(v["padding"])
+                            if "align" in v: self.set_cols_align(v["align"])
+                            if "max_width" in v: self.set_max_width(v["max_width"])
+                            if "max_rows" in v: self.set_max_rows(v["max_rows"])
+                            if "max_cols" in v: self.set_max_cols(v["max_cols"])
+                    break # Halt after applying the active directory config!
+                except Exception as e:
+                    print(f"\033[33m[WARN] Failed to parse {p}: {e}\033[0m")
     def vislen(self, iterable: Iterable) -> int:
         """Calculate the visible legnth of strings or the length for anythine else."""
         if isinstance(iterable, bytes) or isinstance(iterable, str):
@@ -641,8 +714,16 @@ class Vistab:
         self._header = []
         self._rows = []
         self._style = "light"
+        self._pad = 1
+        self._max_width = False
         self._max_rows = 0
         self._max_cols = 0
+        self._col_styles = {}
+        self._row_styles = {}
+        self._cell_styles = {}
+        self._header_style = {}
+        self._border_style = {}
+        self._title = None
         return self
 
     def set_max_rows(self, max_rows: int) -> 'Vistab':
@@ -674,6 +755,127 @@ class Vistab:
         """
         self._max_cols = max_cols if max_cols > 0 else 0
         return self
+
+    def _compile_style_dict(self, fg=None, bg=None, **kwargs):
+        """Helper to safely compile dicts."""
+        d = {}
+        if fg and fg in Vistab.COLORS: d["fg"] = Vistab.COLORS[fg]
+        if bg and bg in Vistab.BG_COLORS: d["bg"] = Vistab.BG_COLORS[bg]
+        for style, val in kwargs.items():
+            if val and style in Vistab.TEXT_STYLES:
+                d[style] = Vistab.TEXT_STYLES[style]
+        return d
+
+    def set_border_style(self, fg=None, bg=None, **kwargs) -> 'Vistab':
+        """Apply colors/styles strictly to the table border and intersection characters."""
+        self._border_style = self._compile_style_dict(fg, bg, **kwargs)
+        return self
+
+    def set_title(self, title: str) -> 'Vistab':
+        """Set a title string to be rendered centered above the table."""
+        self._title = title
+        return self
+
+    def sort_by(self, col_idx: int, reverse: bool = False, key=None) -> 'Vistab':
+        """Sort the internal rows array by the value of a specific column.
+        
+        Args:
+            col_idx (int): The 0-indexed column to sort by.
+            reverse (bool): Reverse the sort direction (descending).
+            key: An optional callable applied to each cell before comparison.
+        """
+        def _get_key(row):
+            val = row[col_idx] if col_idx < len(row) else ""
+            return key(val) if key else val
+            
+        self._rows.sort(key=_get_key, reverse=reverse)
+        return self
+
+    # --- Shorthand UX Stylers ---
+    def bold_header(self) -> 'Vistab':
+        """Shortcut to bold the table header."""
+        return self.set_header_style(bold=True)
+        
+    def color_header(self, fg=None, bg=None) -> 'Vistab':
+        """Shortcut to color the table header."""
+        return self.set_header_style(fg=fg, bg=bg)
+        
+    def bold_row(self, row_idx: int) -> 'Vistab':
+        """Shortcut to bold a specific row index."""
+        return self.set_row_style(row_idx, bold=True)
+        
+    def bold_col(self, col_idx: int) -> 'Vistab':
+        """Shortcut to bold a specific column index."""
+        return self.set_col_style(col_idx, bold=True)
+
+    def color_row(self, row_idx: int, fg=None, bg=None) -> 'Vistab':
+        """Shortcut to color a specific row index."""
+        return self.set_row_style(row_idx, fg=fg, bg=bg)
+        
+    def color_col(self, col_idx: int, fg=None, bg=None) -> 'Vistab':
+        """Shortcut to color a specific column index."""
+        return self.set_col_style(col_idx, fg=fg, bg=bg)
+    # ----------------------------
+
+    def set_header_style(self, fg=None, bg=None, **kwargs) -> 'Vistab':
+        """Apply styles specifically to the header row.
+        
+        Args:
+            fg (str): Foreground color (e.g. 'red').
+            bg (str): Background color (e.g. 'blue').
+            kwargs: Any boolean text style (e.g. bold=True).
+        """
+        self._header_style = self._compile_style_dict(fg, bg, **kwargs)
+        return self
+
+    def set_row_style(self, row_idx: int, fg=None, bg=None, **kwargs) -> 'Vistab':
+        """Apply styles to a specific row index (excluding header)."""
+        self._row_styles[row_idx] = self._compile_style_dict(fg, bg, **kwargs)
+        return self
+
+    def set_col_style(self, col_idx: int, fg=None, bg=None, **kwargs) -> 'Vistab':
+        """Apply styles to a specific column index."""
+        self._col_styles[col_idx] = self._compile_style_dict(fg, bg, **kwargs)
+        return self
+        
+    def set_cell_style(self, row_idx: int, col_idx: int, fg=None, bg=None, **kwargs) -> 'Vistab':
+        """Apply styles to a specific cell. Has highest precedence."""
+        self._cell_styles[(row_idx, col_idx)] = self._compile_style_dict(fg, bg, **kwargs)
+        return self
+
+    def _get_active_ansi_wrap(self, row_idx=None, col_idx=None, is_header=False):
+        """Compute the final active ANSI configuration by priority: Cell > Row/Header > Col"""
+        active = {}
+        # Apply Column
+        if col_idx is not None and col_idx in self._col_styles:
+            active.update(self._col_styles[col_idx])
+            
+        # Apply Row/Header (Overrides Col)
+        if is_header and self._header_style:
+            active.update(self._header_style)
+        elif not is_header and row_idx is not None and row_idx in self._row_styles:
+            active.update(self._row_styles[row_idx])
+            
+        # Apply Cell (Overrides everything)
+        if not is_header and row_idx is not None and col_idx is not None:
+            if (row_idx, col_idx) in self._cell_styles:
+                active.update(self._cell_styles[(row_idx, col_idx)])
+                
+        if not active:
+            return "", ""
+            
+        codes = []
+        for key, val in active.items():
+            codes.append(val)
+            
+        return f"\033[{';'.join(codes)}m", "\033[0m"
+
+    def _get_border_ansi(self):
+        """Compute the active ANSI configuration for table borders."""
+        if not self._border_style:
+            return "", ""
+        codes = [str(val) for val in self._border_style.values()]
+        return f"\033[{';'.join(codes)}m", "\033[0m"
 
     @property
     def max_width(self):
@@ -1099,20 +1301,22 @@ class Vistab:
             self._compute_cols_width()
             self._check_align()
             out = ""
+            
+            # Draw Title horizontally centered over the resulting table width
+            if self._title:
+                total_width = sum(self._width) + (3 * (len(self._width) - 1)) + [0, 4][self.has_border]
+                out += self._title.center(total_width) + "\n"
+                
             if self.has_border:
                 out += self._hline(location=Vistab.TOP)
             if self._header:
                 out += self._draw_line(self._header, isheader=True)
                 if self.has_header:
                     out += self._hline_header(location=Vistab.MIDDLE)
-                    pass
-                pass
-            num = 0
             length = len(self._rows)
-            for row in self._rows:
-                num += 1
-                out += self._draw_line(row)
-                if self.has_hlines() and num < length:
+            for idx, row in enumerate(self._rows):
+                out += self._draw_line(row, row_idx=idx)
+                if self.has_hlines() and (idx + 1) < length:
                     out += self._hline(location=Vistab.MIDDLE)
             if self._has_border:
                 out += self._hline(location=Vistab.BOTTOM)
@@ -1273,7 +1477,9 @@ class Vistab:
             hline = "%s%s%s%s%s\n" % (left, horiz_char * self._pad, hline, horiz_char * self._pad, right)
         else:
             hline += "\n"
-        return hline
+            
+        b_on, b_off = self._get_border_ansi()
+        return b_on + hline[:-1] + b_off + "\n"
 
     def _len_cell(self, cell):
         """Return the width of the cell.
@@ -1394,7 +1600,7 @@ class Vistab:
         if not hasattr(self, "_valign"):
             self._valign = ["t"] * self._row_size
 
-    def _draw_line(self, line: List[str], isheader: bool = False) -> str:
+    def _draw_line(self, line: List[str], isheader: bool = False, row_idx: int = None) -> str:
         """
         Draw a line of the table.
 
@@ -1408,6 +1614,8 @@ class Vistab:
             The line (list of cell content) to be drawn.
         isheader : bool, optional
             Indicates if the line to be drawn is a header line. Default is False.
+        row_idx : int, optional
+            Indicates the 0-indexed row position for structural styling targets.
 
         Returns:
         --------
@@ -1419,52 +1627,57 @@ class Vistab:
         ```
         table = Vistab()
         line = ["Name", "Age"]
-        print(table._draw_line(line, isheader=True))
+        print(table._draw_line(line, isheader=True, row_idx=0))
         ```
         """
         # Split the line into individual cells, handling headers if necessary.
         line = self._splitit(line, isheader)
         space = " "
         out = ""
+        b_on, b_off = self._get_border_ansi()
 
         # Iterate over each row of the split line.
         for i in range(self.vislen(line[0])):
-            # Add the left border if the table has borders.
             if self.has_border:
-                out += f"{self._char_ns}{' ' * self._pad}"
-                pass
-
-            length = 0
-
-            # Iterate over each cell in the line.
-            for cell, width, align in zip(line, self._width, self._align):
-                length += 1
+                out += b_on + self._char_ns + b_off
+                
+            for col_idx, (cell, width, align) in enumerate(zip(line, self._width, self._align)):
+                # Get compiled active ANSI mapping
+                ansi_on, ansi_off = self._get_active_ansi_wrap(row_idx, col_idx, isheader)
+                out += ansi_on
+                
+                # Left padding block
+                if col_idx > 0 or self.has_border:
+                    out += " " * self._pad
+                    
                 cell_line = cell[i]
                 fill = width - self.vislen(cell_line)
-
-                # Use header alignment if the line is a header.
+                
                 if isheader:
-                    align = self._header_align[length - 1]
-                    pass
-
-                # Align cell content based on the specified alignment.
+                    align = self._header_align[col_idx]
+                    
+                # Alignment logic
                 if align == "r":
                     out += fill * space + cell_line
                 elif align == "c":
                     out += (int(fill / 2) * space + cell_line + int(fill / 2 + fill % 2) * space)
                 else:
                     out += cell_line + fill * space
-                    pass
-
-                # Add spaces and vertical lines between cells.
-                if length < self.vislen(line):
-                    out += "%s%s%s" % (" " * self._pad, [space, self._char_ns][self.has_vlines()], " " * self._pad)
-                    pass
-
-                pass
-
-            # Add the right border if the table has borders.
-            out += "%s\n" % ['', " " * self._pad + self._char_ns][self.has_border]
+                    
+                # Right padding block
+                if col_idx < len(line) - 1 or self.has_border:
+                    out += " " * self._pad
+                    
+                # Terminate active ANSI block securely BEFORE structural decorators
+                out += ansi_off
+                
+                # Structural cell delimiter
+                if col_idx < len(line) - 1:
+                    out += b_on + [space, self._char_ns][self.has_vlines()] + b_off
+                    
+            if self.has_border:
+                out += b_on + self._char_ns + b_off
+            out += "\n"
 
         return out
 
@@ -1706,6 +1919,32 @@ def print_styles_list():
     t1 = Vistab(data, max_width=120, style="none", alignment="cccc")
     print(t1.draw())
 
+def print_coordinate_styles_demo():
+    print("\033[1m\033[1;36mCoordinate-Based Styling Demonstration\033[0m")
+    print("These styles target specific cells, columns, and rows without mutating structural padding strings or column decorators!\n")
+    
+    t = Vistab([
+        ["Rank", "Player", "Score", "Status"], 
+        ["1", "Gabriele", "15,230", "Up"],
+        ["2", "Alice", "12,940", "Stable"],
+        ["3", "Bob", "8,100", "Down"]
+    ], style="double")
+
+    t.set_header_style(bg="red", fg="bright_white", bold=True)
+    t.set_border_style(fg="yellow")
+    t.set_col_style(0, fg="bright_cyan", bold=True)
+    t.set_cell_style(1, 1, bg="green", fg="black")  # Gabriele
+    t.set_cell_style(3, 3, fg="red", blink=True)    # Down
+
+    print(t.draw())
+    print("\n\033[3mCode executed:\033[0m")
+    print("table.set_header_style(bg='red', fg='bright_white', bold=True)")
+    print("table.set_border_style(fg='yellow')")
+    print("table.set_col_style(0, fg='bright_cyan', bold=True)")
+    print("table.set_cell_style(1, 1, bg='green', fg='black')")
+    print("table.set_cell_style(3, 3, fg='red', blink=True)")
+    print()
+
 def main():
     import argparse
     import sys
@@ -1724,30 +1963,63 @@ def main():
     
     parser.add_argument("-l", "--list-styles", action="store_true", help="Print all available built-in rendering styles")
     parser.add_argument("-T", "--test", action="store_true", help="Print a demonstration of color-wrapping and complex unicode characters")
+    parser.add_argument("-D", "--demo-styling", action="store_true", help="Print a demonstration of coordinate-based row, column, and cell styling")
     parser.add_argument("-i", "--input", type=str, help="Auto-detect and format a delimited structural file (CSV, TSV, etc.)")
     parser.add_argument("-s", "--style", type=str, default="light", help="Override the visual rendering style (default: 'light')")
     parser.add_argument("-w", "--max-width", type=int, default=0, help="Maximum table width before wrapping cells (default: 0 / infinite)")
     parser.add_argument("-r", "--max-rows", type=int, default=0, help="Maximum number of rows to render (default: 0 / infinite)")
     parser.add_argument("-c", "--max-cols", type=int, default=0, help="Maximum number of columns to render (default: 0 / infinite)")
-    parser.add_argument("-p", "--padding", type=int, default=1, help="Horizontal padding inside cells (default: 1)")
-    parser.add_argument("-a", "--align", type=str, help="Global alignment definition string (e.g. 'lcrc')")
+    parser.add_argument("-p", "--padding", type=int, default=1, help="Cell padding integer (default: 1)")
+    parser.add_argument("-a", "--align", type=str, help="Column alignment string (e.g. 'lrc')")
+    parser.add_argument("--create-config", type=str, metavar="TARGET", help="Generate a verbose boilerplate TOML configuration file at the target path (e.g., .vistab.toml)")
 
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
         sys.exit(1)
         
     args = parser.parse_args()
+    _printed_anything = False
+
+    if args.create_config:
+        config_content = (
+            "# Vistab Core Configuration File\n"
+            "# This file overrides factory defaults quietly in the background when Vistab initializes.\n\n"
+            "[vistab]\n"
+            'style = "light"  # Options: light, double, bold, heavy, dashed, round, markdown, etc.\n'
+            "padding = 1      # Integer spaces injected left and right inside cells\n"
+            'align = "l"      # String sequence for layout (l/c/r)\n'
+            "max_width = 0    # Hard limit on terminal wrap limits (0 = infinite)\n"
+            "max_rows = 0     # Hard limit on rendered rows (0 = infinite)\n"
+            "max_cols = 0     # Hard limit on rendered columns (0 = infinite)\n"
+        )
+        try:
+            with open(args.create_config, "w", encoding="utf8") as f:
+                f.write(config_content)
+            print(f"[\033[32mSUCCESS\033[0m] Generated Vistab config template at: {args.create_config}")
+        except Exception as e:
+            print(f"[\033[1;31mERROR\033[0m] Could not create config: {e}")
+            sys.exit(1)
+        # Exit cleanly without disrupting
+        sys.exit(0)
 
     if args.list_styles:
         print_styles_list()
+        _printed_anything = True
         
     if args.test:
-        if args.list_styles:
+        if _printed_anything:
             print("\n" + "="*40 + "\n")
         print_test_demo()
+        _printed_anything = True
+        
+    if args.demo_styling:
+        if _printed_anything:
+            print("\n" + "="*40 + "\n")
+        print_coordinate_styles_demo()
+        _printed_anything = True
         
     if args.input:
-        if args.test or args.list_styles:
+        if _printed_anything:
             print("\n" + "="*40 + "\n")
         try:
             with open(args.input, "r", encoding="utf8") as f:
