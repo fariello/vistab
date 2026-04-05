@@ -1,6 +1,14 @@
 # vistab
 
-`vistab` is a lightweight, zero-dependency Python module for creating beautiful text-based ASCII/Unicode tables. It comes out-of-the-box with support for terminal formatting (ANSI escape sequences) and guarantees consistent string lengths across color variations.
+`vistab` is a lightweight, zero-dependency Python module for creating beautiful text-based ASCII/Unicode tables. It comes out-of-the-box with support for fluid terminal formatting (ANSI escape sequences), coordinate-based discrete cell styling, and guarantees consistent string lengths across dense color variations.
+
+## Key Features
+
+- **Zero-Dependency Core**: Operates purely off the Python standard library with intelligent fallbacks.
+- **Color-Aware Word Wrapping**: Dynamically measures and wraps table widths natively over embedded invisible ANSI formatting sequences without breaking table structural geometry.
+- **Coordinate-Based Styling API**: Fluently colorize rows, columns, headers, or discrete cells declaratively (e.g. `set_header_style(bg="red", bold=True)`).
+- **Hierarchical TOML Configurations**: Persist your favorite table paddings and layout themes cross-project using a localized `.vistab.toml`.
+- **Advanced Data Parsing**: Injects automatic text wrapping arrays, infers dynamic scientific datatypes, and parses robust CSVs intuitively.
 
 ## Installation
 
@@ -10,14 +18,16 @@ You can install `vistab` directly via pip:
 pip install vistab
 ```
 
-## Basic Usage
+> **Note**: For complex Asian/CJK full-width character wrapping support, install the optional component using `pip install vistab[cjk]`.
 
-Getting started with `vistab` is simple. Initialize a `Vistab` instance, set up alignment if desired, and add your rows!
+## Quick Start
+
+Getting started with `vistab` is simple. Initialize a `Vistab` instance, set up column alignments and paddings, and append your rows!
 
 ```python
 from vistab import Vistab
 
-table = Vistab()
+table = Vistab(style="round2", padding=1)
 # Left, Right, Center alignment
 table.set_cols_align(["l", "r", "c"])
 # Top, Middle, Bottom vertical alignment
@@ -35,32 +45,77 @@ print(table.draw())
 
 **Output:**
 ```
-┌───────┬─────┬──────────┐
-│ Name  │ Age │ Nickname │
-├───────┼─────┼──────────┤
-│ Ms    │     │          │
-│ Sarah │  27 │          │
-│ Jones │     │  Sarah   │
-├───────┼─────┼──────────┤
-│ Mr    │     │          │
-│ John  │  45 │          │
-│ Doe   │     │  Johnny  │
-├───────┼─────┼──────────┤
-│ Dr    │     │          │
-│ Emma  │  34 │          │
-│ Brown │     │    Em    │
-└───────┴─────┴──────────┘
+╭─────────┬─────┬───────────╮
+│ Name    │ Age │ Nickname  │
+╞═════════╪═════╪═══════════╡
+│ Ms      │     │           │
+│ Sarah   │  27 │           │
+│ Jones   │     │   Sarah   │
+├─────────┼─────┼───────────┤
+│ Mr      │     │           │
+│ John    │  45 │           │
+│ Doe     │     │  Johnny   │
+├─────────┼─────┼───────────┤
+│ Dr      │     │           │
+│ Emma    │  34 │           │
+│ Brown   │     │    Em     │
+╰─────────┴─────┴───────────╯
 ```
 
-## Advanced Formatting (Datatypes & Scientific Formatting)
+## Coordinate-Based Cell Styling
 
-`vistab` can infer and parse formatting rules strictly by passing data types, controlling precision dynamically for scientific floats and integers.
+`vistab` natively supports a fluent, declarative API to inject background colors, foreground colors, and text styles (like bolding and underlining) targeting specific grids—ranging from individual cells, whole rows, columns, headers, or borders—organically applying cleanly without twisting table decorator strings!
+
+![Styling Demo](docs/assets/vistab-D-styling-demo.png)
+
+## Hierarchical Configuration System
+Stop re-typing your constructor arguments recursively! `vistab` actively scans your execution environments for TOML configurations natively. 
+
+It searches `[./.config/vistab.toml, ./.vistab.toml, ~/.config/vistab.toml, ~/.vistab.toml]` securely over zero-dependencies. 
+
+You can instantly generate a boiler-plate configuration file to test using the CLI command:
+```bash
+python vistab.py --create-config .vistab.toml
+```
+
+## Built-in Structural Themes
+
+`vistab` comes with predefined structural themes rendering cleanly under `light`, `bold`, `double`, `ascii`, `round2`, `markdown`, and more native variants.
+
+You can view a full structural geometry matrix natively printed on your terminal by executing:
+```bash
+python vistab.py -L
+```
+![Available Styles](docs/assets/vistab-L-available-styles.png)
+
+## Discovering Output Colors (CLI)
+
+Because terminal color renderings vary natively across different user host profiles and color palettes, `vistab` comes packaged with a native matrix test exposing every foreground, background, and stylistic text augmentation you can safely deploy. 
+
+You can view the palette directly on the console by executing:
+```bash
+python vistab.py -C
+```
+![Colors List](docs/assets/vistab-C-colors-list.png)
+
+## ANSI Color Layout Support
+
+A major benchmark advantage of `vistab` is native, invisible terminal styling support. Common ASCII libraries will typically break their visual wrapper alignments when raw terminal colors are embedded because they incorrectly count invisible geometry bytes.
+
+You can view a comprehensive color-wrapping conformance test demonstrating dynamic alignment across complex CJK blocks by executing:
+```bash
+python vistab.py -T
+```
+![Test Output](docs/assets/vistab-T-test-output.png)
+
+## Advanced Formatting (Datatypes)
+
+`vistab` can infer and parse formatting rules strictly by passing data types, controlling precision dynamically for scientific floats and integers seamlessly.
 
 ```python
 from vistab import Vistab
 
 table = Vistab(style="ascii")
-table.set_decorations(Vistab.HEADER)
 table.set_cols_dtype(['t', 'f', 'e', 'i', 'a']) 
 table.set_cols_align(["l", "r", "r", "r", "l"])
 
@@ -68,59 +123,8 @@ table.add_rows([
     ["text", "float", "exp", "int", "auto"],
     ["alpha", "23.45", 543, 100, 45.67],
     ["beta", 3.1415, 1.23, 78, 56789012345.12],
-    ["gamma", 2.718, 2e-3, 56.8, .0000000000128],
-    ["delta", .045, 1e+10, 92, 89000000000000.9]
+    ["gamma", 2.718, 2e-3, 56.8, .0000000000128]
 ])
-
-print(table.draw())
-```
-
-**Output:**
-```
-text    float       exp       int         auto  
-==============================================
-alpha   23.450    5.430e+02   100       45.670  
-beta    3.142     1.230e+00   78        5.679e+10
-gamma   2.718     2.000e-03   57        1.280e-11
-delta   0.045     1.000e+10   92        8.900e+13
-```
-
-## Built-in Theme Styles
-
-`vistab` comes with predefined rendering styles like `light`, `bold`, `double`, `ascii`, and `round`. 
-
-```python
-table = Vistab(style="double")
-table.header(["Name", "Age"])
-table.add_row(["Alice", 30])
-table.add_row(["Bob", 28])
-```
-
-**Output:**
-```
-╔═══════╦═════╗
-║ Name  ║ Age ║
-╠═══════╬═════╣
-║ Alice ║ 30  ║
-╠═══════╬═════╣
-║ Bob   ║ 28  ║
-╚═══════╩═════╝
-```
-
-## ANSI Color Support
-
-A major advantage of `vistab` is native, invisible terminal styling support. It successfully measures invisible ANSI color codes and dynamically resizes your table width correctly underneath color escape formatting (e.g. `\033[1;31m`). Other common ASCII libraries will typically break their visual alignment when terminal colors are embedded.
-
-```python
-from vistab import Vistab
-
-colored_table = Vistab(max_width=40)
-colored_table.add_rows([
-    ["Test 1", "Test 2"],
-    ["\033[1;31mRed Alert!\033[0m", "\033[1;32mSystem Stable\033[0m"]
-])
-
-print(colored_table.draw())
 ```
 
 ## License
