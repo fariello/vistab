@@ -1880,7 +1880,7 @@ def example_table(style: str, padding: int = 1) -> str:
 
 def print_test_demo():
     print("\033[1m\033[1;31mANSI\033[0m\033[1m Color / Escape Sequence Aware Text-Based Tables\033[0m:")
-    t1 = Vistab([
+    tdata = [
         ["Test 1", "Test 2", "Test 3", "Test 4"],
         [
             "This is some \033[1;31mRed text\033[0m to show the ability to wrap \033[38;5;226mcolored text\033[0m correctly.",
@@ -1888,26 +1888,26 @@ def print_test_demo():
             "This is some normal text in the middle to ensure that it is working properly.",
             "Some \033[1;31mRed mandarin: 这是一个 美好的世界！\033[0m for testing.",
         ]
-    ])
+    ]
+    t1 = Vistab(tdata)
     t1.set_max_width(80)
     print(t1.draw())
 
-    try:
-        import textwrap3
-        wrapper_module = textwrap3
-    except ImportError:
-        import textwrap
-        print("[\033[1;33mWARN\033[0m] For the textwrap3 feature demonstration, the textwrap3 library is needed. Please use `pip install textwrap3` to fix this issue.")
-        wrapper_module = textwrap
-        
-    width = 18
-    print("-" * width)
-    for line in wrapper_module.wrap("This is some Red text to show the ability to wrap colored text correctly.", width):
-        print(line)
-    print("-" * width)
-    for line in wrapper_module.wrap("This is some \033[1;31mRed text\033[0m to show the ability to wrap \033[38;5;226mcolored text\033[0m correctly.", width):
-        print(line)
-    print()
+    print("\n\033[1mBelow is the same table but with the color controls removed. They should wrap the same way.\033[0m")
+    tdata = [
+        ["Test 1", "Test 2", "Test 3", "Test 4"],
+        [
+            "This is some Red text to show the ability to wrap colored text correctly.",
+            "This text is underlined, bold, and blue. This is not.",
+            "This is some normal text in the middle to ensure that it is working properly.",
+            "Some Red mandarin: 这是一个 美好的世界！ for testing.",
+        ]
+    ]
+    t2 = Vistab(tdata)
+    t2.set_max_width(80)
+    print(t2.draw())
+
+
 
 def print_styles_list():
     print("\033[1mAvailable Styles\033[0m (Note: the default is \"light\"):")
