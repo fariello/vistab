@@ -265,67 +265,39 @@ class ColorAwareWrapper:
         self.calculator = StringLengthCalculator()
         pass  # Close block to ensure proper indentation
 
-    def wrap(self, text: str, width: int) -> str:
-        """
-        Wraps text to the specified width, ignoring ANSI escape sequences.
-
-        Args:
-        -----
-        text : str
-            The text to wrap.
-        width : int
-            The maximum width of each line.
-
-        Returns:
-        --------
-        str
-            The wrapped text with lines not exceeding the specified width.
-
-        Example:
-        --------
-        ```
-        wrapper = ColorAwareWrapper()
-        sample_text = "This is a sample text to demonstrate wrapping functionality."
-        wrapped_text = wrapper.wrap(sample_text, 15)
-        print(wrapped_text)
-        ```
-
-        The above example would produce:
-        ```
-        This is a sample
-        text to
-        demonstrate
-        wrapping
-        functionality.
-        ```
-        """
-        # Split the text into individual words
+    def wrap_list(self, text: str, width: int) -> List[str]:
+        """Core wrapping logic returning a list of lines."""
         words = text.split()
-
-        # Initialize an empty line to build up words and an empty list to hold the result
         line, result = [], []
 
-        # Iterate over the words in the text
         for word in words:
-            # Calculate the length of the current line and the length of the next word
             line_length = self.calculator.len(' '.join(line))
             word_length = self.calculator.len(word)
 
-            # If adding the next word to the current line would exceed the specified width...
-            if line_length + word_length + len(line) > width:  # +len(line) accounts for spaces between words
-                # ...then add the current line to the result and start a new line
-                result.append(' '.join(line))
-                line = []  # Reset the line
+            # space length accounting 
+            space_length = 1 if line else 0
 
-            # Add the word to the current line
-            line.append(word)
+            if line_length + space_length + word_length > width:
+                if line:
+                    result.append(' '.join(line))
+                    line = [word]
+                else:
+                    # Individual word is larger than column width constraint. Force break it onto its own line.
+                    result.append(word)
+            else:
+                line.append(word)
 
-        # If there are any remaining words in the line, add the line to the result
         if line:
             result.append(' '.join(line))
 
-        # Join the lines in the result with line breaks and return the wrapped text
-        return '\n'.join(result)
+        return result
+
+    def wrap(self, text: str, width: int) -> str:
+        """
+        Wraps text to the specified width, ignoring ANSI escape sequences.
+        ...
+        """
+        return '\n'.join(self.wrap_list(text, width))
         pass  # Close block to ensure proper indentation
 
     pass  # Close block to ensure proper indentation
@@ -1730,7 +1702,8 @@ class Vistab:
                 if c.strip() == "":
                     array.append("")  # Preserve empty lines
                 else:
-                    array.extend(textwrapper(c, width))  # Wrap text to fit the column width
+                    # Dynamically utilize ColorAwareWrapper to segregate layout correctly without mutating ANSI sequences 
+                    array.extend(self._cwrap.wrap_list(c, width))
             line_wrapped.append(array)
 
         # Find the maximum number of lines in any cell
