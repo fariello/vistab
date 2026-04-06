@@ -72,8 +72,8 @@ from functools import reduce  # Higher-order function for performing cumulative 
 __all__ = ["Vistab", "ArraySizeError", "StringLengthCalculator"]
 
 __author__ = 'Gabriele Fariello <gfariello@fariel.com>'
-__license__ = 'BSD'
-__version__ = '3 Clause 2026'
+__license__ = 'BSD 3-Clause 2026'
+__version__ = '1.0.2'
 __credits__ = """\
 Gabriele Fariello <gfariello@fariel.com>
     - Wrote this module adding robust handling for unicode characters and ANSI escape sequences
