@@ -558,7 +558,7 @@ class Vistab:
 
     THEMES = {}
     for _name, _config in _BASE_PALETTES.items():
-        _base = {"style": _config["style"], "padding": 1, "header": _config["header"], "border": _config["border"]}
+        _base = {"style": _config["style"], "header": _config["header"], "border": _config["border"]}
         _alt_sequence = [{"bg": "black", "fg": "white"}, {"bg": "bright_black", "fg": _config["fg2"]}]
         
         # 1. Alternating Rows (Default)
