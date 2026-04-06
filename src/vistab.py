@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # This was inspired by texttable, an excellent lightweight module for creating simple ASCII tables by Gerome Fournier <jef(at)foutaise.org>. Thank you for your inspiration.
 # Copyright (C) 2018-2026 Gabriele Fariello where applicable.
@@ -66,7 +66,7 @@ except ImportError:
         return sum(1 for _ in text)
 import re  # Regular expressions for text processing
 import sys  # System-specific parameters and functions
-from typing import List, Optional, Iterable, Any  # Type hints for better code clarity
+from typing import List, Optional, Iterable, Any, Union  # Type hints for better code clarity
 from functools import reduce  # Higher-order function for performing cumulative operations
 
 __all__ = ["Vistab", "ArraySizeError", "StringLengthCalculator"]
@@ -188,7 +188,7 @@ class StringLengthCalculator:
         # Regular expression to match ANSI escape sequences
         # ANSI escape sequences are used for text formatting (e.g., colors)
         self.ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
-        pass  # Close block to ensure proper indentation
+        pass # for auto-indentation
 
     def len(self, string: str) -> int:
         """
@@ -221,9 +221,8 @@ class StringLengthCalculator:
         # Return the length of the visible string
         # wcswidth returns the number of cells the string occupies when printed
         return wcswidth(visible_string)
-        pass  # Close block to ensure proper indentation
 
-    pass  # Close block to ensure proper indentation
+    pass # for auto-indentation
 
 
 class ColorAwareWrapper:
@@ -263,7 +262,7 @@ class ColorAwareWrapper:
     def __init__(self):
         # Initialize an instance of StringLengthCalculator to handle ANSI escape sequences
         self.calculator = StringLengthCalculator()
-        pass  # Close block to ensure proper indentation
+        pass # for auto-indentation
 
     def wrap_list(self, text: str, width: int) -> List[str]:
         """Core wrapping logic returning a list of lines."""
@@ -298,9 +297,8 @@ class ColorAwareWrapper:
         ...
         """
         return '\n'.join(self.wrap_list(text, width))
-        pass  # Close block to ensure proper indentation
 
-    pass  # Close block to ensure proper indentation
+    pass # for auto-indentation
 
 
 def obj2unicode(obj: Any) -> str:
@@ -370,7 +368,7 @@ class ArraySizeError(Exception):
         """
         self.msg = msg  # Store the error message
         Exception.__init__(self, msg, '')  # Initialize the base Exception class
-        pass  # Close block to ensure proper indentation
+        pass # for auto-indentation
 
     def __str__(self) -> str:
         """
@@ -389,9 +387,8 @@ class ArraySizeError(Exception):
         ```
         """
         return self.msg  # Return the stored error message
-        pass  # Close block to ensure proper indentation
 
-    pass  # Close block to ensure proper indentation
+    pass # for auto-indentation
 
 
 class FallbackToText(Exception):
@@ -410,7 +407,7 @@ class FallbackToText(Exception):
         raise FallbackToText()
     ```
     """
-    pass  # Close block to ensure proper indentation
+    pass # for auto-indentation
 
 
 class Vistab:
@@ -526,12 +523,37 @@ class Vistab:
         }
     }
 
-    def __init__(self, rows=None, header=None, max_width=0, alignment=None, style=None, padding=None):
+    def __init__(self, rows: Optional[Iterable[Iterable[Any]]] = None, header: Optional[Iterable[Any]] = None, max_width: int = 0, alignment: Optional[str] = None, style: Optional[str] = None, padding: Optional[int] = None) -> None:
         """
-        Initializes a new instance of the Vistab class.
+        Initializes a new instance of the Vistab styling rendering class.
 
-        This constructor sets up the initial state of the table, allowing for optional
-        initial rows, maximum width, style, padding, and column alignment.
+        This constructor sets up the initial default state of the table, compiling configuration files dynamically
+        and initiating decorators to allow optional parameters explicitly.
+
+        Args:
+        -----
+        rows : Optional[Iterable[Iterable[Any]]]
+            An iterable containing grouped row sequences to be added immediately. Default is None.
+        header : Optional[Iterable[Any]]
+            A single sequence of values instantiated automatically as the top-most table header.
+        max_width : int
+            The hard terminal rendering width limit enforced via color-aware wrapping. Default is 0.
+        alignment : Optional[str]
+            Layout sequences mapped column by column using characters defined in `set_cols_align("lrc")`.
+        style : Optional[str]
+            Default table box drawing parameters mapped against built-in themes.
+        padding : Optional[int]
+            The amount of numerical spaces injected padding left and right uniformly inside box cells.
+        
+        Returns:
+        --------
+        None
+
+        Example:
+        --------
+        ```python
+        table = Vistab(style="round2", padding=1, max_width=100)
+        ```
 
         Args:
         -----
@@ -608,9 +630,9 @@ class Vistab:
             self.set_padding(padding)  # Set the cell padding
         if alignment is not None:
             self.set_cols_align(alignment)  # Set the column alignment if provided
-            pass  # Close block to ensure proper indentation
+            pass # for auto-indentation
 
-        pass  # Close block to ensure proper indentation
+        pass # for auto-indentation
 
     def _load_config(self):
         """Internal routine loading default attributes natively from vistab.toml settings"""
@@ -662,34 +684,100 @@ class Vistab:
 
     @property
     def has_border(self) -> bool:
-        """Get is this has a border."""
+        """
+        Gets whether the current table is configured to draw an external boundary border.
+
+        Returns:
+        --------
+        bool
+            True if the table is set to draw a visible border around its perimeter, False otherwise.
+
+        Example:
+        --------
+        ```python
+        border_status = table.has_border
+        ```
+        """
         return self._has_border
 
     @has_border.setter
-    def has_border(self, value):
+    def has_border(self, value: bool) -> None:
+        """
+        Sets whether the table will draw an external boundary border.
+
+        Args:
+        -----
+        value : bool
+            Configuration boolean defining whether the table draws border decorators natively.
+
+        Example:
+        --------
+        ```python
+        table.has_border = False
+        ```
+        """
         self._has_border = value
-        return value
 
     @property
-    def has_header(self):
-        """Get if this has a header."""
+    def has_header(self) -> bool:
+        """
+        Gets whether the table is currently configured to format the first row as a structural header.
+
+        Returns:
+        --------
+        bool
+            True if the first array row is ingested as a header, False otherwise.
+
+        Example:
+        --------
+        ```python
+        header_status = table.has_header
+        ```
+        """
         return self._has_header
 
     @has_header.setter
-    def has_header(self, value):
-        self._has_header = value
-        return value
+    def has_header(self, value: bool) -> None:
+        """
+        Sets whether the table will force convert the first inserted row into a table header.
 
-    def reset(self):
-        """Reset the instance.
+        Important Behavior:
+        -------------------
+        By default, Vistab initializes with `has_header=True`. If you append raw datasets without wanting headers drawn, set this to False.
 
-        Clears all row data, header data, and resets the style to default ("light").
-
-        Returns:
-            Vistab: The instance for method chaining.
+        Args:
+        -----
+        value : bool
+            Boolean indicating if the top-most table string sequences are styled natively as center-aligned headers.
 
         Example:
-            table.reset()
+        --------
+        ```python
+        table.has_header = False
+        ```
+        """
+        self._has_header = value
+
+    def reset(self) -> 'Vistab':
+        """
+        Reset the Vistab instance safely to its default state.
+
+        Clears all row data, header data, and restores styling logic configurations dynamically back to standard initialization values (such as reinstating 'light' mode lines, and purging coordinate-based coloring injections natively).
+
+        Returns:
+        --------
+        Vistab
+            The instance for method chaining.
+
+        Important Behavior:
+        -------------------
+        Does not mutate the `None` fallbacks. Resets layout decorators dynamically.
+
+        Example:
+        --------
+        ```python
+        table.reset()
+        ```
         """
         self._hline_string = None
         self._row_size = None
@@ -860,12 +948,39 @@ class Vistab:
         return f"\033[{';'.join(codes)}m", "\033[0m"
 
     @property
-    def max_width(self):
-        """Get the maximum width of the table. If 0, no max."""
+    def max_width(self) -> int:
+        """
+        Gets the predefined maximum width limit of the table.
+
+        Returns:
+        --------
+        int
+            The max character width allowed before cells hard wrap. 0 indicates infinite width.
+
+        Example:
+        --------
+        ```python
+        current_max = table.max_width
+        ```
+        """
         return self._max_width
 
     @max_width.setter
-    def max_width(self, val):
+    def max_width(self, val: int) -> None:
+        """
+        Sets the maximum width of the table programmatically.
+
+        Args:
+        -----
+        val : int
+            The max width limit in characters before cellular string wrapping. 0 equates to infinite wrap scale.
+
+        Example:
+        --------
+        ```python
+        table.max_width = 120
+        ```
+        """
         self.set_max_width(val)
 
     def set_max_width(self, max_width: int) -> 'Vistab':
@@ -995,7 +1110,7 @@ class Vistab:
         self._deco = decorations
         return self
 
-    def set_header_align(self, array: str) -> 'Vistab':
+    def set_header_align(self, array: Union[str, List[str]]) -> 'Vistab':
         """Set the desired header alignment.
 
         Args:
@@ -1017,7 +1132,7 @@ class Vistab:
         self._header_align = array
         return self
 
-    def set_cols_align(self, array: str) -> 'Vistab':
+    def set_cols_align(self, array: Union[str, List[str]]) -> 'Vistab':
         """Set the desired columns alignment.
 
         Args:
@@ -1039,7 +1154,7 @@ class Vistab:
         self._align = array
         return self
 
-    def set_cols_valign(self, array: str) -> 'Vistab':
+    def set_cols_valign(self, array: Union[str, List[str]]) -> 'Vistab':
         """Set the desired columns vertical alignment.
 
         Args:
@@ -1061,12 +1176,12 @@ class Vistab:
         self._valign = array
         return self
 
-    def set_cols_dtype(self, array: str) -> 'Vistab':
+    def set_cols_dtype(self, array: Union[str, List[str]]) -> 'Vistab':
         """
         Sets the data types for the columns in the table.
 
         Args:
-        array (List[str]): A list of strings representing the data types for the columns.
+            array (Union[str, List[str]]): A list of strings representing the data types for the columns.
                            Acceptable values are: 't' (text), 'f' (float, decimal),
                            'e' (float, exponent), 'i' (integer), and 'a' (automatic).
 
@@ -1097,7 +1212,7 @@ class Vistab:
         self._dtype = array
         return self
 
-    def set_cols_width(self, array: str) -> 'Vistab':
+    def set_cols_width(self, array: Union[str, List[Any]]) -> 'Vistab':
         """Set the desired columns width in characters.
 
         Args:
@@ -1204,11 +1319,11 @@ class Vistab:
         self._rows.append(cells)
         return self
 
-    def add_rows(self, rows, header=True) -> 'Vistab':
+    def add_rows(self, rows: Iterable[Iterable[Any]], header: bool = True) -> 'Vistab':
         """Add several rows in the rows stack.
 
         Args:
-            rows (Iterable[List[str]]): An iterator or 2D array of rows to add.
+            rows (Iterable[Iterable[Any]]): An iterator or 2D array of rows to add.
             header (bool): Specifies if the first row in the sequence should be used as the 
                            header of the table. Default is True.
 
@@ -1218,11 +1333,10 @@ class Vistab:
         Example:
             table.add_rows([["Name", "Age"], ["Gabriele", 25]])
         """
-        # nb: don't use 'iter' on by-dimensional arrays, to get a
-        #     usable code for python 2.1
+        # nb: iterate cleanly parsing python 3 backwards mapping
         if header:
-            if hasattr(rows, '__iter__') and hasattr(rows, 'next'):
-                self.header(rows.next())
+            if hasattr(rows, '__iter__') and (hasattr(rows, '__next__') or hasattr(rows, 'next')):
+                self.header(next(rows))
             else:
                 self.header(rows[0])
                 rows = rows[1:]
@@ -1230,11 +1344,11 @@ class Vistab:
             self.add_row(row)
         return self
 
-    def set_rows(self, rows, header=True) -> 'Vistab':
+    def set_rows(self, rows: Iterable[Iterable[Any]], header: bool = True) -> 'Vistab':
         """Replace all rows in the table with the provided rows.
 
         Args:
-            rows (Iterable[List[str]]): An iterator or 2D array of rows to replace the current ones.
+            rows (Iterable[Iterable[Any]]): An iterator or 2D array of rows to replace the current ones.
             header (bool): Specifies if the first row in the sequence should be used as the 
                            header of the table. Default is True.
 
@@ -1247,7 +1361,7 @@ class Vistab:
         self._rows = []
         return self.add_rows(rows, header)
 
-    def draw(self):
+    def draw(self) -> Optional[str]:
         """Draw the table and return as an ASCII/Unicode string.
 
         Returns:
