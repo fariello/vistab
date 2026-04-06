@@ -927,21 +927,21 @@ class Vistab:
         return self
 
     # --- Shorthand UX Stylers ---
-    def bold_header(self) -> 'Vistab':
-        """Shortcut to bold the table header."""
-        return self.set_header_style(bold=True)
+    def bold_header(self, enable: bool = True) -> 'Vistab':
+        """Shortcut to bold the table header. Pass False to strip bold styling."""
+        return self.set_header_style(bold=enable)
         
     def color_header(self, fg=None, bg=None) -> 'Vistab':
         """Shortcut to color the table header."""
         return self.set_header_style(fg=fg, bg=bg)
         
-    def bold_row(self, row_idx: int) -> 'Vistab':
-        """Shortcut to bold a specific row index."""
-        return self.set_row_style(row_idx, bold=True)
+    def bold_row(self, row_idx: int, enable: bool = True) -> 'Vistab':
+        """Shortcut to bold a specific row index. Pass False to strip bold styling."""
+        return self.set_row_style(row_idx, bold=enable)
         
-    def bold_col(self, col_idx: int) -> 'Vistab':
-        """Shortcut to bold a specific column index."""
-        return self.set_col_style(col_idx, bold=True)
+    def bold_col(self, col_idx: int, enable: bool = True) -> 'Vistab':
+        """Shortcut to bold a specific column index. Pass False to strip bold styling."""
+        return self.set_col_style(col_idx, bold=enable)
 
     def color_row(self, row_idx: int, fg=None, bg=None) -> 'Vistab':
         """Shortcut to color a specific row index."""
@@ -2369,6 +2369,7 @@ def main():
     parser.add_argument("-D", "--demo-styling", action="store_true", help="Print a demonstration of coordinate-based row, column, and cell styling")
     parser.add_argument("-M", "--demo-themes", action="store_true", help="Print a demonstration of the integrated high-level layout color themes")
     parser.add_argument("-i", "--input", type=str, help="Auto-detect and format a delimited structural file (CSV, TSV, etc.)")
+    parser.add_argument("-t", "--theme", type=str, help="Apply a dynamic color theme matrix to the input data (e.g. 'forest-cols')")
     parser.add_argument("-s", "--style", type=str, default="light", help="Override the visual rendering style (default: 'light')")
     parser.add_argument("-w", "--max-width", type=int, default=0, help="Maximum table width before wrapping cells (default: 0 / infinite)")
     parser.add_argument("-r", "--max-rows", type=int, default=0, help="Maximum number of rows to render (default: 0 / infinite)")
@@ -2383,6 +2384,19 @@ def main():
         
     args = parser.parse_args()
     _printed_anything = False
+
+    # CLI Validation Safety Nets
+    if args.style and args.style not in Vistab.STYLES:
+        print(f"\033[1;31m[ERROR]\033[0m Unknown layout style '{args.style}'")
+        print(f"Available styles: {', '.join(sorted(Vistab.STYLES.keys()))}")
+        print("Tip: Run 'vistab -L' to view a rendered matrix of all available layout stylings.")
+        sys.exit(1)
+        
+    if getattr(args, 'theme', None) and args.theme not in Vistab.THEMES:
+        print(f"\033[1;31m[ERROR]\033[0m Unknown color theme '{args.theme}'")
+        print(f"Available themes: {', '.join(sorted(Vistab.THEMES.keys()))}")
+        print("Tip: Run 'vistab -M' to view a rendered matrix of all available color themes.")
+        sys.exit(1)
 
     if args.create_config:
         config_content = (
@@ -2463,6 +2477,10 @@ def main():
                     table.set_cols_align(args.align)
                 
                 table.set_rows(rows, header=True)
+                
+                if args.theme:
+                    table.apply_theme(args.theme)
+                    
                 print(table.draw())
         except Exception as e:
             print(f"Error parsing input file: {e}")

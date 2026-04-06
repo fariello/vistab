@@ -62,6 +62,40 @@ print(table.draw())
 ╰─────────┴─────┴───────────╯
 ```
 
+## Cookbook Examples
+
+While `Vistab` excels at simply rendering arrays perfectly, it's actually an extensive, data-aware formatting engine. Because the API strictly uses a **fluent** architecture, you can chain multiple logic mutations securely natively without intermediate variables!
+
+### 1. Data Modification & Sorting
+
+You can completely replace data sets, or sequentially sort physical rows tracking exact coordinate values without needing `pandas` overhead: 
+```python
+table = Vistab(style="round", padding=1)
+
+# Dynamically sort the memory array tracking the second column (col_idx=1) descending...
+table.set_rows(my_messy_csv_data, header=True).sort_by(1, reverse=True)
+```
+
+### 2. Output Formatting & Safe Dimensional Windows
+
+Sometimes querying SQL leaves us with 4,000 returned dimensions. We can protect logging interfaces elegantly:
+```python
+# Force-limit outputs protecting CLI limits securely! 
+table.set_max_rows(10).set_max_cols(5)
+```
+
+### 3. Shorthand Styling & Native Formatting
+
+You don't need to pass massive syntax strings natively evaluating layout injections!
+```python
+# Conditionally highlight physical elements natively:
+for i, condition in enumerate(my_events):
+    table.color_row(i, bg="red" if condition == 'CRITICAL' else None)
+
+# Make the header globally bold instantly:
+table.bold_header()
+```
+
 ## Coordinate-Based Cell Styling
 
 `vistab` natively supports a fluent, declarative API to inject background colors, foreground colors, and text styles (like bolding and underlining) targeting specific grids—ranging from individual cells, whole rows, columns, headers, or borders—organically applying cleanly without twisting table decorator strings!
@@ -162,6 +196,13 @@ table.add_rows([
     ["gamma", 2.718, 2e-3, 56.8, .0000000000128]
 ])
 ```
+
+## Detailed API Reference
+
+Because the native sequence executes so many features, deploying every argument mapping here securely creates clutter. 
+
+For the complete list of physical ingestion endpoints, configuration schemas, parameters, and wrapping constraint trackers natively enabled within `vistab`:
+👉 **Please refer to the absolute granular [Vistab Core API Documentation](docs/API.md)** 👈
 
 ## License
 
