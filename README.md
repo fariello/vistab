@@ -66,7 +66,7 @@ print(table.draw())
 
 `vistab` natively supports a fluent, declarative API to inject background colors, foreground colors, and text styles (like bolding and underlining) targeting specific grids—ranging from individual cells, whole rows, columns, headers, or borders—organically applying cleanly without twisting table decorator strings!
 
-![Styling Demo](docs/assets/vistab-D-styling-demo.png)
+![Styling Demo](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-D-styling-demo.png)
 
 ## Coordinate-Based Word Wrapping (Nested Tables)
 
@@ -92,7 +92,7 @@ It searches `[./.config/vistab.toml, ./.vistab.toml, ~/.config/vistab.toml, ~/.v
 
 You can instantly generate a boiler-plate configuration file to test using the CLI command:
 ```bash
-python vistab.py --create-config .vistab.toml
+vistab --create-config .vistab.toml
 ```
 
 ## Built-in Structural Themes
@@ -101,9 +101,9 @@ python vistab.py --create-config .vistab.toml
 
 You can view a full structural geometry matrix natively printed on your terminal by executing:
 ```bash
-python vistab.py -L
+vistab -L
 ```
-![Available Styles](docs/assets/vistab-L-available-styles.png)
+![Available Styles](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-L-available-styles.png)
 
 ### The Curated Color Theme Matrix
 
@@ -120,9 +120,9 @@ If these 18 themes aren't enough, you can dynamically construct massive custom m
 
 View the curated themes rendered beautifully stacked by executing:
 ```bash
-python vistab.py -M
+vistab -M
 ```
-![Theme Output](docs/assets/vistab-M-themes-output.png)
+![Theme Output](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-M-themes-output.png)
 
 ## Discovering Output Colors (CLI)
 
@@ -130,9 +130,9 @@ Because terminal color renderings vary natively across different user host profi
 
 You can view the palette directly on the console by executing:
 ```bash
-python vistab.py -C
+vistab -C
 ```
-![Defined Colors](docs/assets/vistab-C-defined-colors.png)
+![Defined Colors](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-C-defined-colors.png)
 
 ## ANSI Color Layout Support
 
@@ -140,9 +140,9 @@ A major benchmark advantage of `vistab` is native, invisible terminal styling su
 
 You can view a comprehensive color-wrapping conformance test demonstrating dynamic alignment across complex CJK blocks by executing:
 ```bash
-python vistab.py -T
+vistab -T
 ```
-![Test Output](docs/assets/vistab-T-test-output.png)
+![Test Output](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-T-test-output.png)
 
 ## Advanced Formatting (Datatypes)
 

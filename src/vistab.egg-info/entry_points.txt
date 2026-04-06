@@ -1,0 +1,2 @@
+[console_scripts]
+vistab = vistab:main
