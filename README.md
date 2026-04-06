@@ -10,6 +10,12 @@
 - **Hierarchical TOML Configurations**: Persist your favorite table paddings and layout themes cross-project using a localized `.vistab.toml`.
 - **Advanced Data Parsing**: Injects automatic text wrapping arrays, infers dynamic scientific datatypes, and parses robust CSVs intuitively.
 
+## Detailed Documentation
+Looking for an exhaustive configuration breakdown or command-line parser bindings?
+
+- 📚 **[Vistab Python API Reference](docs/API.md)** *(Covers all objects, data formatting algorithms, and properties)*
+- 💻 **[Command-Line (CLI) Manual](docs/CLI.md)** *(Covers mapping raw CSV structures and terminal limits seamlessly)*
+
 ## Installation
 
 You can install `vistab` directly via pip:
