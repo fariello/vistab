@@ -1569,7 +1569,11 @@ class Vistab:
             
             # Draw Title horizontally centered over the resulting table width
             if self._title:
-                total_width = sum(self._width) + (3 * (len(self._width) - 1)) + [0, 4][self.has_border]
+                w_cells = sum(self._width)
+                w_pads = len(self._width) * 2 * self._pad
+                w_seps = len(self._width) - 1
+                w_borders = 2 if self.has_border else 0
+                total_width = w_cells + w_pads + w_seps + w_borders
                 out += self._title.center(total_width) + "\n"
                 
             if self.has_border:
@@ -2514,7 +2518,7 @@ def main():
             sample = raw_data[:1024]
             f_stream = io.StringIO(raw_data)
             try:
-                dialect = csv.Sniffer().sniff(sample)
+                dialect = csv.Sniffer().sniff(sample, delimiters=",\t|;")
                 reader = csv.reader(f_stream, dialect)
             except csv.Error:
                 # Sniffer fails on single-column text or non-explicit delimiters.
