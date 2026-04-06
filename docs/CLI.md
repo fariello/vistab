@@ -1,54 +1,53 @@
 # Vistab Command-Line Interface (CLI)
 
-`vistab` natively acts as a vastly powerful command-line utility for parsing, truncating, and beautifully styling `.csv` datasets physically entirely within your terminal without touching Python logic.
+`vistab` includes a command-line utility for parsing, truncating, and styling `.csv` datasets directly in your terminal.
 
 ## Usage Overview
-`vistab` tracks UNIX pipeline standards globally natively grabbing files cleanly natively:
+`vistab` tracks standard UNIX pipeline inputs and positional arguments:
 
 ```bash
-# Map explicit physical files strictly utilizing positional arguments natively
+# Process explicitly defined files
 vistab data.csv
 
-# Chain multiple datasets elegantly sequentially
+# Process multiple datasets sequentially
 vistab file1.csv file2.csv logs.tsv
 
-# Pipe standard stdout elegantly executing mappings directly from pipelines recursively
+# Pipe standard stdout directly into vistab
 echo -e "Name,Age\nGabriel,25" | vistab --theme forest-index
 ```
-![Screenshot: Terminal output showing vistab successfully executing a parsed CSV structure displaying a table with colored columns mapping ocean-index theme beautifully on a black background natively.](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-CLI-basic.png)
+![Screenshot: Terminal output showing vistab successfully executing a parsed CSV structure displaying a table with colored columns.](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-CLI-basic.png)
 
+## Formatting Configurations
 
-## Formatting Configs & Structure Limits
-
-The CLI naturally captures all data layout, spacing, and wrapper restrictions tracking parameters gracefully!
+The CLI lets you manage data layout, spacing, and wrapper constraints via standard flags.
 
 ### 1. Dimension Wrappers
-- **`-w, --width`**: Limits global maximum table geometries natively bounding sequences safely (0 = infinite wraps).
-- **`-W, --col-widths`**: Explicit array of bounding integers statically forcing geometry cleanly (e.g., `--col-widths 10,20,5`).
-- **`-r, --max-rows`**: Maps boundaries tracking row execution bounds limits (e.g., `-r 50`).
-- **`-c, --max-cols`**: Aggressively drops right-most bounds physically protecting visual interfaces smoothly.
+- **`-w, --width`**: Limits global maximum table geometries (0 = infinite wraps).
+- **`-W, --col-widths`**: Explicit comma-separated array of bounding integers (e.g., `--col-widths 10,20,5`).
+- **`-r, --max-rows`**: Sets the maximum number of rows to print (e.g., `-r 50`).
+- **`-c, --max-cols`**: Drops the right-most columns to fit within a specific limit.
 
 ### 2. Alignment Logic and Typing
-*Provide one character chronologically evaluating your specific CSV geometries sequence!*
-- **`-a, --align`**: Target horizontal tracking alignments seamlessly (`l=left`, `c=center`, `r=right`). Example: `-a lrc`
-- **`--valign`**: Maps cell internal evaluations vertically natively (`t=top`, `m=middle`, `b=bottom`). Example: `--valign ttb`
-- **`--dtype`**: Force datatypes actively ensuring outputs format consistently (`a=auto`, `t=text`, `f=float`, `i=int`, `e=exp`).
+*Provide a single character sequence to evaluate columns chronologically.*
+- **`-a, --align`**: Target horizontal alignments (`l=left`, `c=center`, `r=right`). Example: `-a lrc`
+- **`--valign`**: Target vertical alignments (`t=top`, `m=middle`, `b=bottom`). Example: `--valign ttb`
+- **`--dtype`**: Force datatypes to ensure consistent output formatting (`a=auto`, `t=text`, `f=float`, `i=int`, `e=exp`).
 
 ### 3. Aesthetics & Themes
-- **`-t, --theme`**: Statically map beautiful dynamic Zebra-Striping matrix algorithms dynamically parsing data (`ocean-cols`, `forest`).
-- **`-s, --style`**: Modifies the boundary rendering strings cleanly (`light`, `round2`, `markdown`).
-- **`-p, --padding`**: Expands visual footprint integers pushing whitespace internally smoothly.
-- **`--title`**: Passes a centered string elegantly displaying over the header organically.
-- **`--no-header`**: Tracks boolean variables silently injecting plain data structures (prevents treating the top `.csv` line globally as formal column headers).
+- **`-t, --theme`**: Apply predefined dynamic Zebra-Striping matrix algorithms (`ocean-cols`, `forest`).
+- **`-s, --style`**: Modify the table border characters (`light`, `round2`, `markdown`).
+- **`-p, --padding`**: Expand the internal whitespace padding of cells by a standard integer.
+- **`--title`**: Pass a title to center above the table header.
+- **`--no-header`**: Ignore header styling logic and render the first dataset row as plain data.
 
-![Screenshot: Terminal output displaying an execution block utilizing formatting constraints explicitly showing --no-header flags cleanly omitting middle grid bounding segments sequentially gracefully mapping a standalone row dynamically.](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-CLI-formatting.png)
+![Screenshot: Terminal output displaying an execution block utilizing formatting constraints and showing --no-header flags.](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-CLI-formatting.png)
 
 ## Diagnostic Endpoints
 
-The CLI natively provides visual evaluation matrices allowing you to verify rendering structures locally gracefully tracking outputs!
-- **`--create-config TARGET`**: Inidividually map and spawn a dynamic configuration file internally directly seamlessly (e.g. `vistab --create-config .vistab.toml`).
-- **`vistab -M`**: Render a massive color matrix showcasing every single pre-built Theme algorithm physically globally.
-- **`vistab -L`**: Visualize structural framework limits parsing valid physical Table styles mapped explicitly natively.
-- **`vistab -C`**: Prints the native execution dictionary safely displaying CLI colors organically (`fg="red"`, etc.).
+The CLI provides visual evaluation matrices to verify layouts locally:
+- **`--create-config TARGET`**: Generate a standard configuration file for the current local directory (e.g., `vistab --create-config .vistab.toml`).
+- **`vistab -M`**: Render a color matrix showcasing every pre-built Theme algorithm.
+- **`vistab -L`**: Visualize structural framework limits parsing valid physical Table styles.
+- **`vistab -C`**: Print the terminal execution dictionary safely displaying CLI colors.
 
-![Screenshot: Massive colorful logical matrix block structurally displaying 15 different theme executions mapped perfectly across distinct visual borders sequentially rendering dynamic zebra-striping elegantly.](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-M-themes-output.png)
+![Screenshot: Massive colorful logical matrix block structurally displaying 15 different theme executions mapped perfectly across distinct visual borders sequentially rendering dynamic zebra-striping.](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-M-themes-output.png)

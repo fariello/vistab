@@ -3,7 +3,7 @@
 ## Architectural Considerations
 
 ### 1. Jagged Array / Mismatched Row Routing
-Currently, `Vistab` natively throws an `ArraySizeError` when users ingest dataset rows that physically mismatch the column-count established by the first instantiated row. In the future, we may need to introduce non-fatal routing logic. 
+Currently, `Vistab` raises an `ArraySizeError` when users input dataset rows that do not match the column count of the first row. In the future, we may need to introduce non-fatal routing logic. 
 
 **Proposed Mechanism:** Introduce an `on_jagged_row = "error" | "expand" | "truncate" | "merge"` configuration.
 
@@ -11,8 +11,8 @@ Currently, `Vistab` natively throws an `ArraySizeError` when users ingest datase
 
 | Strategy | Pros | Cons |
 | :--- | :--- | :--- |
-| **`"error"` (Current)** | Guarantees perfect geometries and protects pipelines from rendering corrupt structures natively. | Fails violently on messy CSV arrays and prevents silent rendering tests. |
-| **`"expand"`** | Zero data loss. Expands the global grid dynamically and patches older rows symmetrically. | Missing alignment/dtype settings for dynamically born columns will fallback to unknown defaults. |
-| **`"truncate"`** | Extremely fast constraint parsing (`row[:size]`). Inherits exact alignment stylings gracefully. | Major silent data loss. Users might not realize backend parameters are being pruned entirely. |
-| **`"merge"`** | Preserves all data perfectly while maintaining strict column boundaries (coalesces excess to the last col). | Destroys datatype parsing (e.g., merging strings into a float validation column triggers exceptions). |
-| **`"pad"` (Short Rows)** | Trivial to execute (`row + [""] * diff`). Allows missing sparse structures. | Blank injection can ruin datatype rendering if not gracefully caught as a mathematical `None`. |
+| **`"error"` (Current)** | Guarantees perfect geometries and prevents rendering corrupt tables. | Fails on messy CSV arrays and prevents silent rendering tests. |
+| **`"expand"`** | Zero data loss. Expands the grid and pads older rows. | Missing alignment/dtype settings for new columns fall back to unknown defaults. |
+| **`"truncate"`** | Fast constraint parsing (`row[:size]`). Inherits exact alignment stylings. | Silent data loss. Users might not realize data is being omitted. |
+| **`"merge"`** | Preserves all data while maintaining strict column boundaries by appending excess data to the last column. | May break datatype parsing (e.g., merging strings into a float validation column raises exceptions). |
+| **`"pad"` (Short Rows)** | Easy to execute (`row + [""] * diff`). Allows missing sparse structures. | Blank injection can break datatype rendering if not caught as `None`. |
