@@ -50,23 +50,10 @@ print(table.draw())
 ```
 
 **Output:**
-```
-╭─────────┬─────┬───────────╮
-│ Name    │ Age │ Nickname  │
-╞═════════╪═════╪═══════════╡
-│ Ms      │     │           │
-│ Sarah   │  27 │           │
-│ Jones   │     │   Sarah   │
-├─────────┼─────┼───────────┤
-│ Mr      │     │           │
-│ John    │  45 │           │
-│ Doe     │     │  Johnny   │
-├─────────┼─────┼───────────┤
-│ Dr      │     │           │
-│ Emma    │  34 │           │
-│ Brown   │     │    Em     │
-╰─────────┴─────┴───────────╯
-```
+
+> **Note on Web Rendering:** We display the raw output below as an image because some package registries (like PyPI) explicitly enforce code-block font stacks (e.g., `Source Code Pro`) that completely lack glyphs for Unicode Extended Box Drawing characters. When forced to fall back onto secondary system fonts to locate characters like `╭` or `╪`, the physical grid mathematically misaligns. Rest assured, on your system's local terminal—and on full-featured renderers like GitHub or BitBucket, the actual raw ASCII/Unicode text output mathematically snaps into geometric alignment perfectly!
+
+![Screenshot: Terminal output displaying a formatted 3-column data matrix natively. The headers are 'Name', 'Age', and 'Nickname'. The table perfectly encapsulates complex multi-line text blocks across individual cells mapping 'Sarah Jones' directly alongside her age, wrapped deeply inside elegant, perfectly aligned rounded Unicode border geometries.](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-code-output-01.png)
 
 ## Cookbook Examples
 
@@ -158,7 +145,7 @@ The library supports three base color palettes (`ocean`, `forest`, `minimalist`)
 
 If these 18 themes aren't enough, you can dynamically construct massive custom matrix libraries securely by pushing a dictionary configuration directly into the global static boundary `Vistab.THEMES["my_blue_theme"] = {...}` in your own scripts!
 
-View the curated themes rendered beautifully stacked by executing:
+View the curated themes rendered stacked by executing:
 ```bash
 vistab -M
 ```
