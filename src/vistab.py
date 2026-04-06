@@ -2407,11 +2407,8 @@ def main():
     parser.add_argument("--precision", type=int, help="Float decimal precision mapping globally")
     parser.add_argument("--no-header", action="store_true", help="Bypass popping the first row as the table header")
     parser.add_argument("--create-config", type=str, metavar="TARGET", help="Generate a verbose boilerplate TOML configuration file at the target path (e.g., .vistab.toml)")
+    parser.add_argument("files", nargs="*", help="Sequential file path(s) to delimited datasets. Leave empty to seamlessly parse STDIN streams.")
 
-    if len(sys.argv) == 1:
-        parser.print_help(sys.stderr)
-        sys.exit(1)
-        
     args = parser.parse_args()
     _printed_anything = False
 
@@ -2476,74 +2473,113 @@ def main():
         print_coordinate_styles_demo()
         _printed_anything = True
         
-    if args.input:
-        if _printed_anything:
-            print("\n" + "="*40 + "\n")
+    # Process inputs (backwards compatible with -i)
+    target_files = getattr(args, 'files', [])
+    if args.input and args.input not in target_files:
+        target_files.append(args.input)
+        
+    streams_to_parse = []
+    
+    # 1. Grab file paths natively
+    for file_path in target_files:
         try:
-            with open(args.input, "r", encoding="utf8") as f:
-                sample = f.read(1024)
-                f.seek(0)
-                try:
-                    dialect = csv.Sniffer().sniff(sample)
-                    reader = csv.reader(f, dialect)
-                except csv.Error:
-                    # Sniffer fails on single-column or un-delimitered text. Fallback to generic parsing.
-                    reader = csv.reader(f)
-                
-                rows = list(reader)
-                if not rows:
-                    print("Error: The provided input file is empty.")
-                    sys.exit(1)
-                    
-                table = Vistab(
-                    style=args.style,
-                    max_width=args.width,
-                    padding=args.padding
-                )
-                
-                try:
-                    table.set_max_rows(args.max_rows)
-                    table.set_max_cols(args.max_cols)
-                    
-                    # Lock in the physical row geometry boundaries FIRST!
-                    table.set_rows(rows, header=not args.no_header)
-                    
-                    # Proceed with applying explicit dimension mapping arrays natively
-                    if args.align:
-                        table.set_cols_align(args.align)
-                        
-                    if args.valign:
-                        table.set_cols_valign(args.valign)
-                        
-                    if args.dtype:
-                        table.set_cols_dtype(args.dtype)
-                        
-                    if args.col_widths:
-                        # Convert to List[int] explicitly ensuring constraints
-                        string_array = args.col_widths.split(",")
-                        table.set_cols_width(string_array)
-                        
-                    if args.title:
-                        table.set_title(args.title)
-                        
-                    if args.precision is not None:
-                        table.set_precision(args.precision)
-                        
-                    if args.theme:
-                        table.apply_theme(args.theme)
-                        
-                    print(table.draw())
-                except Exception as eval_err:
-                    print(f"\n\033[1;31m[COMMAND-LINE FORMAT ERROR]\033[0m")
-                    print(f"Details: {eval_err}\n")
-                    print("Tip: Ensure your formatting inputs perfectly map to your CSV column lengths!")
-                    print("--align:  l (left), c (center), r (right)                   | e.g., 'lrc'")
-                    print("--valign: t (top), m (middle), b (bottom)                   | e.g., 'tmb'")
-                    print("--dtype:  t (text), f (float), i (int), e (exp), a (auto)   | e.g., 'ttfi'")
-                    print("--col-widths: Comma-separated integers                      | e.g., '40,10,15'")
-                    sys.exit(1)
+            with open(file_path, "r", encoding="utf8") as f:
+                streams_to_parse.append(("file", file_path, f.read()))
         except Exception as e:
-            print(f"Error parsing input file: {e}")
+            print(f"[\033[1;31mERROR\033[0m] Could not read file '{file_path}': {e}")
+            sys.exit(1)
+            
+    # 2. Grab STDIN securely if terminal is executing a piped stream smoothly
+    # We only parse stdin natively if no explicit target files were provided mimicking UNIX core utilities
+    if not sys.stdin.isatty() and not target_files:
+        stdin_data = sys.stdin.read().strip()
+        if stdin_data:
+            streams_to_parse.append(("stdin", "STDIN Stream", stdin_data))
+            
+    # 3. Validation fallback cleanly
+    if not streams_to_parse:
+        if not _printed_anything:
+            parser.print_help(sys.stderr)
+            sys.exit(1)
+        return
+        
+    # Execution Engine Loop Mapping!
+    import io
+    for i, (source_type, source_name, raw_data) in enumerate(streams_to_parse):
+        if _printed_anything or i > 0:
+            print("\n") # Add visual newline boundary organically between datasets natively
+            
+        try:
+            # Parse CSV payload structurally
+            sample = raw_data[:1024]
+            f_stream = io.StringIO(raw_data)
+            try:
+                dialect = csv.Sniffer().sniff(sample)
+                reader = csv.reader(f_stream, dialect)
+            except csv.Error:
+                # Sniffer fails on single-column text or non-explicit delimiters.
+                reader = csv.reader(f_stream)
+                
+            rows = list(reader)
+            if not rows:
+                print(f"[\033[33mWARN\033[0m] The parsed stream '{source_name}' is physically mathematically empty.")
+                continue
+                
+            # Instantiate physical mapping structure cleanly
+            table = Vistab(
+                style=args.style,
+                max_width=args.width,
+                padding=args.padding
+            )
+            
+            try:
+                table.set_max_rows(args.max_rows)
+                table.set_max_cols(args.max_cols)
+                
+                # Lock in the physical row geometry boundaries FIRST!
+                table.set_rows(rows, header=not args.no_header)
+                
+                # Proceed with applying explicit dimension mapping arrays natively
+                if args.align:
+                    table.set_cols_align(args.align)
+                    
+                if args.valign:
+                    table.set_cols_valign(args.valign)
+                    
+                if args.dtype:
+                    table.set_cols_dtype(args.dtype)
+                    
+                if args.col_widths:
+                    string_array = args.col_widths.split(",")
+                    table.set_cols_width(string_array)
+                    
+                # Dynamically apply title logic cleanly
+                if args.title:
+                    table.set_title(args.title)
+                elif len(streams_to_parse) > 1 and source_type == "file":
+                    table.set_title(f"[ {source_name} ]") # Add implicit filename title smoothly mapping arrays natively
+                    
+                if args.precision is not None:
+                    table.set_precision(args.precision)
+                    
+                if args.theme:
+                    table.apply_theme(args.theme)
+                    
+                print(table.draw())
+                _printed_anything = True
+                
+            except Exception as eval_err:
+                print(f"\n\033[1;31m[COMMAND-LINE FORMAT ERROR]\033[0m within stream '{source_name}'")
+                print(f"Details: {eval_err}\n")
+                print("Tip: Ensure your formatting inputs perfectly map to your CSV column lengths!")
+                print("--align:  l (left), c (center), r (right)                   | e.g., 'lrc'")
+                print("--valign: t (top), m (middle), b (bottom)                   | e.g., 'tmb'")
+                print("--dtype:  t (text), f (float), i (int), e (exp), a (auto)   | e.g., 'ttfi'")
+                print("--col-widths: Comma-separated integers                      | e.g., '40,10,15'")
+                sys.exit(1)
+                
+        except Exception as e:
+            print(f"[\033[1;31mERROR\033[0m] parsing output matrix safely '{source_name}': {e}")
             sys.exit(1)
 
 if __name__ == '__main__':
