@@ -51,4 +51,4 @@ The CLI natively provides visual evaluation matrices allowing you to verify rend
 - **`vistab -L`**: Visualize structural framework limits parsing valid physical Table styles mapped explicitly natively.
 - **`vistab -C`**: Prints the native execution dictionary safely displaying CLI colors organically (`fg="red"`, etc.).
 
-![Screenshot: Massive colorful logical matrix block structurally displaying 15 different theme executions mapped perfectly across distinct visual borders sequentially rendering dynamic zebra-striping elegantly.](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-CLI-diagnostics.png)
+![Screenshot: Massive colorful logical matrix block structurally displaying 15 different theme executions mapped perfectly across distinct visual borders sequentially rendering dynamic zebra-striping elegantly.](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-M-themes-output.png)

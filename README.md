@@ -13,8 +13,8 @@
 ## Detailed Documentation
 Looking for an exhaustive configuration breakdown or command-line parser bindings?
 
-- 📚 **[Vistab Python API Reference](docs/API.md)** *(Covers all objects, data formatting algorithms, and properties)*
-- 💻 **[Command-Line (CLI) Manual](docs/CLI.md)** *(Covers mapping raw CSV structures and terminal limits seamlessly)*
+- **[Vistab Python API Reference](docs/API.md)** *(Covers all objects, data formatting algorithms, and properties)*
+- **[Command-Line (CLI) Manual](docs/CLI.md)** *(Covers mapping raw CSV structures and terminal limits seamlessly)*
 
 ## Installation
 
@@ -218,7 +218,7 @@ table.add_rows([
 Because the native sequence executes so many features, deploying every argument mapping here securely creates clutter. 
 
 For the complete list of physical ingestion endpoints, configuration schemas, parameters, and wrapping constraint trackers natively enabled within `vistab`:
-👉 **Please refer to the absolute granular [Vistab Core API Documentation](docs/API.md)** 👈
+**Please refer to the absolute granular [Vistab Core API Documentation](docs/API.md)**
 
 ## License
 
