@@ -1977,7 +1977,7 @@ class Vistab:
                     if self.on_wrap_conflict == "error":
                         raise VistabOverflowError(f"Cell string explicitly mapped wrap=False natively exceeded layout width {width}.")
                     elif self.on_wrap_conflict == "warn":
-                        sys.stderr.write(f"[\033[1;33mWARN\033[0m] Vistab geometry cell length ({self.vislen(cell_line)}) intrinsically mapped wrap=False bypassing {width} max_width boundary natively. Deflecting to clipping fallback.\n")
+                        sys.stderr.write(f"[\033[1;33mWARN\033[0m] Vistab geometry cell length ({self.vislen(cell_line)}) explicitly bypasses {width} max_width boundary natively. Deflecting to clipping fallback.\n")
                         cell_line = self._ansi_safe_clip(cell_line, width)
                         fill = 0
                     elif self.on_wrap_conflict == "clip":
