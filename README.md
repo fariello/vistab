@@ -167,7 +167,11 @@ vistab -M
 #### Applying Themes via CLI
 You can dynamically inject these structural formats directly onto raw CSVs leveraging the command line endpoints seamlessly:
 ```bash
-vistab --input data.csv --theme ocean-cols-index --style round
+# Parsing files iteratively natively via positional bindings
+vistab data.csv --theme ocean-cols-index --style round
+
+# Routing pipes over STDIN straight from bash safely
+echo -e "Value,Metric\n99,Speed" | vistab --theme minimalist
 ```
 
 ## Discovering Output Colors (CLI)

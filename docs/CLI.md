@@ -3,11 +3,19 @@
 `vistab` natively acts as a vastly powerful command-line utility for parsing, truncating, and beautifully styling `.csv` datasets physically entirely within your terminal without touching Python logic.
 
 ## Usage Overview
-To seamlessly render a raw delimited file securely structurally:
+`vistab` tracks UNIX pipeline standards globally natively grabbing files cleanly natively:
+
 ```bash
-vistab --input data.csv
+# Map explicit physical files strictly utilizing positional arguments natively
+vistab data.csv
+
+# Chain multiple datasets elegantly sequentially
+vistab file1.csv file2.csv logs.tsv
+
+# Pipe standard stdout elegantly executing mappings directly from pipelines recursively
+echo -e "Name,Age\nGabriel,25" | vistab --theme forest-index
 ```
-![Basic CLI Execution](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-CLI-basic.png)
+![Screenshot: Terminal output showing vistab successfully executing a parsed CSV structure displaying a table with colored columns mapping ocean-index theme beautifully on a black background natively.](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-CLI-basic.png)
 
 
 ## Formatting Configs & Structure Limits
@@ -33,13 +41,14 @@ The CLI naturally captures all data layout, spacing, and wrapper restrictions tr
 - **`--title`**: Passes a centered string elegantly displaying over the header organically.
 - **`--no-header`**: Tracks boolean variables silently injecting plain data structures (prevents treating the top `.csv` line globally as formal column headers).
 
-![Terminal Formatting Configuration](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-CLI-formatting.png)
+![Screenshot: Terminal output displaying an execution block utilizing formatting constraints explicitly showing --no-header flags cleanly omitting middle grid bounding segments sequentially gracefully mapping a standalone row dynamically.](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-CLI-formatting.png)
 
 ## Diagnostic Endpoints
 
 The CLI natively provides visual evaluation matrices allowing you to verify rendering structures locally gracefully tracking outputs!
+- **`--create-config TARGET`**: Inidividually map and spawn a dynamic configuration file internally directly seamlessly (e.g. `vistab --create-config .vistab.toml`).
 - **`vistab -M`**: Render a massive color matrix showcasing every single pre-built Theme algorithm physically globally.
 - **`vistab -L`**: Visualize structural framework limits parsing valid physical Table styles mapped explicitly natively.
 - **`vistab -C`**: Prints the native execution dictionary safely displaying CLI colors organically (`fg="red"`, etc.).
 
-![Diagnostic Endpoints](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-CLI-diagnostics.png)
+![Screenshot: Massive colorful logical matrix block structurally displaying 15 different theme executions mapped perfectly across distinct visual borders sequentially rendering dynamic zebra-striping elegantly.](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-CLI-diagnostics.png)
