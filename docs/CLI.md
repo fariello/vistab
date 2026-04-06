@@ -7,6 +7,8 @@ To seamlessly render a raw delimited file securely structurally:
 ```bash
 vistab --input data.csv
 ```
+![Basic CLI Execution](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-CLI-basic.png)
+
 
 ## Formatting Configs & Structure Limits
 
@@ -31,9 +33,13 @@ The CLI naturally captures all data layout, spacing, and wrapper restrictions tr
 - **`--title`**: Passes a centered string elegantly displaying over the header organically.
 - **`--no-header`**: Tracks boolean variables silently injecting plain data structures (prevents treating the top `.csv` line globally as formal column headers).
 
+![Terminal Formatting Configuration](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-CLI-formatting.png)
+
 ## Diagnostic Endpoints
 
 The CLI natively provides visual evaluation matrices allowing you to verify rendering structures locally gracefully tracking outputs!
 - **`vistab -M`**: Render a massive color matrix showcasing every single pre-built Theme algorithm physically globally.
 - **`vistab -L`**: Visualize structural framework limits parsing valid physical Table styles mapped explicitly natively.
 - **`vistab -C`**: Prints the native execution dictionary safely displaying CLI colors organically (`fg="red"`, etc.).
+
+![Diagnostic Endpoints](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-CLI-diagnostics.png)
