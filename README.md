@@ -122,6 +122,7 @@ View the curated themes rendered beautifully stacked by executing:
 ```bash
 python vistab.py -M
 ```
+![Theme Output](docs/assets/vistab-M-themes-output.png)
 
 ## Discovering Output Colors (CLI)
 
@@ -131,7 +132,7 @@ You can view the palette directly on the console by executing:
 ```bash
 python vistab.py -C
 ```
-![Colors List](docs/assets/vistab-C-colors-list.png)
+![Defined Colors](docs/assets/vistab-C-defined-colors.png)
 
 ## ANSI Color Layout Support
 
