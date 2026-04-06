@@ -2230,6 +2230,15 @@ def print_test_demo():
     print(t1.draw())
 
     print("\n\033[1mBelow is the same table but with the color controls removed. They should wrap the same way.\033[0m")
+    tdata = [
+        ["Test 1", "Test 2", "Test 3", "Test 4"],
+        [
+            "This is some Red text to show the ability to wrap colored text correctly.",
+            "This text is underlined, bold, and blue. This is not.",
+            "This is some normal text in the middle to ensure that it is working properly.",
+            "Some Red mandarin: 这是一个 美好的世界 for testing.",
+        ]
+    ]
     t2 = Vistab(tdata)
     t2.set_max_width(80)
     print(t2.draw())
