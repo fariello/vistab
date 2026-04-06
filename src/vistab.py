@@ -1576,7 +1576,7 @@ class Vistab:
                 out += self._hline(location=Vistab.TOP)
             if self._header:
                 out += self._draw_line(self._header, isheader=True)
-                if self.has_header:
+                if self.has_header and len(self._rows) > 0:
                     out += self._hline_header(location=Vistab.MIDDLE)
             length = len(self._rows)
             for idx, row in enumerate(self._rows):
