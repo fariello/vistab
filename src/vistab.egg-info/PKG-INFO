@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: vistab
-Version: 1.0.0
+Version: 1.0.1
 Summary: A simple module for creating ASCII tables
 Author-email: Gabriele Fariello <gfariello@fariel.com>
 License: BSD 3-Clause License
@@ -112,7 +112,7 @@ print(table.draw())
 
 `vistab` natively supports a fluent, declarative API to inject background colors, foreground colors, and text styles (like bolding and underlining) targeting specific grids—ranging from individual cells, whole rows, columns, headers, or borders—organically applying cleanly without twisting table decorator strings!
 
-![Styling Demo](docs/assets/vistab-D-styling-demo.png)
+![Styling Demo](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-D-styling-demo.png)
 
 ## Coordinate-Based Word Wrapping (Nested Tables)
 
@@ -149,7 +149,7 @@ You can view a full structural geometry matrix natively printed on your terminal
 ```bash
 vistab -L
 ```
-![Available Styles](docs/assets/vistab-L-available-styles.png)
+![Available Styles](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-L-available-styles.png)
 
 ### The Curated Color Theme Matrix
 
@@ -168,7 +168,7 @@ View the curated themes rendered beautifully stacked by executing:
 ```bash
 vistab -M
 ```
-![Theme Output](docs/assets/vistab-M-themes-output.png)
+![Theme Output](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-M-themes-output.png)
 
 ## Discovering Output Colors (CLI)
 
@@ -178,7 +178,7 @@ You can view the palette directly on the console by executing:
 ```bash
 vistab -C
 ```
-![Defined Colors](docs/assets/vistab-C-defined-colors.png)
+![Defined Colors](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-C-defined-colors.png)
 
 ## ANSI Color Layout Support
 
@@ -188,7 +188,7 @@ You can view a comprehensive color-wrapping conformance test demonstrating dynam
 ```bash
 vistab -T
 ```
-![Test Output](docs/assets/vistab-T-test-output.png)
+![Test Output](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-T-test-output.png)
 
 ## Advanced Formatting (Datatypes)
 
