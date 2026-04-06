@@ -152,6 +152,14 @@ def textwrapper(txt, width):
         import textwrap
         return textwrap.wrap(txt, width)
 
+class ArraySizeError(Exception):
+    """Exception raised when adding a row with a different number of columns than initialized."""
+    pass
+
+class VistabOverflowError(ValueError):
+    """Exception raised when an explicit `wrap=False` literal violates `max_width` dimensions under strict `on_wrap_conflict`."""
+    pass
+
 
 class StringLengthCalculator:
     """
@@ -523,7 +531,50 @@ class Vistab:
         }
     }
 
-    def __init__(self, rows: Optional[Iterable[Iterable[Any]]] = None, header: Optional[Iterable[Any]] = None, max_width: int = 0, alignment: Optional[str] = None, style: Optional[str] = None, padding: Optional[int] = None) -> None:
+    # High-level color/style base palettes
+    _BASE_PALETTES = {
+        "ocean": {
+            "style": "round2",
+            "header": {"fg": "bright_white", "bg": "blue", "bold": True},
+            "border": {"fg": "bright_blue"},
+            "col_0": {"fg": "bright_white", "bg": "blue", "bold": True},
+            "fg2": "bright_white"
+        },
+        "forest": {
+            "style": "round",
+            "header": {"fg": "bright_white", "bg": "green", "bold": True},
+            "border": {"fg": "bright_green"},
+            "col_0": {"fg": "bright_white", "bg": "green", "bold": True},
+            "fg2": "white"
+        },
+        "minimalist": {
+            "style": "light",
+            "header": {"fg": "black", "bg": "bright_white", "bold": True},
+            "border": {"fg": "bright_black"},
+            "col_0": {"fg": "black", "bg": "bright_white", "bold": True},
+            "fg2": "bright_white"
+        }
+    }
+
+    THEMES = {}
+    for _name, _config in _BASE_PALETTES.items():
+        _base = {"style": _config["style"], "padding": 1, "header": _config["header"], "border": _config["border"]}
+        _alt_sequence = [{"bg": "black", "fg": "white"}, {"bg": "bright_black", "fg": _config["fg2"]}]
+        
+        # 1. Alternating Rows (Default)
+        THEMES[f"{_name}"] = {**_base, "alt_rows": _alt_sequence}
+        THEMES[f"{_name}-index"] = {**_base, "alt_rows": _alt_sequence, "col_0": _config["col_0"]}
+        
+        # 2. Alternating Columns (-cols)
+        THEMES[f"{_name}-cols"] = {**_base, "alt_cols": _alt_sequence}
+        THEMES[f"{_name}-cols-index"] = {**_base, "alt_cols": _alt_sequence, "col_0": _config["col_0"]}
+        
+        # 3. Solid (-solid)
+        _solid_base = {"bg": "black", "fg": "white"}
+        THEMES[f"{_name}-solid"] = {**_base, "alt_rows": [_solid_base, _solid_base]}
+        THEMES[f"{_name}-solid-index"] = {**_base, "alt_rows": [_solid_base, _solid_base], "col_0": _config["col_0"]}
+
+    def __init__(self, rows: Optional[Iterable[Iterable[Any]]] = None, header: Union[bool, Iterable[Any], str, None] = True, max_width: int = 0, alignment: Optional[str] = None, style: Optional[str] = None, padding: Optional[int] = None) -> None:
         """
         Initializes a new instance of the Vistab styling rendering class.
 
@@ -534,8 +585,10 @@ class Vistab:
         -----
         rows : Optional[Iterable[Iterable[Any]]]
             An iterable containing grouped row sequences to be added immediately. Default is None.
-        header : Optional[Iterable[Any]]
-            A single sequence of values instantiated automatically as the top-most table header.
+        header : Union[bool, Iterable[Any], str, None]
+            If True (default), extracts the first row as the top-most table header dynamically.
+            If False, "" or None, bypasses extraction mapping structurally rows naturally.
+            If an Iterable is passed, maps directly into `self.header()`.
         max_width : int
             The hard terminal rendering width limit enforced via color-aware wrapping. Default is 0.
         alignment : Optional[str]
@@ -606,10 +659,15 @@ class Vistab:
         self._precision = 3  # Default precision for numeric values
 
         # Added to support rows arg (i.e., adding entire table definition in initialization).
-        if header is not None:
+        is_header = True
+        if header is False or header is None or header == "":
+            is_header = False
+        elif getattr(header, '__iter__', False) and not isinstance(header, (str, bytes, bool)):
             self.header(header)
+            is_header = False  # The explicit header was added, don't consume the first row structurally
+
         if rows is not None:
-            self.add_rows(rows)  # Add initial rows to the table if provided
+            self.add_rows(rows, header=is_header)  # Add initial rows to the table if provided
 
         if max_width > 0:
             self.set_max_width(max_width)  # Set the maximum width of the table
@@ -791,9 +849,16 @@ class Vistab:
         self._col_styles = {}
         self._row_styles = {}
         self._cell_styles = {}
+        self._alt_row_styles = {}
+        self._alt_col_styles = {}
+        self._table_wrap = True
+        self._col_wraps = {}
+        self._row_wraps = {}
+        self._cell_wraps = {}
         self._header_style = {}
         self._border_style = {}
         self._title = None
+        self.on_wrap_conflict = "warn"
         return self
 
     def set_max_rows(self, max_rows: int) -> 'Vistab':
@@ -913,20 +978,127 @@ class Vistab:
         self._cell_styles[(row_idx, col_idx)] = self._compile_style_dict(fg, bg, **kwargs)
         return self
 
+    def set_alternating_row_style(self, fg1=None, bg1=None, fg2=None, bg2=None, **kwargs) -> 'Vistab':
+        """Set alternating row styling (zebra-striping) applied iteratively over table coordinates."""
+        self._alt_row_styles[0] = self._compile_style_dict(fg1, bg1, **kwargs)
+        self._alt_row_styles[1] = self._compile_style_dict(fg2, bg2, **kwargs)
+        return self
+
+    def set_alternating_col_style(self, fg1=None, bg1=None, fg2=None, bg2=None, **kwargs) -> 'Vistab':
+        """Set alternating column styling (zebra-striping)."""
+        self._alt_col_styles[0] = self._compile_style_dict(fg1, bg1, **kwargs)
+        self._alt_col_styles[1] = self._compile_style_dict(fg2, bg2, **kwargs)
+        return self
+
+    def apply_theme(self, theme_name: str) -> 'Vistab':
+        """Apply a predefined high-level color theme dynamically over table geometries.
+        
+        Vistab provides heavily curated default palettes (ocean, forest, minimalist) mathematically
+        multiplied into variants (e.g. `ocean-index`, `ocean-cols-index`, `ocean-solid`).
+        
+        To construct and deploy your own massive permutation of custom themes dynamically, 
+        simply inject your custom dictionaries directly into the static `Vistab.THEMES` registry:
+        
+        Example:
+        --------
+        ```python
+        Vistab.THEMES["my_blue_theme"] = {
+            "style": "round2",
+            "padding": 2,
+            "header": {"fg": "black", "bg": "bright_blue", "bold": True},
+            "border": {"fg": "blue"},
+            "col_0": {"bg": "bright_blue", "fg": "black"}, # Optional highlight
+            "alt_rows": [{"bg": "black", "fg": "white"}, {"bg": "bright_black", "fg": "white"}] # Optional striping
+        }
+        
+        table = Vistab().apply_theme("my_blue_theme")
+        ```
+        """
+        if theme_name not in Vistab.THEMES:
+            raise ValueError(f"Theme '{theme_name}' not found. Available: {', '.join(Vistab.THEMES.keys())}")
+        theme = Vistab.THEMES[theme_name]
+        
+        if "style" in theme: self.set_style(theme["style"])
+        if "padding" in theme: self.set_padding(theme["padding"])
+        if "header" in theme: self.set_header_style(**theme["header"])
+        if "border" in theme: self.set_border_style(**theme["border"])
+        if "col_0" in theme: self.set_col_style(0, **theme["col_0"])
+            
+        if "alt_rows" in theme and len(theme["alt_rows"]) == 2:
+            self._alt_row_styles[0] = self._compile_style_dict(**theme["alt_rows"][0])
+            self._alt_row_styles[1] = self._compile_style_dict(**theme["alt_rows"][1])
+            
+        if "alt_cols" in theme and len(theme["alt_cols"]) == 2:
+            self._alt_col_styles[0] = self._compile_style_dict(**theme["alt_cols"][0])
+            self._alt_col_styles[1] = self._compile_style_dict(**theme["alt_cols"][1])
+
+        return self
+
+    def set_table_wrap(self, wrap: bool) -> 'Vistab':
+        """Set the global wrapping behavior for the table."""
+        self._table_wrap = wrap
+        return self
+        
+    def set_row_wrap(self, row_idx: int, wrap: bool) -> 'Vistab':
+        """Override wrapping behavior exclusively for a specific row index."""
+        self._row_wraps[row_idx] = wrap
+        return self
+        
+    def set_col_wrap(self, col_idx: int, wrap: bool) -> 'Vistab':
+        """Override wrapping behavior exclusively for a specific column index."""
+        self._col_wraps[col_idx] = wrap
+        return self
+        
+    def set_cell_wrap(self, row_idx: int, col_idx: int, wrap: bool) -> 'Vistab':
+        """Override wrapping behavior securely for an exact cell mapping."""
+        self._cell_wraps[(row_idx, col_idx)] = wrap
+        return self
+
+    def _get_active_wrap_control(self, row_idx=None, col_idx=None, is_header=False) -> bool:
+        """Compute the final active Wrapping block applying precedence logic efficiently cleanly."""
+        # 1. Base Table Wrap constraint
+        active = self._table_wrap
+        
+        # 2. Overlap precise Column override natively
+        if col_idx is not None and col_idx in self._col_wraps:
+            active = self._col_wraps[col_idx]
+            
+        # 3. Overlap exact Row/Header override natively
+        if is_header and "header" in self._row_wraps:
+            active = self._row_wraps["header"]
+        elif not is_header and row_idx is not None and row_idx in self._row_wraps:
+            active = self._row_wraps[row_idx]
+            
+        # 4. Apply explicit nested Cell override exactly natively
+        if not is_header and row_idx is not None and col_idx is not None:
+            if (row_idx, col_idx) in self._cell_wraps:
+                active = self._cell_wraps[(row_idx, col_idx)]
+                
+        return active
+
     def _get_active_ansi_wrap(self, row_idx=None, col_idx=None, is_header=False):
-        """Compute the final active ANSI configuration by priority: Cell > Row/Header > Col"""
+        """Compute the final active ANSI configuration applying precedence logic gracefully."""
         active = {}
-        # Apply Column
+        
+        # 1. Base Alternating Columns
+        if col_idx is not None and self._alt_col_styles:
+            active.update(self._alt_col_styles.get(col_idx % 2, {}))
+            
+        # 2. Base Alternating Rows (Merge/Overrides Alt Cols)
+        if not is_header and row_idx is not None and self._alt_row_styles:
+            active.update(self._alt_row_styles.get(row_idx % 2, {}))
+            
+        # 3. Apply precise Column (Overrides Base Alternating Patterns)
         if col_idx is not None and col_idx in self._col_styles:
             active.update(self._col_styles[col_idx])
             
-        # Apply Row/Header (Overrides Col)
+        # 4. Apply precise Row/Header (Overrides Alt Rows)
         if is_header and self._header_style:
             active.update(self._header_style)
         elif not is_header and row_idx is not None and row_idx in self._row_styles:
             active.update(self._row_styles[row_idx])
             
-        # Apply Cell (Overrides everything)
+        # 5. Apply exact Cell (Overrides EVERYTHING)
         if not is_header and row_idx is not None and col_idx is not None:
             if (row_idx, col_idx) in self._cell_styles:
                 active.update(self._cell_styles[(row_idx, col_idx)])
@@ -934,10 +1106,7 @@ class Vistab:
         if not active:
             return "", ""
             
-        codes = []
-        for key, val in active.items():
-            codes.append(val)
-            
+        codes = [str(val) for val in active.values()]
         return f"\033[{';'.join(codes)}m", "\033[0m"
 
     def _get_border_ansi(self):
@@ -1308,7 +1477,7 @@ class Vistab:
             Vistab: The instance for method chaining.
 
         Example:
-            table.add_row(["Gabriele", "Fariello"])
+            table.add_row(["Arnold", "Fitzpatrick"])
         """
         self._check_row_size(array)
         if not hasattr(self, "_dtype"):
@@ -1331,7 +1500,7 @@ class Vistab:
             Vistab: The instance for method chaining.
 
         Example:
-            table.add_rows([["Name", "Age"], ["Gabriele", 25]])
+            table.add_rows([["Name", "Age"], ["Gabriel", 25]])
         """
         # nb: iterate cleanly parsing python 3 backwards mapping
         if header:
@@ -1696,6 +1865,36 @@ class Vistab:
         if not hasattr(self, "_valign"):
             self._valign = ["t"] * self._row_size
 
+    def _ansi_safe_clip(self, text: str, limit: int) -> str:
+        """Clip a string to a specific visible limit structurally preserving nested formatting correctly."""
+        if self.vislen(text) <= limit:
+            return text
+            
+        vis_count = 0
+        clamped = ""
+        parts = re.split(self._vislen.ansi_escape, text)
+        codes = self._vislen.ansi_escape.findall(text)
+        
+        for i, part in enumerate(parts):
+            available = limit - vis_count
+            part_len = self.vislen(part)
+            
+            if part_len <= available:
+                clamped += part
+                vis_count += part_len
+                if i < len(codes):
+                    clamped += codes[i]
+            else:
+                for char in part:
+                    char_len = self.vislen(char)
+                    if vis_count + char_len > limit:
+                        break
+                    clamped += char
+                    vis_count += char_len
+                break
+                
+        return clamped + "\033[0m"
+
     def _draw_line(self, line: List[str], isheader: bool = False, row_idx: int = None) -> str:
         """
         Draw a line of the table.
@@ -1727,7 +1926,7 @@ class Vistab:
         ```
         """
         # Split the line into individual cells, handling headers if necessary.
-        line = self._splitit(line, isheader)
+        line = self._splitit(line, isheader, row_idx=row_idx)
         space = " "
         out = ""
         b_on, b_off = self._get_border_ansi()
@@ -1749,6 +1948,20 @@ class Vistab:
                 cell_line = cell[i]
                 fill = width - self.vislen(cell_line)
                 
+                # Routing strict native layout bounding collisions seamlessly
+                if fill < 0:
+                    if self.on_wrap_conflict == "error":
+                        raise VistabOverflowError(f"Cell string explicitly mapped wrap=False natively exceeded layout width {width}.")
+                    elif self.on_wrap_conflict == "warn":
+                        sys.stderr.write(f"[\033[1;33mWARN\033[0m] Vistab geometry cell length ({self.vislen(cell_line)}) intrinsically mapped wrap=False bypassing {width} max_width boundary natively. Deflecting to clipping fallback.\n")
+                        cell_line = self._ansi_safe_clip(cell_line, width)
+                        fill = 0
+                    elif self.on_wrap_conflict == "clip":
+                        cell_line = self._ansi_safe_clip(cell_line, width)
+                        fill = 0
+                    elif self.on_wrap_conflict == "overflow":
+                        fill = 0  # Override space mapping forcefully bleeding into structural delimiters
+                        
                 if isheader:
                     align = self._header_align[col_idx]
                     
@@ -1777,13 +1990,14 @@ class Vistab:
 
         return out
 
-    def _splitit(self, line: List[str], isheader: bool) -> List[List[str]]:
+    def _splitit(self, line: List[str], isheader: bool, row_idx: int = None) -> List[List[str]]:
         """
         Split each element of the line to fit the column width.
 
         Each element is turned into a list, resulting from wrapping the string
         to the desired width. This method ensures that each cell content fits
         within the specified column width and handles vertical alignment.
+        It also conditionally respects wrap=False bypass modifiers.
 
         Args:
         -----
@@ -1791,30 +2005,29 @@ class Vistab:
             The line (list of cell content) to be split and wrapped.
         isheader : bool
             Indicates if the line to be split is a header line.
+        row_idx : int, optional
+            The coordinate index tracking structural overrides natively.
 
         Returns:
         --------
         List[List[str]]
             The processed and wrapped lines.
-
-        Example:
-        --------
-        ```
-        table = Vistab()
-        line = ["Name", "Age"]
-        wrapped_line = table._splitit(line, isheader=True)
-        print(wrapped_line)
-        ```
         """
         line_wrapped = []
 
         # Iterate over each cell and its corresponding column width
-        for cell, width in zip(line, self._width):
+        for col_idx, (cell, width) in enumerate(zip(line, self._width)):
             array = []
+            
+            # Fetch active boolean wrap logic executing precedence mapping
+            do_wrap = self._get_active_wrap_control(row_idx, col_idx, isheader)
+            
             # Split cell content by new lines and wrap each part to fit the column width
             for c in cell.split('\n'):
-                if c.strip() == "":
-                    array.append("")  # Preserve empty lines
+                if c.strip() == "" and do_wrap:
+                    array.append("")  # Preserve empty lines safely if wrapping
+                elif not do_wrap:
+                    array.append(c) # Actively bypass logic natively saving space literals verbatim
                 else:
                     # Dynamically utilize ColorAwareWrapper to segregate layout correctly without mutating ANSI sequences 
                     array.extend(self._cwrap.wrap_list(c, width))
@@ -2030,7 +2243,7 @@ def print_coordinate_styles_demo():
     
     t = Vistab([
         ["Rank", "Player", "Score", "Status"], 
-        ["1", "Gabriele", "15,230", "Up"],
+        ["1", "Gabriel", "15,230", "Up"],
         ["2", "Alice", "12,940", "Stable"],
         ["3", "Bob", "8,100", "Down"]
     ], style="double")
@@ -2038,7 +2251,7 @@ def print_coordinate_styles_demo():
     t.set_header_style(bg="red", fg="bright_white", bold=True)
     t.set_border_style(fg="yellow")
     t.set_col_style(0, fg="bright_cyan", bold=True)
-    t.set_cell_style(1, 1, bg="green", fg="black")  # Gabriele
+    t.set_cell_style(1, 1, bg="green", fg="black")  # Gabriel
     t.set_cell_style(3, 3, fg="red", blink=True)    # Down
 
     print(t.draw())
@@ -2105,6 +2318,35 @@ def print_colors_list():
     print(t_ts.draw())
     print()
 
+def print_themes_demo():
+    print("\033[1m\033[1;36mBuilt-In Theme Macro Demonstrations\033[0m")
+    print("Predefined themes combining geometry layouts with zebra-striping and boundary padding natively!\n")
+    
+    tdata = [
+        ["A", "B", "C", "D"], 
+        ["1", "Al", "123", "Good"],
+        ["2", "Bob", "122", "Bad"],
+        ["3", "Cat", "111", "Good"],
+        ["4", "Dan", "93", "Bad"],
+        ["5", "Ed", "41", "Good"]
+    ]
+
+    t2data = []
+    for theme in ["ocean", "forest", "minimalist"]:
+        t2data.append([
+            f"\"{theme}\"\n" + Vistab(tdata).apply_theme(f"{theme}").draw(),
+            f"\"{theme}-index\"\n" + Vistab(tdata).apply_theme(f"{theme}-index").draw(),
+            f"\"{theme}-cols\"\n" + Vistab(tdata).apply_theme(f"{theme}-cols").draw(),
+            f"\"{theme}-cols-index\"\n" + Vistab(tdata).apply_theme(f"{theme}-cols-index").draw(),
+            f"\"{theme}-solid\"\n" + Vistab(tdata).apply_theme(f"{theme}-solid").draw(),
+            f"\"{theme}-solid-index\"\n" + Vistab(tdata).apply_theme(f"{theme}-solid-index").draw()
+        ])
+
+    demo_tb = Vistab(t2data, header=False, style="light", padding=0)
+    demo_tb.set_table_wrap(False)
+    print(demo_tb.draw())
+    print()
+
 def main():
     import argparse
     import sys
@@ -2125,6 +2367,7 @@ def main():
     parser.add_argument("-C", "--list-colors", action="store_true", help="Print all predefined foreground, background, and rendering format strings")
     parser.add_argument("-T", "--test", action="store_true", help="Print a demonstration of color-wrapping and complex unicode characters")
     parser.add_argument("-D", "--demo-styling", action="store_true", help="Print a demonstration of coordinate-based row, column, and cell styling")
+    parser.add_argument("-M", "--demo-themes", action="store_true", help="Print a demonstration of the integrated high-level layout color themes")
     parser.add_argument("-i", "--input", type=str, help="Auto-detect and format a delimited structural file (CSV, TSV, etc.)")
     parser.add_argument("-s", "--style", type=str, default="light", help="Override the visual rendering style (default: 'light')")
     parser.add_argument("-w", "--max-width", type=int, default=0, help="Maximum table width before wrapping cells (default: 0 / infinite)")
@@ -2171,6 +2414,12 @@ def main():
         print_colors_list()
         _printed_anything = True
         
+    if args.demo_themes:
+        if _printed_anything:
+            print("\n" + "="*40 + "\n")
+        print_themes_demo()
+        _printed_anything = True
+
     if args.test:
         if _printed_anything:
             print("\n" + "="*40 + "\n")
