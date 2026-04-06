@@ -158,6 +158,12 @@ vistab -M
 ```
 ![Theme Output](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-M-themes-output.png)
 
+#### Applying Themes via CLI
+You can dynamically inject these structural formats directly onto raw CSVs leveraging the command line endpoints seamlessly:
+```bash
+vistab --input data.csv --theme ocean-cols-index --style round
+```
+
 ## Discovering Output Colors (CLI)
 
 Because terminal color renderings vary natively across different user host profiles and color palettes, `vistab` comes packaged with a native matrix test exposing every foreground, background, and stylistic text augmentation you can safely deploy. 

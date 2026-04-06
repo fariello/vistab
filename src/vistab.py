@@ -2371,11 +2371,17 @@ def main():
     parser.add_argument("-i", "--input", type=str, help="Auto-detect and format a delimited structural file (CSV, TSV, etc.)")
     parser.add_argument("-t", "--theme", type=str, help="Apply a dynamic color theme matrix to the input data (e.g. 'forest-cols')")
     parser.add_argument("-s", "--style", type=str, default="light", help="Override the visual rendering style (default: 'light')")
-    parser.add_argument("-w", "--max-width", type=int, default=0, help="Maximum table width before wrapping cells (default: 0 / infinite)")
+    parser.add_argument("-w", "--width", type=int, default=0, help="Maximum table width before wrapping cells (default: 0 / infinite)")
+    parser.add_argument("-W", "--col-widths", type=str, help="Comma-separated list of strict integer widths for columns (e.g. '10,20,5')")
     parser.add_argument("-r", "--max-rows", type=int, default=0, help="Maximum number of rows to render (default: 0 / infinite)")
     parser.add_argument("-c", "--max-cols", type=int, default=0, help="Maximum number of columns to render (default: 0 / infinite)")
     parser.add_argument("-p", "--padding", type=int, default=1, help="Cell padding integer (default: 1)")
     parser.add_argument("-a", "--align", type=str, help="Column alignment string (e.g. 'lrc')")
+    parser.add_argument("--valign", type=str, help="Column vertical alignment string (e.g. 'tmb')")
+    parser.add_argument("--dtype", type=str, help="Column datatypes string (e.g. 'tfi')")
+    parser.add_argument("--title", type=str, help="Table title string rendered centered above output")
+    parser.add_argument("--precision", type=int, help="Float decimal precision mapping globally")
+    parser.add_argument("--no-header", action="store_true", help="Bypass popping the first row as the table header")
     parser.add_argument("--create-config", type=str, metavar="TARGET", help="Generate a verbose boilerplate TOML configuration file at the target path (e.g., .vistab.toml)")
 
     if len(sys.argv) == 1:
@@ -2467,21 +2473,51 @@ def main():
                     
                 table = Vistab(
                     style=args.style,
-                    max_width=args.max_width,
+                    max_width=args.width,
                     padding=args.padding
                 )
-                table.set_max_rows(args.max_rows)
-                table.set_max_cols(args.max_cols)
                 
-                if args.align:
-                    table.set_cols_align(args.align)
-                
-                table.set_rows(rows, header=True)
-                
-                if args.theme:
-                    table.apply_theme(args.theme)
+                try:
+                    table.set_max_rows(args.max_rows)
+                    table.set_max_cols(args.max_cols)
                     
-                print(table.draw())
+                    # Lock in the physical row geometry boundaries FIRST!
+                    table.set_rows(rows, header=not args.no_header)
+                    
+                    # Proceed with applying explicit dimension mapping arrays natively
+                    if args.align:
+                        table.set_cols_align(args.align)
+                        
+                    if args.valign:
+                        table.set_cols_valign(args.valign)
+                        
+                    if args.dtype:
+                        table.set_cols_dtype(args.dtype)
+                        
+                    if args.col_widths:
+                        # Convert to List[int] explicitly ensuring constraints
+                        string_array = args.col_widths.split(",")
+                        table.set_cols_width(string_array)
+                        
+                    if args.title:
+                        table.set_title(args.title)
+                        
+                    if args.precision is not None:
+                        table.set_precision(args.precision)
+                        
+                    if args.theme:
+                        table.apply_theme(args.theme)
+                        
+                    print(table.draw())
+                except Exception as eval_err:
+                    print(f"\n\033[1;31m[COMMAND-LINE FORMAT ERROR]\033[0m")
+                    print(f"Details: {eval_err}\n")
+                    print("Tip: Ensure your formatting inputs perfectly map to your CSV column lengths!")
+                    print("  Valid --align specs:      'l' (left), 'c' (center), 'r' (right)         | e.g., 'lrc'")
+                    print("  Valid --valign specs:     't' (top), 'm' (middle), 'b' (bottom)         | e.g., 'tmb'")
+                    print("  Valid --dtype specs:      't', 'f', 'i', 'e', 'a'                       | e.g., 'ttfi'")
+                    print("  Valid --col-widths specs: Comma-separated integers                      | e.g., '40,10,15'")
+                    sys.exit(1)
         except Exception as e:
             print(f"Error parsing input file: {e}")
             sys.exit(1)
