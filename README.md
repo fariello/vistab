@@ -68,6 +68,23 @@ print(table.draw())
 
 ![Styling Demo](docs/assets/vistab-D-styling-demo.png)
 
+## Coordinate-Based Word Wrapping (Nested Tables)
+
+If you need absolute structural control over spatial layouts—for example, if you are embedding pre-rendered ascii tables inside the cells of another `Vistab`—you can bypass the internal word-wrapping engine entirely using coordinate mapping. 
+
+By setting `wrap=False` on specific axes, `Vistab` guarantees it will preserve your rigid structural spacing verbatim without snapping or aggressively pruning layouts:
+
+```python
+# Globally bypass word-wrapping for the entire table
+table.set_table_wrap(False)
+
+# Or target specific structural coordinates
+table.set_row_wrap(0, False)
+table.set_col_wrap(2, False)
+table.set_cell_wrap(0, 1, False)
+```
+If a cell bypassed with `wrap=False` physically exceeds `table.max_width`, `Vistab` uses an intelligent constraint router (`table.on_wrap_conflict = "warn"`) that securely drops trailing characters while surgically reconstructing your internal ANSI styling sequences to prevent catastrophic terminal boundary collapse!
+
 ## Hierarchical Configuration System
 Stop re-typing your constructor arguments recursively! `vistab` actively scans your execution environments for TOML configurations natively. 
 
@@ -87,6 +104,24 @@ You can view a full structural geometry matrix natively printed on your terminal
 python vistab.py -L
 ```
 ![Available Styles](docs/assets/vistab-L-available-styles.png)
+
+### The Curated Color Theme Matrix
+
+In addition to ASCII-structural styles, `Vistab` dynamically mathematically computes 18 fully curated color layout themes utilizing Zebra-Striping natively. You can paint entire layouts instantly using `.apply_theme()`.
+
+The library supports three base color palettes (`ocean`, `forest`, `minimalist`). Each color palette is distributed across six visual geometries matching the systematic format `<palette>-<striping>-<index>`. For example:
+
+- `table.apply_theme("ocean")` *(Default Alternating Zebra Rows)*
+- `table.apply_theme("ocean-index")` *(Alternating Rows + First Column Index Highlight applied)*
+- `table.apply_theme("ocean-cols")` *(Alternating Column Striping)*
+- `table.apply_theme("ocean-solid")` *(Static Background, No striping)*
+
+If these 18 themes aren't enough, you can dynamically construct massive custom matrix libraries securely by pushing a dictionary configuration directly into the global static boundary `Vistab.THEMES["my_blue_theme"] = {...}` in your own scripts!
+
+View the curated themes rendered beautifully stacked by executing:
+```bash
+python vistab.py -M
+```
 
 ## Discovering Output Colors (CLI)
 
