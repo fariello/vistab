@@ -1858,9 +1858,33 @@ class Vistab:
         # Check if header alignment is set; if not, set default alignment to center.
         if not hasattr(self, "_header_align"):
             self._header_align = ["c"] * self._row_size
-        # Check if column alignment is set; if not, set default alignment to left.
+            
+        # Check if column alignment is set natively; if not, compute data-centric defaults dynamically
         if not hasattr(self, "_align"):
             self._align = ["l"] * self._row_size
+            if hasattr(self, "_dtype") and self._rows:
+                for c in range(self._row_size):
+                    # Explicit numeric types physically lock right-alignment securely
+                    if self._dtype[c] in ("i", "I", "f", "e"):
+                        self._align[c] = "r"
+                    # Auto types physically parse physical storage mapping characters
+                    elif self._dtype[c] == "a":
+                        valid_cells = 0
+                        numeric_cells = 0
+                        for row in self._rows:
+                            if c < len(row):
+                                val = str(row[c]).strip()
+                                if val:
+                                    valid_cells += 1
+                                    try:
+                                        float(val.replace(",", "")) # Catch formatted sequences seamlessly
+                                        numeric_cells += 1
+                                    except ValueError:
+                                        pass
+                        # If row data is purely numerical cleanly, evaluate 'r' structurally efficiently
+                        if valid_cells > 0 and numeric_cells == valid_cells:
+                            self._align[c] = "r"
+                            
         # Check if vertical alignment is set; if not, set default alignment to top.
         if not hasattr(self, "_valign"):
             self._valign = ["t"] * self._row_size
@@ -2513,10 +2537,10 @@ def main():
                     print(f"\n\033[1;31m[COMMAND-LINE FORMAT ERROR]\033[0m")
                     print(f"Details: {eval_err}\n")
                     print("Tip: Ensure your formatting inputs perfectly map to your CSV column lengths!")
-                    print("  Valid --align specs:      'l' (left), 'c' (center), 'r' (right)         | e.g., 'lrc'")
-                    print("  Valid --valign specs:     't' (top), 'm' (middle), 'b' (bottom)         | e.g., 'tmb'")
-                    print("  Valid --dtype specs:      't', 'f', 'i', 'e', 'a'                       | e.g., 'ttfi'")
-                    print("  Valid --col-widths specs: Comma-separated integers                      | e.g., '40,10,15'")
+                    print("--align:  l (left), c (center), r (right)                   | e.g., 'lrc'")
+                    print("--valign: t (top), m (middle), b (bottom)                   | e.g., 'tmb'")
+                    print("--dtype:  t (text), f (float), i (int), e (exp), a (auto)   | e.g., 'ttfi'")
+                    print("--col-widths: Comma-separated integers                      | e.g., '40,10,15'")
                     sys.exit(1)
         except Exception as e:
             print(f"Error parsing input file: {e}")
