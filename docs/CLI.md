@@ -1,3 +1,5 @@
+[README](../README.md) | [API](API.md) | [CLI](CLI.md) | [SPEC](../FUNCTIONAL_SPEC.md) | [CHANGELOG](../CHANGELOG.md)
+
 # Vistab Command-Line Interface (CLI)
 
 `vistab` includes a command-line utility for parsing, truncating, and styling `.csv` datasets directly in your terminal.
@@ -73,3 +75,6 @@ vistab data.csv --theme minimalist --table-bg-color bright_black --align lrl --s
 ```
 
 ![Screenshot: Massive colorful logical matrix block structurally displaying 15 different theme executions mapped perfectly across distinct visual borders sequentially rendering dynamic zebra-striping.](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-M-themes-output.png)
+
+---
+[README](../README.md) | [API](API.md) | [CLI](CLI.md) | [SPEC](../FUNCTIONAL_SPEC.md) | [CHANGELOG](../CHANGELOG.md)

@@ -1,3 +1,5 @@
+[README](README.md) | [API](docs/API.md) | [CLI](docs/CLI.md) | [SPEC](FUNCTIONAL_SPEC.md) | [CHANGELOG](CHANGELOG.md)
+
 # Vistab Functional Specification
 
 This specification outlines the deterministic constraints, rendering flows, and API invariants governing the `Vistab` library. Any additions or modifications to the core engine must preserve backward compatibility with these definitions.
@@ -34,3 +36,6 @@ The structural formatting loop isolates strings based on target datatypes define
 
 Themes operate as dictionary structures intersecting with the internal rendering loop. 
 User-defined variables passed explicitly via the CLI (like `--align` or `--width`) or specific structural properties must NEVER be cached to `themes.json` using the `--save-theme` logic, as this breaks layout reusability. Settings targeting visual colors, paddings, decorations, and styles are exclusively categorized as theme architectures.
+
+---
+[README](README.md) | [API](docs/API.md) | [CLI](docs/CLI.md) | [SPEC](FUNCTIONAL_SPEC.md) | [CHANGELOG](CHANGELOG.md)

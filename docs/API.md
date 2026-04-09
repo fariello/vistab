@@ -1,3 +1,5 @@
+[README](../README.md) | [API](API.md) | [CLI](CLI.md) | [SPEC](../FUNCTIONAL_SPEC.md) | [CHANGELOG](../CHANGELOG.md)
+
 # Vistab API Reference (v1.0.3)
 
 `Vistab` uses a **fluent API**. Almost all manipulation and styling methods return the instance itself (`self`), allowing developers to chain operations cleanly:
@@ -166,3 +168,6 @@ Computes all styling rules globally, measuring byte boundaries safely processing
 ### Properties
 - `table.has_header` `(bool)`: Programmatically disable header tracking safely without stripping matrix sizes dynamically correctly cleanly.
 - `table.on_wrap_conflict` `(str)`: Explicitly defines evaluation behaviors cleanly mapping routing bounds safely (`"warn"`, `"error"`, `"clip"`, `"overflow"`).
+
+---
+[README](../README.md) | [API](API.md) | [CLI](CLI.md) | [SPEC](../FUNCTIONAL_SPEC.md) | [CHANGELOG](../CHANGELOG.md)

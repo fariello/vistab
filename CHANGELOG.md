@@ -1,3 +1,5 @@
+[README](README.md) | [API](docs/API.md) | [CLI](docs/CLI.md) | [SPEC](FUNCTIONAL_SPEC.md) | [CHANGELOG](CHANGELOG.md)
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
@@ -52,3 +54,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dynamic Thematic Striping Matrices**: Configured 18 pre-built layout themes with Zebra-Striping colors (e.g., `ocean-index`, `forest-cols`, `minimalist-solid`).
 - **Comprehensive ANSI Mapping Frameworks**: The internal width calculator bypasses ANSI configuration sequences, ensuring borders align correctly when colors are applied.
 - **Diagnostic Execution Modes**: Added diagnostic terminal options (`-M` for Themes, `-L` for Styles, `-C` for Terminal Color Support, `-T` for the ANSI bypass test suite).
+
+---
+[README](README.md) | [API](docs/API.md) | [CLI](docs/CLI.md) | [SPEC](FUNCTIONAL_SPEC.md) | [CHANGELOG](CHANGELOG.md)
