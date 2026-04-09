@@ -19,13 +19,14 @@ class TestVistabRegression(unittest.TestCase):
         # Ensure fixtures directory exists safely
         os.makedirs(self.fixtures_dir, exist_ok=True)
 
-    def _run_cli(self, args: list) -> str:
+    def _run_cli(self, args: list, input_data: str = None) -> str:
         """Executes the CLI and returns the unified STDOUT."""
         cmd = ["python", str(self.cli_path)] + args
         result = subprocess.run(
             cmd, 
             capture_output=True, 
             text=True, 
+            input=input_data,
             encoding="utf-8"
         )
         return result.stdout
@@ -75,6 +76,21 @@ class TestVistabRegression(unittest.TestCase):
         """Safeguard structural matrix calculations implicitly testing rendering offsets natively."""
         out = self._run_cli(["-M"])
         self._assert_against_fixture("regression_diagnostic_matrix", out)
+
+    def test_regression_pipeline_stdin(self):
+        """Test the structural execution capturing datasets strictly through STDIN streams."""
+        raw_csv_string = "ID,Name,Status\n101,Process A,Active\n102,Process B,Failed\n"
+        out = self._run_cli(["--theme", "ocean", "--padding", "2"], input_data=raw_csv_string)
+        self._assert_against_fixture("regression_pipeline_stdin", out)
+
+    def test_regression_pipeline_multi_file(self):
+        """Test the sequential CLI resolution targeting multiple physical files iteratively."""
+        db1 = self.data_dir / "small_1x1.csv"
+        db2 = self.data_dir / "small_5x5.csv"
+        
+        # Pass multiple paths explicitly
+        out = self._run_cli([str(db1), str(db2), "--style", "bold"])
+        self._assert_against_fixture("regression_pipeline_multi_file", out)
 
     def test_regression_api_dynamic_typing(self):
         """Test API directly for strict layout boundaries using dynamic typings."""

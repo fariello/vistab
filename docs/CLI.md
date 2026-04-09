@@ -56,6 +56,7 @@ If predefined themes aren't enough, you can explicitly override coordinate eleme
 
 The CLI provides visual evaluation matrices to verify layouts locally:
 - **`--create-config TARGET`**: Generate a standard configuration file for the current local directory (e.g., `vistab --create-config .vistab.toml`).
+- **`-Q, --show-config`**: Print the paths mapping global dynamic configuration directories cleanly and exit.
 - **`vistab -M`**: Render a color matrix showcasing every pre-built Theme algorithm.
 - **`vistab -L`**: Visualize structural framework limits parsing valid physical Table styles.
 - **`vistab -C`**: Print the terminal execution dictionary safely displaying CLI colors.

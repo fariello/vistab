@@ -37,5 +37,25 @@ The structural formatting loop isolates strings based on target datatypes define
 Themes operate as dictionary structures intersecting with the internal rendering loop. 
 User-defined variables passed explicitly via the CLI (like `--align` or `--width`) or specific structural properties must NEVER be cached to `themes.json` using the `--save-theme` logic, as this breaks layout reusability. Settings targeting visual colors, paddings, decorations, and styles are exclusively categorized as theme architectures.
 
+### 3.1 Global `themes.json` Schema
+
+When users execute `--save-theme`, configurations map directly into `~/.config/vistab/themes.json`. The dictionary validates these strictly structured keys:
+
+1. **Global Modifiers**:
+   - `style`: (str) Frame mapping (`light`, `bold`, `markdown`).
+   - `padding`: (int) Numeric horizontal offset spacing.
+   - `decorations`: (int) Internal structural bitmask limits.
+2. **Global Architecture Targets**:
+   - `table`: Applies default background washes globally across all table coordinates.
+   - `border`: Applies colors to the exterior and interior bounding lines.
+   - `header`: Applies specific foreground and background targets to the header block.
+3. **Array Component Targets**:
+   - `row_X`, `col_X`: Targets integers explicitly. E.g. `col_0` overrides the first column.
+   - `row_-1`, `col_-1`: Resolves automatically to the dynamic bottom row or final rightmost column.
+4. **Color Syntax Definitions**:
+   - `fg`: Fore-ground text mappings (e.g., `bright_cyan`).
+   - `bg`: Background terminal cell layouts (e.g., `magenta`).
+   - `bold` / `italic` / `underline` / `dim`: Boolean definitions activating specific terminal rendering escapes.
+
 ---
 [README](README.md) | [API](docs/API.md) | [CLI](docs/CLI.md) | [SPEC](FUNCTIONAL_SPEC.md) | [CHANGELOG](CHANGELOG.md)
