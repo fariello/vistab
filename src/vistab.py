@@ -1984,22 +1984,31 @@ class Vistab:
         # Split the line into individual cells, handling headers if necessary.
         line = self._splitit(line, isheader, row_idx=row_idx)
         space = " "
-        out = ""
+        out_parts = []
+        
+        # Cache repetitive property access natively inside local namespace for high-speed loops
         b_on, b_off = self._get_border_ansi()
+        has_border = self.has_border
+        pad_str = space * self._pad
+        char_ns = self._char_ns
+        v_delim = b_on + [space, char_ns][self.has_vlines()] + b_off
+        num_cols = len(line)
 
         # Iterate over each row of the split line.
         for i in range(self.vislen(line[0])):
-            if self.has_border:
-                out += b_on + self._char_ns + b_off
+            if has_border:
+                out_parts.append(b_on)
+                out_parts.append(char_ns)
+                out_parts.append(b_off)
                 
             for col_idx, (cell, width, align) in enumerate(zip(line, self._width, self._align)):
                 # Get compiled active ANSI mapping
                 ansi_on, ansi_off = self._get_active_ansi_wrap(row_idx, col_idx, isheader)
-                out += ansi_on
+                if ansi_on: out_parts.append(ansi_on)
                 
                 # Left padding block
-                if col_idx > 0 or self.has_border:
-                    out += " " * self._pad
+                if col_idx > 0 or has_border:
+                    out_parts.append(pad_str)
                     
                 cell_line = cell[i]
                 fill = width - self.vislen(cell_line)
@@ -2023,28 +2032,35 @@ class Vistab:
                     
                 # Alignment logic
                 if align == "r":
-                    out += fill * space + cell_line
+                    if fill > 0: out_parts.append(fill * space)
+                    out_parts.append(cell_line)
                 elif align == "c":
-                    out += (int(fill / 2) * space + cell_line + int(fill / 2 + fill % 2) * space)
+                    if fill > 0: out_parts.append(int(fill / 2) * space)
+                    out_parts.append(cell_line)
+                    if fill > 0: out_parts.append(int(fill / 2 + fill % 2) * space)
                 else:
-                    out += cell_line + fill * space
+                    out_parts.append(cell_line)
+                    if fill > 0: out_parts.append(fill * space)
                     
                 # Right padding block
-                if col_idx < len(line) - 1 or self.has_border:
-                    out += " " * self._pad
+                if col_idx < num_cols - 1 or has_border:
+                    out_parts.append(pad_str)
                     
                 # Terminate active ANSI block securely BEFORE structural decorators
-                out += ansi_off
+                if ansi_off: out_parts.append(ansi_off)
                 
                 # Structural cell delimiter
-                if col_idx < len(line) - 1:
-                    out += b_on + [space, self._char_ns][self.has_vlines()] + b_off
+                if col_idx < num_cols - 1:
+                    out_parts.append(v_delim)
                     
-            if self.has_border:
-                out += b_on + self._char_ns + b_off
-            out += "\n"
+            if has_border:
+                out_parts.append(b_on)
+                out_parts.append(char_ns)
+                out_parts.append(b_off)
+                
+            out_parts.append("\n")
 
-        return out
+        return "".join(out_parts)
 
     def _splitit(self, line: List[str], isheader: bool, row_idx: int = None) -> List[List[str]]:
         """

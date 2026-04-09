@@ -1,4 +1,0 @@
-wcwidth
-
-[cjk]
-cjkwrap
