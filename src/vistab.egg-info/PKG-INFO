@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: vistab
-Version: 1.0.2
+Version: 1.0.3
 Summary: A simple module for creating ASCII tables
 Author-email: Gabriele Fariello <gfariello@fariel.com>
 License: BSD 3-Clause License
@@ -51,16 +51,16 @@ Dynamic: license-file
 ## Key Features
 
 - **Zero-Dependency Core**: Operates purely off the Python standard library with intelligent fallbacks.
-- **Color-Aware Word Wrapping**: Dynamically measures and wraps table widths natively over embedded invisible ANSI formatting sequences without breaking table structural geometry.
-- **Coordinate-Based Styling API**: Fluently colorize rows, columns, headers, or discrete cells declaratively (e.g. `set_header_style(bg="red", bold=True)`).
+- **Color-Aware Word Wrapping**: Dynamically measures and wraps table widths over embedded, invisible ANSI formatting sequences without breaking table geometry.
+- **Coordinate-Based Styling API**: Colorize rows, columns, headers, or specific cells declaratively (e.g. `set_header_style(bg="red", bold=True)`).
 - **Hierarchical TOML Configurations**: Persist your favorite table paddings and layout themes cross-project using a localized `.vistab.toml`.
-- **Advanced Data Parsing**: Injects automatic text wrapping arrays, infers dynamic scientific datatypes, and parses robust CSVs intuitively.
+- **Advanced Data Parsing**: Injects automatic text wrapping, infers scientific datatypes, and parses CSV files.
 
 ## Detailed Documentation
 Looking for an exhaustive configuration breakdown or command-line parser bindings?
 
 - **[Vistab Python API Reference](docs/API.md)** *(Covers all objects, data formatting algorithms, and properties)*
-- **[Command-Line (CLI) Manual](docs/CLI.md)** *(Covers mapping raw CSV structures and terminal limits seamlessly)*
+- **[Command-Line (CLI) Manual](docs/CLI.md)** *(Covers mapping raw CSV structures and terminal limits)*
 
 ## Installation
 
@@ -74,7 +74,7 @@ pip install vistab
 
 ## Quick Start
 
-Getting started with `vistab` is simple. Initialize a `Vistab` instance, set up column alignments and paddings, and append your rows!
+Getting started with `vistab` is simple. Initialize a `Vistab` instance, set up column alignments and paddings, and append your rows.
 
 ```python
 from vistab import Vistab
@@ -97,37 +97,37 @@ print(table.draw())
 
 **Output:**
 
-> **Note on Web Rendering:** We display the raw output below as an image because some package registries (like PyPI) explicitly enforce code-block font stacks (e.g., `Source Code Pro`) that completely lack glyphs for Unicode Extended Box Drawing characters. When forced to fall back onto secondary system fonts to locate characters like `╭` or `╪`, the physical grid mathematically misaligns. Rest assured, on your system's local terminal—and on full-featured renderers like GitHub or BitBucket, the actual raw ASCII/Unicode text output mathematically snaps into geometric alignment perfectly!
+> **Note on Web Rendering:** We display the raw output below as an image because some package registries (like PyPI) explicitly enforce code-block font stacks (e.g., `Source Code Pro`) that lack glyphs for Unicode Extended Box Drawing characters. When falling back to secondary system fonts for characters like `╭` or `╪`, the physical grid mathematically misaligns. On your local terminal—and on full-featured renderers like GitHub or BitBucket—the actual text output mathematically aligns perfectly!
 
-![Screenshot: Terminal output displaying a formatted 3-column data matrix natively. The headers are 'Name', 'Age', and 'Nickname'. The table perfectly encapsulates complex multi-line text blocks across individual cells mapping 'Sarah Jones' directly alongside her age, wrapped deeply inside elegant, perfectly aligned rounded Unicode border geometries.](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-code-output-01.png)
+![Screenshot: Terminal output displaying a formatted 3-column data matrix. The headers are 'Name', 'Age', and 'Nickname'. The table perfectly encapsulates complex multi-line text blocks across individual cells mapping 'Sarah Jones' directly alongside her age, wrapped inside perfectly aligned rounded Unicode border geometries.](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-code-output-01.png)
 
 ## Cookbook Examples
 
-While `Vistab` excels at simply rendering arrays perfectly, it's actually an extensive, data-aware formatting engine. Because the API strictly uses a **fluent** architecture, you can chain multiple logic mutations securely natively without intermediate variables!
+While `Vistab` excels at rendering arrays, it's also a data-aware formatting engine. Because the API uses a **fluent** architecture, you can chain multiple logic mutations without intermediate variables.
 
 ### 1. Data Modification & Sorting
 
-You can completely replace data sets, or sequentially sort physical rows tracking exact coordinate values without needing `pandas` overhead: 
+You can completely replace data sets or sequentially sort physical rows tracking exact coordinate values without needing `pandas` overhead: 
 ```python
 table = Vistab(style="round", padding=1)
 
-# Dynamically sort the memory array tracking the second column (col_idx=1) descending...
+# Sort the array tracking the second column (col_idx=1) descending...
 table.set_rows(my_messy_csv_data, header=True).sort_by(1, reverse=True)
 ```
 
 ### 2. Output Formatting & Safe Dimensional Windows
 
-Sometimes querying SQL leaves us with 4,000 returned dimensions. We can protect logging interfaces elegantly:
+Sometimes querying SQL leaves us with extensive data dimensions. We can protect logging interfaces elegantly:
 ```python
-# Force-limit outputs protecting CLI limits securely! 
+# Force-limit outputs protecting CLI limits! 
 table.set_max_rows(10).set_max_cols(5)
 ```
 
 ### 3. Shorthand Styling & Native Formatting
 
-You don't need to pass massive syntax strings natively evaluating layout injections!
+You don't need to pass massive syntax strings to evaluate layout injections:
 ```python
-# Conditionally highlight physical elements natively:
+# Conditionally highlight physical elements:
 for i, condition in enumerate(my_events):
     table.color_row(i, bg="red" if condition == 'CRITICAL' else None)
 
@@ -137,15 +137,15 @@ table.bold_header()
 
 ## Coordinate-Based Cell Styling
 
-`vistab` natively supports a fluent, declarative API to inject background colors, foreground colors, and text styles (like bolding and underlining) targeting specific grids—ranging from individual cells, whole rows, columns, headers, or borders—organically applying cleanly without twisting table decorator strings!
+`vistab` supports a fluent, declarative API to inject background colors, foreground colors, and text styles (like bolding and underlining) targeting specific grids—ranging from individual cells, whole rows, columns, headers, or borders.
 
 ![Styling Demo](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-D-styling-demo.png)
 
 ## Coordinate-Based Word Wrapping (Nested Tables)
 
-If you need absolute structural control over spatial layouts—for example, if you are embedding pre-rendered ascii tables inside the cells of another `Vistab`—you can bypass the internal word-wrapping engine entirely using coordinate mapping. 
+If you need absolute structural control over spatial layouts—for example, if you are embedding pre-rendered ASCII tables inside the cells of another `Vistab`—you can bypass the internal word-wrapping engine entirely using coordinate mapping. 
 
-By setting `wrap=False` on specific axes, `Vistab` guarantees it will preserve your rigid structural spacing verbatim without snapping or aggressively pruning layouts:
+By setting `wrap=False` on specific axes, `Vistab` guarantees it will preserve your structural spacing verbatim without snapping or aggressively pruning layouts:
 
 ```python
 # Globally bypass word-wrapping for the entire table
@@ -156,23 +156,23 @@ table.set_row_wrap(0, False)
 table.set_col_wrap(2, False)
 table.set_cell_wrap(0, 1, False)
 ```
-If a cell bypassed with `wrap=False` physically exceeds `table.max_width`, `Vistab` uses an intelligent constraint router (`table.on_wrap_conflict = "warn"`) that securely drops trailing characters while surgically reconstructing your internal ANSI styling sequences to prevent catastrophic terminal boundary collapse!
+If a cell bypassed with `wrap=False` exceeds `table.max_width`, `Vistab` uses a constraint router (`table.on_wrap_conflict = "warn"`) that securely drops trailing characters while reconstructing your internal ANSI styling sequences to prevent terminal boundary collapse.
 
 ## Hierarchical Configuration System
-Stop re-typing your constructor arguments recursively! `vistab` actively scans your execution environments for TOML configurations natively. 
+Stop re-typing your constructor arguments! `vistab` actively scans your execution environment for TOML configurations. 
 
-It searches `[./.config/vistab.toml, ./.vistab.toml, ~/.config/vistab.toml, ~/.vistab.toml]` securely over zero-dependencies. 
+It searches `[./.config/vistab.toml, ./.vistab.toml, ~/.config/vistab.toml, ~/.vistab.toml]` for configurations without external dependencies. 
 
-You can instantly generate a boiler-plate configuration file to test using the CLI command:
+You can generate a template configuration file to test using the CLI command:
 ```bash
 vistab --create-config .vistab.toml
 ```
 
 ## Built-in Structural Themes
 
-`vistab` comes with predefined structural themes rendering cleanly under `light`, `bold`, `double`, `ascii`, `round2`, `markdown`, and more native variants.
+`vistab` comes with predefined structural themes including `light`, `bold`, `double`, `ascii`, `round2`, `markdown`, and others.
 
-You can view a full structural geometry matrix natively printed on your terminal by executing:
+You can view a full structural geometry matrix printed on your terminal by executing:
 ```bash
 vistab -L
 ```
@@ -180,7 +180,7 @@ vistab -L
 
 ### The Curated Color Theme Matrix
 
-In addition to ASCII-structural styles, `Vistab` dynamically mathematically computes 18 fully curated color layout themes utilizing Zebra-Striping natively. You can paint entire layouts instantly using `.apply_theme()`.
+In addition to ASCII-structural styles, `Vistab` dynamically computes 18 color layout themes utilizing Zebra-Striping. You can paint entire layouts instantly using `.apply_theme()`.
 
 The library supports three base color palettes (`ocean`, `forest`, `minimalist`). Each color palette is distributed across six visual geometries matching the systematic format `<palette>-<striping>-<index>`. For example:
 
@@ -189,7 +189,7 @@ The library supports three base color palettes (`ocean`, `forest`, `minimalist`)
 - `table.apply_theme("ocean-cols")` *(Alternating Column Striping)*
 - `table.apply_theme("ocean-solid")` *(Static Background, No striping)*
 
-If these 18 themes aren't enough, you can dynamically construct massive custom matrix libraries securely by pushing a dictionary configuration directly into the global static boundary `Vistab.THEMES["my_blue_theme"] = {...}` in your own scripts!
+If these 18 themes aren't enough, you can dynamically construct custom matrices by pushing a dictionary configuration directly into the global static boundary `Vistab.THEMES["my_blue_theme"] = {...}` in your own scripts.
 
 View the curated themes rendered stacked by executing:
 ```bash
@@ -198,18 +198,18 @@ vistab -M
 ![Theme Output](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-M-themes-output.png)
 
 #### Applying Themes via CLI
-You can dynamically inject these structural formats directly onto raw CSVs leveraging the command line endpoints seamlessly:
+You can inject these structural formats directly onto raw CSVs leveraging the command line endpoints:
 ```bash
-# Parsing files iteratively natively via positional bindings
+# Parsing files iteratively via positional bindings
 vistab data.csv --theme ocean-cols-index --style round
 
-# Routing pipes over STDIN straight from bash safely
+# Routing pipes over STDIN straight from bash
 echo -e "Value,Metric\n99,Speed" | vistab --theme minimalist
 ```
 
 ## Discovering Output Colors (CLI)
 
-Because terminal color renderings vary natively across different user host profiles and color palettes, `vistab` comes packaged with a native matrix test exposing every foreground, background, and stylistic text augmentation you can safely deploy. 
+Because terminal color renderings vary across different user host profiles and color palettes, `vistab` comes packaged with a native matrix test exposing every foreground, background, and styling text option you can safely deploy. 
 
 You can view the palette directly on the console by executing:
 ```bash
@@ -219,7 +219,7 @@ vistab -C
 
 ## ANSI Color Layout Support
 
-A major benchmark advantage of `vistab` is native, invisible terminal styling support. Common ASCII libraries will typically break their visual wrapper alignments when raw terminal colors are embedded because they incorrectly count invisible geometry bytes.
+A major benchmark advantage of `vistab` is native, invisible terminal styling support. Common ASCII libraries frequently break their visual wrapper alignments when raw terminal colors are embedded because they incorrectly count invisible geometry bytes.
 
 You can view a comprehensive color-wrapping conformance test demonstrating dynamic alignment across complex CJK blocks by executing:
 ```bash
@@ -248,9 +248,7 @@ table.add_rows([
 
 ## Detailed API Reference
 
-Because the native sequence executes so many features, deploying every argument mapping here securely creates clutter. 
-
-For the complete list of physical ingestion endpoints, configuration schemas, parameters, and wrapping constraint trackers natively enabled within `vistab`:
+For the complete list of endpoints, configuration schemas, parameters, and wrapping constraints available in `vistab`:
 **Please refer to the absolute granular [Vistab Core API Documentation](docs/API.md)**
 
 ## License

@@ -57,6 +57,8 @@ Result:
     delta   0.045     1.000e+10   92        8.900e+13
 """
 
+from typing import Union
+
 try:
     from wcwidth import wcswidth  # For calculating the display width of unicode characters
 except ImportError:
@@ -756,7 +758,7 @@ class Vistab:
         border_status = table.has_border
         ```
         """
-        return self._has_border
+        return self._has_border and ((self._deco & Vistab.BORDER) > 0)
 
     @has_border.setter
     def has_border(self, value: bool) -> None:
@@ -855,6 +857,7 @@ class Vistab:
         self._col_wraps = {}
         self._row_wraps = {}
         self._cell_wraps = {}
+        self._table_style = {}
         self._header_style = {}
         self._border_style = {}
         self._title = None
@@ -952,6 +955,11 @@ class Vistab:
         return self.set_col_style(col_idx, fg=fg, bg=bg)
     # ----------------------------
 
+    def set_table_style(self, fg=None, bg=None, **kwargs) -> 'Vistab':
+        """Apply a global base style mapping uniformly to all cells inside the table natively."""
+        self._table_style = self._compile_style_dict(fg, bg, **kwargs)
+        return self
+
     def set_header_style(self, fg=None, bg=None, **kwargs) -> 'Vistab':
         """Apply styles specifically to the header row.
         
@@ -990,39 +998,45 @@ class Vistab:
         self._alt_col_styles[1] = self._compile_style_dict(fg2, bg2, **kwargs)
         return self
 
-    def apply_theme(self, theme_name: str) -> 'Vistab':
+    def apply_theme(self, theme: Union[str, dict]) -> 'Vistab':
         """Apply a predefined high-level color theme dynamically over table geometries.
         
-        Vistab provides heavily curated default palettes (ocean, forest, minimalist) mathematically
-        multiplied into variants (e.g. `ocean-index`, `ocean-cols-index`, `ocean-solid`).
-        
-        To construct and deploy your own massive permutation of custom themes dynamically, 
-        simply inject your custom dictionaries directly into the static `Vistab.THEMES` registry:
+        Vistab provides curated default palettes natively (e.g. `ocean`, `forest`).
+        You may pass a string to map from `Vistab.THEMES`, or pass a literal active dictionary seamlessly.
         
         Example:
         --------
         ```python
-        Vistab.THEMES["my_blue_theme"] = {
+        custom_theme = {
             "style": "round2",
             "padding": 2,
             "header": {"fg": "black", "bg": "bright_blue", "bold": True},
-            "border": {"fg": "blue"},
-            "col_0": {"bg": "bright_blue", "fg": "black"}, # Optional highlight
-            "alt_rows": [{"bg": "black", "fg": "white"}, {"bg": "bright_black", "fg": "white"}] # Optional striping
+            "border": {"fg": "blue"}
         }
         
-        table = Vistab().apply_theme("my_blue_theme")
+        table = Vistab().apply_theme(custom_theme)
         ```
         """
-        if theme_name not in Vistab.THEMES:
-            raise ValueError(f"Theme '{theme_name}' not found. Available: {', '.join(Vistab.THEMES.keys())}")
-        theme = Vistab.THEMES[theme_name]
-        
+        if isinstance(theme, str):
+            if theme not in Vistab.THEMES:
+                raise ValueError(f"Theme '{theme}' not found. Available: {', '.join(Vistab.THEMES.keys())}")
+            theme = Vistab.THEMES[theme]
+        elif not isinstance(theme, dict):
+            raise TypeError("Theme must be a predefined string identifier or a literal dictionary map.")
+            
         if "style" in theme: self.set_style(theme["style"])
         if "padding" in theme: self.set_padding(theme["padding"])
+        if "table" in theme: self.set_table_style(**theme["table"])
         if "header" in theme: self.set_header_style(**theme["header"])
         if "border" in theme: self.set_border_style(**theme["border"])
         if "col_0" in theme: self.set_col_style(0, **theme["col_0"])
+        if "col_-1" in theme: self.set_col_style(-1, **theme["col_-1"])
+        if "row_0" in theme: self.set_row_style(0, **theme["row_0"])
+        if "row_-1" in theme: self.set_row_style(-1, **theme["row_-1"])
+            
+        if "decorations" in theme: self.set_decorations(theme["decorations"])
+        if "has_border" in theme: self.has_border = theme["has_border"]
+        if "has_header" in theme: self._has_header = theme["has_header"]
             
         if "alt_rows" in theme and len(theme["alt_rows"]) == 2:
             self._alt_row_styles[0] = self._compile_style_dict(**theme["alt_rows"][0])
@@ -1080,6 +1094,10 @@ class Vistab:
         """Compute the final active ANSI configuration applying precedence logic gracefully."""
         active = {}
         
+        # 0. Base Table Level styling mapped fluidly
+        if self._table_style:
+            active.update(self._table_style)
+            
         # 1. Base Alternating Columns
         if col_idx is not None and self._alt_col_styles:
             active.update(self._alt_col_styles.get(col_idx % 2, {}))
@@ -1089,14 +1107,20 @@ class Vistab:
             active.update(self._alt_row_styles.get(row_idx % 2, {}))
             
         # 3. Apply precise Column (Overrides Base Alternating Patterns)
-        if col_idx is not None and col_idx in self._col_styles:
-            active.update(self._col_styles[col_idx])
+        if col_idx is not None:
+            if col_idx in self._col_styles:
+                active.update(self._col_styles[col_idx])
+            elif (-1 in self._col_styles) and hasattr(self, '_width') and (col_idx == len(self._width) - 1):
+                active.update(self._col_styles[-1])
             
         # 4. Apply precise Row/Header (Overrides Alt Rows)
         if is_header and self._header_style:
             active.update(self._header_style)
-        elif not is_header and row_idx is not None and row_idx in self._row_styles:
-            active.update(self._row_styles[row_idx])
+        elif not is_header and row_idx is not None:
+            if row_idx in self._row_styles:
+                active.update(self._row_styles[row_idx])
+            elif (-1 in self._row_styles) and (row_idx == len(self._rows) - 1):
+                active.update(self._row_styles[-1])
             
         # 5. Apply exact Cell (Overrides EVERYTHING)
         if not is_header and row_idx is not None and col_idx is not None:
@@ -1580,14 +1604,14 @@ class Vistab:
                 out += self._hline(location=Vistab.TOP)
             if self._header:
                 out += self._draw_line(self._header, isheader=True)
-                if self.has_header and len(self._rows) > 0:
+                if self.has_header and len(self._rows) > 0 and ((self._deco & Vistab.HEADER) > 0):
                     out += self._hline_header(location=Vistab.MIDDLE)
             length = len(self._rows)
             for idx, row in enumerate(self._rows):
                 out += self._draw_line(row, row_idx=idx)
                 if self.has_hlines() and (idx + 1) < length:
                     out += self._hline(location=Vistab.MIDDLE)
-            if self._has_border:
+            if self.has_border:
                 out += self._hline(location=Vistab.BOTTOM)
             return out[:-1]
         finally:
@@ -2379,7 +2403,18 @@ def main():
     import argparse
     import sys
     import csv
+    import json
+    import os
     
+    # Enable global theme resolution cleanly mapping native OS layers
+    config_dir = os.path.join(os.path.expanduser("~"), ".config", "vistab")
+    themes_file = os.path.join(config_dir, "themes.json")
+    if os.path.exists(themes_file):
+        try:
+            with open(themes_file, "r", encoding="utf8") as f:
+                Vistab.THEMES.update(json.load(f))
+        except Exception: pass
+        
     parser = argparse.ArgumentParser(
         prog="vistab",
         description="A zero-dependency Python utility for rendering rich terminal tables with ANSI color awareness.",
@@ -2405,12 +2440,38 @@ def main():
     parser.add_argument("-c", "--max-cols", type=int, default=0, help="Maximum number of columns to render (default: 0 / infinite)")
     parser.add_argument("-p", "--padding", type=int, default=1, help="Cell padding integer (default: 1)")
     parser.add_argument("-a", "--align", type=str, help="Column alignment string (e.g. 'lrc')")
-    parser.add_argument("--valign", type=str, help="Column vertical alignment string (e.g. 'tmb')")
-    parser.add_argument("--dtype", type=str, help="Column datatypes string (e.g. 'tfi')")
-    parser.add_argument("--title", type=str, help="Table title string rendered centered above output")
-    parser.add_argument("--precision", type=int, help="Float decimal precision mapping globally")
-    parser.add_argument("--no-header", action="store_true", help="Bypass popping the first row as the table header")
-    parser.add_argument("--create-config", type=str, metavar="TARGET", help="Generate a verbose boilerplate TOML configuration file at the target path (e.g., .vistab.toml)")
+    parser.add_argument("-v", "--valign", type=str, help="Column vertical alignment string (e.g. 'tmb')")
+    parser.add_argument("-d", "--dtype", type=str, help="Column datatypes string (e.g. 'tfi')")
+    parser.add_argument("-N", "--title", type=str, help="Table title string rendered centered above output")
+    parser.add_argument("-P", "--precision", type=int, help="Float decimal precision mapping globally")
+    parser.add_argument("-H", "--no-header", action="store_true", help="Bypass popping the first row as the table header")
+    parser.add_argument("-B", "--no-borders", action="store_true", help="Disable the outer table border natively")
+    parser.add_argument("-X", "--no-hlines", action="store_true", help="Disable horizontal lines iteratively between rows")
+    parser.add_argument("-V", "--no-vlines", action="store_true", help="Disable vertical lines strictly between columns")
+    parser.add_argument("-U", "--no-header-line", action="store_true", help="Disable the horizontal divider below the header cleanly")
+    parser.add_argument("-b", "--border-color", type=str, metavar="COLOR", help="Override table outer border color")
+    parser.add_argument("-f", "--header-color", type=str, metavar="COLOR", help="Override header row color")
+    parser.add_argument("-0", "--col0-color", type=str, metavar="COLOR", help="Override first data column color (index 0)")
+    parser.add_argument("-E", "--even-row-color", type=str, metavar="COLOR", help="Override even data rows color")
+    parser.add_argument("-O", "--odd-row-color", type=str, metavar="COLOR", help="Override odd data rows color")
+    parser.add_argument("-e", "--even-col-color", type=str, metavar="COLOR", help="Override even columns color")
+    parser.add_argument("-o", "--odd-col-color", type=str, metavar="COLOR", help="Override odd columns color")
+    parser.add_argument("-l", "--last-row-color", type=str, metavar="COLOR", help="Override last data row color")
+    parser.add_argument("-x", "--last-col-color", type=str, metavar="COLOR", help="Override last data column color")
+    parser.add_argument("-Z", "--border-bg-color", type=str, metavar="COLOR", help="Override table outer border background color")
+    parser.add_argument("-G", "--header-bg-color", type=str, metavar="COLOR", help="Override header row background color")
+    parser.add_argument("-1", "--col0-bg-color", type=str, metavar="COLOR", help="Override first data column background color")
+    parser.add_argument("-2", "--even-row-bg-color", type=str, metavar="COLOR", help="Override even data rows background color")
+    parser.add_argument("-3", "--odd-row-bg-color", type=str, metavar="COLOR", help="Override odd data rows background color")
+    parser.add_argument("-4", "--even-col-bg-color", type=str, metavar="COLOR", help="Override even columns background color")
+    parser.add_argument("-5", "--odd-col-bg-color", type=str, metavar="COLOR", help="Override odd columns background color")
+    parser.add_argument("-A", "--last-row-bg-color", type=str, metavar="COLOR", help="Override last data row background color")
+    parser.add_argument("-y", "--last-col-bg-color", type=str, metavar="COLOR", help="Override last data column background color")
+    parser.add_argument("-g", "--table-bg-color", type=str, metavar="COLOR", help="Override global table background color uniformly")
+    parser.add_argument("-S", "--save-theme", type=str, metavar="THEME", help="Save the current CLI styling arguments to the global themes registry under THEME")
+    parser.add_argument("-Y", "--show-code", action="store_true", help="Print the equivalent Python initialization code for the generated layout instead of drawing.")
+    parser.add_argument("-Q", "--show-config", action="store_true", help="Print the paths mapping the global dynamic configuration files explicitly and exit.")
+    parser.add_argument("-K", "--create-config", type=str, nargs="?", const=os.path.join(config_dir, "config.toml"), metavar="TARGET", help="Generate TOML configuration internally. (default: ~/.config/vistab/config.toml)")
     parser.add_argument("files", nargs="*", help="Sequential file path(s) to delimited datasets. Leave empty to seamlessly parse STDIN streams.")
 
     args = parser.parse_args()
@@ -2428,7 +2489,38 @@ def main():
         print(f"Available themes: {', '.join(sorted(Vistab.THEMES.keys()))}")
         print("Tip: Run 'vistab -M' to view a rendered matrix of all available color themes.")
         sys.exit(1)
+        
+    for color_arg in ['border_color', 'header_color', 'row0_color', 'even_row_color', 'odd_row_color', 'even_col_color', 'odd_col_color', 'last_row_color', 'last_col_color']:
+        val = getattr(args, color_arg, None)
+        if val and val.lower() != "none" and val not in Vistab.COLORS:
+            print_colors_list()
+            print(f"\n\033[1;31m[ERROR]\033[0m Foreground color '{val}' is not a valid color. See above for available colors. You may also use 'none' to remove colors.")
+            sys.exit(1)
+            
+    for color_arg in ['border_bg_color', 'header_bg_color', 'row0_bg_color', 'even_row_bg_color', 'odd_row_bg_color', 'even_col_bg_color', 'odd_col_bg_color', 'last_row_bg_color', 'last_col_bg_color', 'table_bg_color']:
+        val = getattr(args, color_arg, None)
+        if val and val.lower() != "none" and val not in Vistab.BG_COLORS:
+            print_colors_list()
+            print(f"\n\033[1;31m[ERROR]\033[0m Background color '{val}' is not a valid background color. See above for available background colors. You may also use 'none'.")
+            sys.exit(1)
 
+    if args.show_config:
+        core_config = os.path.join(config_dir, "config.toml")
+        print(f"[\033[36mINFO\033[0m] Vistab Global Configuration Paths:\n")
+        
+        if os.path.exists(themes_file):
+            print(f"  Themes Registry (JSON):  \033[32m{themes_file}\033[0m (Found)")
+        else:
+            print(f"  Themes Registry (JSON):  \033[33m{themes_file}\033[0m (Missing)")
+            print("                           Create by running: \033[36mvistab --save-theme <name>\033[0m\n")
+            
+        if os.path.exists(core_config):
+            print(f"  Core Settings (TOML):    \033[32m{core_config}\033[0m (Found)")
+        else:
+            print(f"  Core Settings (TOML):    \033[33m{core_config}\033[0m (Missing)")
+            print("                           Create by running: \033[36mvistab --create-config\033[0m")
+        sys.exit(0)
+        
     if args.create_config:
         config_content = (
             "# Vistab Core Configuration File\n"
@@ -2477,6 +2569,9 @@ def main():
         print_coordinate_styles_demo()
         _printed_anything = True
         
+    if _printed_anything:
+        sys.exit(0)
+        
     # Process inputs (backwards compatible with -i)
     target_files = getattr(args, 'files', [])
     if args.input and args.input not in target_files:
@@ -2495,17 +2590,25 @@ def main():
             
     # 2. Grab STDIN securely if terminal is executing a piped stream smoothly
     # We only parse stdin natively if no explicit target files were provided mimicking UNIX core utilities
-    if not sys.stdin.isatty() and not target_files:
+    is_config_only = getattr(args, 'save_theme', None) or getattr(args, 'show_code', False)
+    
+    if not is_config_only and not sys.stdin.isatty() and not target_files:
         stdin_data = sys.stdin.read().strip()
         if stdin_data:
             streams_to_parse.append(("stdin", "STDIN Stream", stdin_data))
             
     # 3. Validation fallback cleanly
     if not streams_to_parse:
-        if not _printed_anything:
-            parser.print_help(sys.stderr)
+        if is_config_only:
+            streams_to_parse.append(("dummy", "Config Mapping", "foo,bar\n1,2"))
+        elif not _printed_anything:
+            parser.print_usage(sys.stderr)
+            sys.stderr.write("[\033[1;31mERROR\033[0m] No tabular dataset found. Please provide a file path argument or pipe data into STDIN.\n")
+            sys.stderr.write("Tip: Run 'vistab --help' for a complete list of configurations and options.\n")
             sys.exit(1)
-        return
+            
+        if not streams_to_parse and not _printed_anything:
+            return
         
     # Execution Engine Loop Mapping!
     import io
@@ -2543,6 +2646,18 @@ def main():
                 # Lock in the physical row geometry boundaries FIRST!
                 table.set_rows(rows, header=not args.no_header)
                 
+                # Apply custom decorations cleanly and naturally
+                deco = Vistab.BORDER | Vistab.HEADER | Vistab.HLINES | Vistab.VLINES
+                if args.no_borders:
+                    deco &= ~Vistab.BORDER
+                if args.no_hlines:
+                    deco &= ~Vistab.HLINES
+                if args.no_vlines:
+                    deco &= ~Vistab.VLINES
+                if args.no_header_line:
+                    deco &= ~Vistab.HEADER
+                table.set_decorations(deco)
+                
                 # Proceed with applying explicit dimension mapping arrays natively
                 if args.align:
                     table.set_cols_align(args.align)
@@ -2568,6 +2683,134 @@ def main():
                     
                 if args.theme:
                     table.apply_theme(args.theme)
+                    
+                    # Ensure explicit command-line style or padding flag overrides theme defaults natively
+                    if "-s" in sys.argv or "--style" in sys.argv:
+                        table.set_style(args.style)
+                    if "-p" in sys.argv or "--padding" in sys.argv:
+                        table.set_padding(args.padding)
+                        
+                # Native helper to seamlessly map CLI string states to API logic dropping keys explicitly if "none"
+                def _apply_clr(style_dict, arg_fg, arg_bg):
+                    if arg_fg:
+                        if arg_fg.lower() == "none": style_dict.pop("fg", None)
+                        else: style_dict.update(table._compile_style_dict(fg=arg_fg))
+                    if arg_bg:
+                        if arg_bg.lower() == "none": style_dict.pop("bg", None)
+                        else: style_dict.update(table._compile_style_dict(bg=arg_bg))
+
+                _apply_clr(table._border_style, getattr(args, 'border_color', None), getattr(args, 'border_bg_color', None))
+                _apply_clr(table._header_style, getattr(args, 'header_color', None), getattr(args, 'header_bg_color', None))
+                _apply_clr(table._table_style, None, getattr(args, 'table_bg_color', None))
+                
+                clr_r0_f, clr_r0_b = getattr(args, 'col0_color', None), getattr(args, 'col0_bg_color', None)
+                if clr_r0_f or clr_r0_b:
+                    if 0 not in table._col_styles: table._col_styles[0] = {}
+                    _apply_clr(table._col_styles[0], clr_r0_f, clr_r0_b)
+                
+                clr_er_f, clr_er_b = getattr(args, 'even_row_color', None), getattr(args, 'even_row_bg_color', None)
+                if clr_er_f or clr_er_b:
+                    if 0 not in table._alt_row_styles: table._alt_row_styles[0] = {}
+                    _apply_clr(table._alt_row_styles[0], clr_er_f, clr_er_b)
+
+                clr_or_f, clr_or_b = getattr(args, 'odd_row_color', None), getattr(args, 'odd_row_bg_color', None)
+                if clr_or_f or clr_or_b:
+                    if 1 not in table._alt_row_styles: table._alt_row_styles[1] = {}
+                    _apply_clr(table._alt_row_styles[1], clr_or_f, clr_or_b)
+                    
+                clr_ec_f, clr_ec_b = getattr(args, 'even_col_color', None), getattr(args, 'even_col_bg_color', None)
+                clr_oc_f, clr_oc_b = getattr(args, 'odd_col_color', None), getattr(args, 'odd_col_bg_color', None)
+                if clr_oc_f or clr_oc_b:
+                    if 1 not in table._alt_col_styles: table._alt_col_styles[1] = {}
+                    _apply_clr(table._alt_col_styles[1], clr_oc_f, clr_oc_b)
+
+                clr_lr_f, clr_lr_b = getattr(args, 'last_row_color', None), getattr(args, 'last_row_bg_color', None)
+                if clr_lr_f or clr_lr_b:
+                    if -1 not in table._row_styles: table._row_styles[-1] = {}
+                    _apply_clr(table._row_styles[-1], clr_lr_f, clr_lr_b)
+
+                clr_lc_f, clr_lc_b = getattr(args, 'last_col_color', None), getattr(args, 'last_col_bg_color', None)
+                if clr_lc_f or clr_lc_b:
+                    if -1 not in table._col_styles: table._col_styles[-1] = {}
+                    _apply_clr(table._col_styles[-1], clr_lc_f, clr_lc_b)
+
+                if clr_oc_f or clr_oc_b:
+                    if 1 not in table._alt_col_styles: table._alt_col_styles[1] = {}
+                    _apply_clr(table._alt_col_styles[1], clr_oc_f, clr_oc_b)
+                    
+                # Evaluate save-theme and show-code intercept logic cleanly referencing active state
+                if getattr(args, 'save_theme', None) or getattr(args, 'show_code', False):
+                    rev_fg = {v: k for k, v in Vistab.COLORS.items()}
+                    rev_bg = {v: k for k, v in Vistab.BG_COLORS.items()}
+                    rev_st = {v: k for k, v in Vistab.TEXT_STYLES.items()}
+                    
+                    def _rev(d):
+                        o = {}
+                        if "fg" in d: o["fg"] = rev_fg.get(d["fg"])
+                        if "bg" in d: o["bg"] = rev_bg.get(d["bg"])
+                        for k, v in d.items():
+                            if k not in ["fg", "bg"] and v in rev_st: o[rev_st[v]] = True
+                        return o
+                        
+                    compiled_theme = {}
+                    if table._style != "light": compiled_theme["style"] = table._style
+                    if table._pad != 1: compiled_theme["padding"] = table._pad
+                    compiled_theme["decorations"] = table._deco
+                    if not table._has_border: compiled_theme["has_border"] = False
+                    if not table._has_header: compiled_theme["has_header"] = False
+                    
+                    if table._table_style: compiled_theme["table"] = _rev(table._table_style)
+                    if table._header_style: compiled_theme["header"] = _rev(table._header_style)
+                    if table._border_style: compiled_theme["border"] = _rev(table._border_style)
+                    if 0 in table._col_styles: compiled_theme["col_0"] = _rev(table._col_styles[0])
+                    if -1 in table._col_styles: compiled_theme["col_-1"] = _rev(table._col_styles[-1])
+                    if -1 in table._row_styles: compiled_theme["row_-1"] = _rev(table._row_styles[-1])
+                    
+                    if 0 in table._alt_row_styles and 1 in table._alt_row_styles:
+                        compiled_theme["alt_rows"] = [_rev(table._alt_row_styles[0]), _rev(table._alt_row_styles[1])]
+                    if 0 in table._alt_col_styles and 1 in table._alt_col_styles:
+                        compiled_theme["alt_cols"] = [_rev(table._alt_col_styles[0]), _rev(table._alt_col_styles[1])]
+                        
+                    if getattr(args, 'save_theme', None):
+                        os.makedirs(config_dir, exist_ok=True)
+                        if not os.path.exists(themes_file):
+                            with open(themes_file, "w") as f: json.dump({}, f)
+                        try:
+                            with open(themes_file, "r") as f: tdb = json.load(f)
+                        except Exception: tdb = {}
+                        tdb[args.save_theme] = compiled_theme
+                        with open(themes_file, "w", encoding="utf8") as f: json.dump(tdb, f, indent=4)
+                        print(f"[\033[32mSUCCESS\033[0m] Saved layout globally as '{args.save_theme}' in {themes_file}")
+                        
+                    if getattr(args, 'show_code', False):
+                        print("import vistab\n")
+                        print("custom_theme = " + json.dumps(compiled_theme, indent=4) + "\n")
+                        print("table = vistab.Vistab().apply_theme(custom_theme)")
+                        
+                        has_geometry = any([
+                            getattr(args, 'col_widths', None), getattr(args, 'align', None), 
+                            getattr(args, 'valign', None), getattr(args, 'dtype', None), 
+                            getattr(args, 'precision', None) is not None, getattr(args, 'title', None), 
+                            getattr(args, 'width', 0) > 0, getattr(args, 'max_rows', 0) > 0, getattr(args, 'max_cols', 0) > 0
+                        ])
+                        
+                        if has_geometry:
+                            print("\n# Data-specific parameters are mapped explicitly outside the theme registry")
+                            print("# This prevents shape-specific geometries from breaking theme reusability")
+                            if getattr(args, 'col_widths', None): print(f"table.set_cols_width([{args.col_widths}])")
+                            if getattr(args, 'align', None): print(f"table.set_cols_align('{args.align}')")
+                            if getattr(args, 'valign', None): print(f"table.set_cols_valign('{args.valign}')")
+                            if getattr(args, 'dtype', None): print(f"table.set_cols_dtype('{args.dtype}')")
+                            if getattr(args, 'precision', None) is not None: print(f"table.set_precision({args.precision})")
+                            if getattr(args, 'title', None): print(f"table.set_title('{args.title}')")
+                            if getattr(args, 'width', 0) > 0: print(f"table.set_max_width({args.width})")
+                            if getattr(args, 'max_rows', 0) > 0: print(f"table.set_max_rows({args.max_rows})")
+                            if getattr(args, 'max_cols', 0) > 0: print(f"table.set_max_cols({args.max_cols})")
+                            
+                        print("\n# ... map inputs cleanly and execute drawing natively")
+                        print("print(table.draw())")
+                        
+                    sys.exit(0)
                     
                 print(table.draw())
                 _printed_anything = True
