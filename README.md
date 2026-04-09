@@ -113,13 +113,25 @@ table.set_cell_wrap(0, 1, False)
 If a cell bypassed with `wrap=False` exceeds `table.max_width`, `Vistab` uses a constraint router (`table.on_wrap_conflict = "warn"`) that securely drops trailing characters while reconstructing your internal ANSI styling sequences to prevent terminal boundary collapse.
 
 ## Hierarchical Configuration System
-Stop re-typing your constructor arguments! `vistab` actively scans your execution environment for TOML configurations. 
+Stop re-typing your constructor arguments! `vistab` actively scans your execution environment for two distinct configuration architectures:
 
-It searches `[./.config/vistab.toml, ./.vistab.toml, ~/.config/vistab.toml, ~/.vistab.toml]` for configurations without external dependencies. 
+### 1. Default Fallbacks (`vistab.toml`)
+It searches `[./.config/vistab.toml, ./.vistab.toml, ~/.config/vistab.toml, ~/.vistab.toml]` for generic table properties. 
 
 You can generate a template configuration file to test using the CLI command:
 ```bash
 vistab --create-config .vistab.toml
+```
+
+### 2. Custom Aesthetic Themes (`themes.json`)
+You can lock in CLI layout arguments seamlessly by saving custom styles into `~/.config/vistab/themes.json` using the `--save-theme` directive. Once saved, these aesthetics become natively addressable on your machine using `--theme`.
+
+```bash
+# Safely capture a global background wash + custom last row colors 
+vistab data.csv --table-bg-color bright_black --last-row-color magenta --save-theme my_custom_theme
+
+# Execute the saved layout on another dataset modularly universally!
+vistab another_data.csv --theme my_custom_theme
 ```
 
 ## Built-in Structural Themes

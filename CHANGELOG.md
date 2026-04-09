@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), 
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-04-08
+
+### Added
+- **Global Theme Washes**: Implemented `table.set_table_style()` and the `--table-bg-color` (`-g`) flag, allowing users to apply universal foregrounds or backgrounds behind table grids natively.
+- **Negative Coordinate Architecture**: Re-engineered core rendering logic to accept `-1` indexing natively. Added `--last-col-color` (`-x`), `--last-col-bg-color` (`-y`), `--last-row-color` (`-l`), and `--last-row-bg-color` (`-A`) cleanly.
+- **CLI Configuration Workflows**: Added native `--save-theme` workflow generating `~/.config/vistab/themes.json` allowing user-defined themes to persist locally across projects.
+- **Python Initialization Expansion**: Enhanced `--show-code` to explicitly output explicit method bindings for data-specific dimensions (like `--align` or `--width`), cleanly decoupling them from reusable color targets.
+
+### Fixed
+- **CLI Parser Mappings**: Resolved an internal mapping conflict renaming the visual `--row0-color` flag internally properly assigning it functionally to `--col0-color` (`-0`) directly mapping the physical columns visually flawlessly.
+- **Comprehensive API Structuring**: Completely refactored `docs/API.md` documenting the entire suite explicitly capturing typing and functionality for 40+ methods organically mapping Python project quality boundaries safely.
+
 ## [1.0.3] - 2026-04-06
 
 ### Documentation

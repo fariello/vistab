@@ -23,6 +23,7 @@ dependencies = [
 
 [project.optional-dependencies]
 cjk = ["cjkwrap"]
+dev = ["pytest"]
 
 [project.scripts]
 vistab = "vistab:main"
