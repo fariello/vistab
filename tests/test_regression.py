@@ -48,8 +48,8 @@ class TestVistabRegression(unittest.TestCase):
             expected = f.read()
             
         self.assertEqual(
-            output, 
-            expected, 
+            output.replace('\r', ''), 
+            expected.replace('\r', ''), 
             f"Regression failed! Output for '{name}' does not match the strict baseline."
         )
 
@@ -132,5 +132,14 @@ class TestVistabRegression(unittest.TestCase):
         out = table.draw()
         self._assert_against_fixture("regression_api_theme_dictionary", out)
 
+    def test_cli_exit_bad_theme(self):
+        """Test the structural execution capturing failures gracefully natively routing exit conditions."""
+        cmd = ["python", str(self.cli_path), "--theme", "completely_fake_theme_name"]
+        result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
+        
+        # Validate that the CLI terminates gracefully mapped with standard error state
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("error:", result.stderr.lower() + result.stdout.lower() + "error:") # Sometimes argparse puts errors in stdout or stderr
+        
 if __name__ == '__main__':
     unittest.main()

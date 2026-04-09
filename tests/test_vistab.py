@@ -1,5 +1,5 @@
 import unittest
-from vistab import Vistab, StringLengthCalculator, ColorAwareWrapper
+from vistab import Vistab, StringLengthCalculator, ColorAwareWrapper, ArraySizeError
 
 class TestVistab(unittest.TestCase):
 
@@ -86,6 +86,33 @@ class TestVistab(unittest.TestCase):
         # Verify the ANSI codes were actually mapped into the output
         self.assertIn("\033[41m", out) # Red background exists
         self.assertIn("\033[44m", out) # Blue background exists
+
+    def test_invalid_padding(self):
+        """Test trapping ValueErrors for impossible configurations."""
+        table = Vistab()
+        with self.assertRaises(ValueError):
+            table.set_padding(-1)
+
+    def test_invalid_style(self):
+        """Test trapping an unknown style mapping configuration."""
+        with self.assertRaises(ValueError):
+            table = Vistab(style="fake_border_magic")
+
+    def test_max_width_too_low(self):
+        """Test trapping an impossible max-width matrix bound."""
+        table = Vistab(max_width=2) # 2 physically cannot contain standard framing
+        table.add_rows([["A", "B"], ["1", "2"]])
+        with self.assertRaises(ValueError) as context:
+            table.draw()
+        self.assertIn("too low to render data", str(context.exception))
+
+    def test_array_size_error(self):
+        """Test triggering structural asymmetry inside table strings."""
+        table = Vistab()
+        with self.assertRaises(ArraySizeError):
+            # Pass bad configuration structure arrays manually bypassing logic
+            table.add_rows([["A", "B", "C"]])
+            table.set_cols_dtype(["i", "f"]) # 2 dtypes mapping to 3 columns throws ArraySizeError
 
 if __name__ == '__main__':
     unittest.main()
