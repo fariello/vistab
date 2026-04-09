@@ -69,7 +69,7 @@ except ImportError:
 import re  # Regular expressions for text processing
 import sys  # System-specific parameters and functions
 from typing import List, Optional, Iterable, Any, Union  # Type hints for better code clarity
-from functools import reduce  # Higher-order function for performing cumulative operations
+from functools import reduce, lru_cache  # Higher-order function for performing cumulative operations
 
 __all__ = ["Vistab", "ArraySizeError", "StringLengthCalculator"]
 
@@ -194,13 +194,17 @@ class StringLengthCalculator:
     without counting the ANSI escape sequences.
     """
 
+    # Regular expression to match ANSI escape sequences
+    # ANSI escape sequences are used for text formatting (e.g., colors)
+    _ANSI_ESCAPE = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+
     def __init__(self):
-        # Regular expression to match ANSI escape sequences
-        # ANSI escape sequences are used for text formatting (e.g., colors)
-        self.ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+        self.ansi_escape = self._ANSI_ESCAPE
         pass # for auto-indentation
 
-    def len(self, string: str) -> int:
+    @staticmethod
+    @lru_cache(maxsize=8192)
+    def len(string: str) -> int:
         """
         Calculate the visible length of a string, excluding ANSI escape sequences.
 
@@ -226,7 +230,7 @@ class StringLengthCalculator:
         The above example shows how to use the `len` method to calculate the visible length of a string with ANSI escape sequences.
         """
         # Remove ANSI escape sequences from the string
-        visible_string = self.ansi_escape.sub('', string)
+        visible_string = StringLengthCalculator._ANSI_ESCAPE.sub('', string)
 
         # Return the length of the visible string
         # wcswidth returns the number of cells the string occupies when printed
@@ -2577,30 +2581,18 @@ def main():
     if args.input and args.input not in target_files:
         target_files.append(args.input)
         
-    streams_to_parse = []
-    
-    # 1. Grab file paths natively
-    for file_path in target_files:
-        try:
-            with open(file_path, "r", encoding="utf8") as f:
-                streams_to_parse.append(("file", file_path, f.read()))
-        except Exception as e:
-            print(f"[\033[1;31mERROR\033[0m] Could not read file '{file_path}': {e}")
-            sys.exit(1)
+    streams_to_parse = [("file", fp) for fp in target_files]
             
-    # 2. Grab STDIN securely if terminal is executing a piped stream smoothly
-    # We only parse stdin natively if no explicit target files were provided mimicking UNIX core utilities
+    # Grab STDIN securely if terminal is executing a piped stream smoothly
     is_config_only = getattr(args, 'save_theme', None) or getattr(args, 'show_code', False)
     
     if not is_config_only and not sys.stdin.isatty() and not target_files:
-        stdin_data = sys.stdin.read().strip()
-        if stdin_data:
-            streams_to_parse.append(("stdin", "STDIN Stream", stdin_data))
+        streams_to_parse.append(("stdin", "STDIN Stream"))
             
-    # 3. Validation fallback cleanly
+    # Validation fallback cleanly
     if not streams_to_parse:
         if is_config_only:
-            streams_to_parse.append(("dummy", "Config Mapping", "foo,bar\n1,2"))
+            streams_to_parse.append(("dummy", "Config Mapping"))
         elif not _printed_anything:
             parser.print_usage(sys.stderr)
             sys.stderr.write("[\033[1;31mERROR\033[0m] No tabular dataset found. Please provide a file path argument or pipe data into STDIN.\n")
@@ -2612,222 +2604,256 @@ def main():
         
     # Execution Engine Loop Mapping!
     import io
-    for i, (source_type, source_name, raw_data) in enumerate(streams_to_parse):
-        if _printed_anything or i > 0:
-            print("\n") # Add visual newline boundary organically between datasets natively
-            
+    
+    class LinePeekableStream:
+        """Safe infinite stream interceptor generating native buffer subsets transparently organically."""
+        def __init__(self, stream, num_lines=15):
+            self.stream = stream
+            self.peeked = []
+            for _ in range(num_lines):
+                try:
+                    line = next(stream)
+                    self.peeked.append(line)
+                except Exception:
+                    break
+        def sample(self): return "".join(self.peeked)
+        def __iter__(self):
+            yield from self.peeked
+            yield from self.stream
+
+    def _process_stream(f_stream, source_name, source_type):
+        nonlocal _printed_anything
+        # Parse CSV payload structurally securely efficiently
+        peek_stream = LinePeekableStream(f_stream)
+        
         try:
-            # Parse CSV payload structurally
-            sample = raw_data[:1024]
-            f_stream = io.StringIO(raw_data)
-            try:
-                dialect = csv.Sniffer().sniff(sample, delimiters=",\t|;")
-                reader = csv.reader(f_stream, dialect)
-            except csv.Error:
-                # Sniffer fails on single-column text or non-explicit delimiters.
-                reader = csv.reader(f_stream)
-                
-            rows = list(reader)
-            if not rows:
-                print(f"[\033[33mWARN\033[0m] The parsed stream '{source_name}' is physically mathematically empty.")
-                continue
-                
-            # Instantiate physical mapping structure cleanly
-            table = Vistab(
-                style=args.style,
-                max_width=args.width,
-                padding=args.padding
-            )
+            dialect = csv.Sniffer().sniff(peek_stream.sample(), delimiters=",\t|;")
+            reader = csv.reader(peek_stream, dialect)
+        except csv.Error:
+            reader = csv.reader(peek_stream)
             
-            try:
-                table.set_max_rows(args.max_rows)
-                table.set_max_cols(args.max_cols)
-                
-                # Lock in the physical row geometry boundaries FIRST!
-                table.set_rows(rows, header=not args.no_header)
-                
-                # Apply custom decorations cleanly and naturally
-                deco = Vistab.BORDER | Vistab.HEADER | Vistab.HLINES | Vistab.VLINES
-                if args.no_borders:
-                    deco &= ~Vistab.BORDER
-                if args.no_hlines:
-                    deco &= ~Vistab.HLINES
-                if args.no_vlines:
-                    deco &= ~Vistab.VLINES
-                if args.no_header_line:
-                    deco &= ~Vistab.HEADER
-                table.set_decorations(deco)
-                
-                # Proceed with applying explicit dimension mapping arrays natively
-                if args.align:
-                    table.set_cols_align(args.align)
-                    
-                if args.valign:
-                    table.set_cols_valign(args.valign)
-                    
-                if args.dtype:
-                    table.set_cols_dtype(args.dtype)
-                    
-                if args.col_widths:
-                    string_array = args.col_widths.split(",")
-                    table.set_cols_width(string_array)
-                    
-                # Dynamically apply title logic cleanly
-                if args.title:
-                    table.set_title(args.title)
-                elif len(streams_to_parse) > 1 and source_type == "file":
-                    table.set_title(f"[ {source_name} ]") # Add implicit filename title smoothly mapping arrays natively
-                    
-                if args.precision is not None:
-                    table.set_precision(args.precision)
-                    
-                if args.theme:
-                    table.apply_theme(args.theme)
-                    
-                    # Ensure explicit command-line style or padding flag overrides theme defaults natively
-                    if "-s" in sys.argv or "--style" in sys.argv:
-                        table.set_style(args.style)
-                    if "-p" in sys.argv or "--padding" in sys.argv:
-                        table.set_padding(args.padding)
-                        
-                # Native helper to seamlessly map CLI string states to API logic dropping keys explicitly if "none"
-                def _apply_clr(style_dict, arg_fg, arg_bg):
-                    if arg_fg:
-                        if arg_fg.lower() == "none": style_dict.pop("fg", None)
-                        else: style_dict.update(table._compile_style_dict(fg=arg_fg))
-                    if arg_bg:
-                        if arg_bg.lower() == "none": style_dict.pop("bg", None)
-                        else: style_dict.update(table._compile_style_dict(bg=arg_bg))
+        if getattr(args, 'max_rows', 0) > 0:
+            rows = []
+            limit = args.max_rows + (not getattr(args, 'no_header', False))
+            for _ in range(limit):
+                try: rows.append(next(reader))
+                except StopIteration: break
+        else:
+            rows = list(reader)
+            
+        if not rows:
+            print(f"[\033[33mWARN\033[0m] The parsed stream '{source_name}' is physically mathematically empty.")
+            return
 
-                _apply_clr(table._border_style, getattr(args, 'border_color', None), getattr(args, 'border_bg_color', None))
-                _apply_clr(table._header_style, getattr(args, 'header_color', None), getattr(args, 'header_bg_color', None))
-                _apply_clr(table._table_style, None, getattr(args, 'table_bg_color', None))
+        # Instantiate physical mapping structure cleanly
+        table = Vistab(
+            style=args.style,
+            max_width=args.width,
+            padding=args.padding
+        )
+        
+        try:
+            table.set_max_rows(args.max_rows)
+            table.set_max_cols(args.max_cols)
+            
+            # Lock in the physical row geometry boundaries FIRST!
+            table.set_rows(rows, header=not args.no_header)
+            
+            # Apply custom decorations cleanly and naturally
+            deco = Vistab.BORDER | Vistab.HEADER | Vistab.HLINES | Vistab.VLINES
+            if args.no_borders:
+                deco &= ~Vistab.BORDER
+            if args.no_hlines:
+                deco &= ~Vistab.HLINES
+            if args.no_vlines:
+                deco &= ~Vistab.VLINES
+            if args.no_header_line:
+                deco &= ~Vistab.HEADER
+            table.set_decorations(deco)
+            
+            # Proceed with applying explicit dimension mapping arrays natively
+            if args.align:
+                table.set_cols_align(args.align)
                 
-                clr_r0_f, clr_r0_b = getattr(args, 'col0_color', None), getattr(args, 'col0_bg_color', None)
-                if clr_r0_f or clr_r0_b:
-                    if 0 not in table._col_styles: table._col_styles[0] = {}
-                    _apply_clr(table._col_styles[0], clr_r0_f, clr_r0_b)
+            if args.valign:
+                table.set_cols_valign(args.valign)
                 
-                clr_er_f, clr_er_b = getattr(args, 'even_row_color', None), getattr(args, 'even_row_bg_color', None)
-                if clr_er_f or clr_er_b:
-                    if 0 not in table._alt_row_styles: table._alt_row_styles[0] = {}
-                    _apply_clr(table._alt_row_styles[0], clr_er_f, clr_er_b)
-
-                clr_or_f, clr_or_b = getattr(args, 'odd_row_color', None), getattr(args, 'odd_row_bg_color', None)
-                if clr_or_f or clr_or_b:
-                    if 1 not in table._alt_row_styles: table._alt_row_styles[1] = {}
-                    _apply_clr(table._alt_row_styles[1], clr_or_f, clr_or_b)
-                    
-                clr_ec_f, clr_ec_b = getattr(args, 'even_col_color', None), getattr(args, 'even_col_bg_color', None)
-                clr_oc_f, clr_oc_b = getattr(args, 'odd_col_color', None), getattr(args, 'odd_col_bg_color', None)
-                if clr_oc_f or clr_oc_b:
-                    if 1 not in table._alt_col_styles: table._alt_col_styles[1] = {}
-                    _apply_clr(table._alt_col_styles[1], clr_oc_f, clr_oc_b)
-
-                clr_lr_f, clr_lr_b = getattr(args, 'last_row_color', None), getattr(args, 'last_row_bg_color', None)
-                if clr_lr_f or clr_lr_b:
-                    if -1 not in table._row_styles: table._row_styles[-1] = {}
-                    _apply_clr(table._row_styles[-1], clr_lr_f, clr_lr_b)
-
-                clr_lc_f, clr_lc_b = getattr(args, 'last_col_color', None), getattr(args, 'last_col_bg_color', None)
-                if clr_lc_f or clr_lc_b:
-                    if -1 not in table._col_styles: table._col_styles[-1] = {}
-                    _apply_clr(table._col_styles[-1], clr_lc_f, clr_lc_b)
-
-                if clr_oc_f or clr_oc_b:
-                    if 1 not in table._alt_col_styles: table._alt_col_styles[1] = {}
-                    _apply_clr(table._alt_col_styles[1], clr_oc_f, clr_oc_b)
-                    
-                # Evaluate save-theme and show-code intercept logic cleanly referencing active state
-                if getattr(args, 'save_theme', None) or getattr(args, 'show_code', False):
-                    rev_fg = {v: k for k, v in Vistab.COLORS.items()}
-                    rev_bg = {v: k for k, v in Vistab.BG_COLORS.items()}
-                    rev_st = {v: k for k, v in Vistab.TEXT_STYLES.items()}
-                    
-                    def _rev(d):
-                        o = {}
-                        if "fg" in d: o["fg"] = rev_fg.get(d["fg"])
-                        if "bg" in d: o["bg"] = rev_bg.get(d["bg"])
-                        for k, v in d.items():
-                            if k not in ["fg", "bg"] and v in rev_st: o[rev_st[v]] = True
-                        return o
-                        
-                    compiled_theme = {}
-                    if table._style != "light": compiled_theme["style"] = table._style
-                    if table._pad != 1: compiled_theme["padding"] = table._pad
-                    compiled_theme["decorations"] = table._deco
-                    if not table._has_border: compiled_theme["has_border"] = False
-                    if not table._has_header: compiled_theme["has_header"] = False
-                    
-                    if table._table_style: compiled_theme["table"] = _rev(table._table_style)
-                    if table._header_style: compiled_theme["header"] = _rev(table._header_style)
-                    if table._border_style: compiled_theme["border"] = _rev(table._border_style)
-                    if 0 in table._col_styles: compiled_theme["col_0"] = _rev(table._col_styles[0])
-                    if -1 in table._col_styles: compiled_theme["col_-1"] = _rev(table._col_styles[-1])
-                    if -1 in table._row_styles: compiled_theme["row_-1"] = _rev(table._row_styles[-1])
-                    
-                    if 0 in table._alt_row_styles and 1 in table._alt_row_styles:
-                        compiled_theme["alt_rows"] = [_rev(table._alt_row_styles[0]), _rev(table._alt_row_styles[1])]
-                    if 0 in table._alt_col_styles and 1 in table._alt_col_styles:
-                        compiled_theme["alt_cols"] = [_rev(table._alt_col_styles[0]), _rev(table._alt_col_styles[1])]
-                        
-                    if getattr(args, 'save_theme', None):
-                        os.makedirs(config_dir, exist_ok=True)
-                        if not os.path.exists(themes_file):
-                            with open(themes_file, "w") as f: json.dump({}, f)
-                        try:
-                            with open(themes_file, "r") as f: tdb = json.load(f)
-                        except Exception: tdb = {}
-                        tdb[args.save_theme] = compiled_theme
-                        with open(themes_file, "w", encoding="utf8") as f: json.dump(tdb, f, indent=4)
-                        print(f"[\033[32mSUCCESS\033[0m] Saved layout globally as '{args.save_theme}' in {themes_file}")
-                        
-                    if getattr(args, 'show_code', False):
-                        print("import vistab\n")
-                        print("custom_theme = " + json.dumps(compiled_theme, indent=4) + "\n")
-                        print("table = vistab.Vistab().apply_theme(custom_theme)")
-                        
-                        has_geometry = any([
-                            getattr(args, 'col_widths', None), getattr(args, 'align', None), 
-                            getattr(args, 'valign', None), getattr(args, 'dtype', None), 
-                            getattr(args, 'precision', None) is not None, getattr(args, 'title', None), 
-                            getattr(args, 'width', 0) > 0, getattr(args, 'max_rows', 0) > 0, getattr(args, 'max_cols', 0) > 0
-                        ])
-                        
-                        if has_geometry:
-                            print("\n# Data-specific parameters are mapped explicitly outside the theme registry")
-                            print("# This prevents shape-specific geometries from breaking theme reusability")
-                            if getattr(args, 'col_widths', None): print(f"table.set_cols_width([{args.col_widths}])")
-                            if getattr(args, 'align', None): print(f"table.set_cols_align('{args.align}')")
-                            if getattr(args, 'valign', None): print(f"table.set_cols_valign('{args.valign}')")
-                            if getattr(args, 'dtype', None): print(f"table.set_cols_dtype('{args.dtype}')")
-                            if getattr(args, 'precision', None) is not None: print(f"table.set_precision({args.precision})")
-                            if getattr(args, 'title', None): print(f"table.set_title('{args.title}')")
-                            if getattr(args, 'width', 0) > 0: print(f"table.set_max_width({args.width})")
-                            if getattr(args, 'max_rows', 0) > 0: print(f"table.set_max_rows({args.max_rows})")
-                            if getattr(args, 'max_cols', 0) > 0: print(f"table.set_max_cols({args.max_cols})")
-                            
-                        print("\n# ... map inputs cleanly and execute drawing natively")
-                        print("print(table.draw())")
-                        
-                    sys.exit(0)
-                    
-                print(table.draw())
-                _printed_anything = True
+            if args.dtype:
+                table.set_cols_dtype(args.dtype)
                 
-            except Exception as eval_err:
-                print(f"\n\033[1;31m[COMMAND-LINE FORMAT ERROR]\033[0m within stream '{source_name}'")
-                print(f"Details: {eval_err}\n")
-                print("Tip: Ensure your formatting inputs perfectly map to your CSV column lengths!")
-                print("--align:  l (left), c (center), r (right)                   | e.g., 'lrc'")
-                print("--valign: t (top), m (middle), b (bottom)                   | e.g., 'tmb'")
-                print("--dtype:  t (text), f (float), i (int), e (exp), a (auto)   | e.g., 'ttfi'")
-                print("--col-widths: Comma-separated integers                      | e.g., '40,10,15'")
-                sys.exit(1)
+            if args.col_widths:
+                string_array = args.col_widths.split(",")
+                table.set_cols_width(string_array)
                 
+            # Dynamically apply title logic cleanly
+            if args.title:
+                table.set_title(args.title)
+            elif len(target_files) > 1 and source_type == "file":
+                table.set_title(f"[ {source_name} ]") # Add implicit filename title smoothly mapping arrays natively
+                
+            if args.precision is not None:
+                table.set_precision(args.precision)
+                
+            if args.theme:
+                table.apply_theme(args.theme)
+                
+                # Ensure explicit command-line style or padding flag overrides theme defaults natively
+                if "-s" in sys.argv or "--style" in sys.argv:
+                    table.set_style(args.style)
+                if "-p" in sys.argv or "--padding" in sys.argv:
+                    table.set_padding(args.padding)
+                    
+            # Native helper to seamlessly map CLI string states to API logic dropping keys explicitly if "none"
+            def _apply_clr(style_dict, arg_fg, arg_bg):
+                if arg_fg:
+                    if arg_fg.lower() == "none": style_dict.pop("fg", None)
+                    else: style_dict.update(table._compile_style_dict(fg=arg_fg))
+                if arg_bg:
+                    if arg_bg.lower() == "none": style_dict.pop("bg", None)
+                    else: style_dict.update(table._compile_style_dict(bg=arg_bg))
+
+            _apply_clr(table._border_style, getattr(args, 'border_color', None), getattr(args, 'border_bg_color', None))
+            _apply_clr(table._header_style, getattr(args, 'header_color', None), getattr(args, 'header_bg_color', None))
+            _apply_clr(table._table_style, None, getattr(args, 'table_bg_color', None))
+            
+            clr_r0_f, clr_r0_b = getattr(args, 'col0_color', None), getattr(args, 'col0_bg_color', None)
+            if clr_r0_f or clr_r0_b:
+                if 0 not in table._col_styles: table._col_styles[0] = {}
+                _apply_clr(table._col_styles[0], clr_r0_f, clr_r0_b)
+            
+            clr_er_f, clr_er_b = getattr(args, 'even_row_color', None), getattr(args, 'even_row_bg_color', None)
+            if clr_er_f or clr_er_b:
+                if 0 not in table._alt_row_styles: table._alt_row_styles[0] = {}
+                _apply_clr(table._alt_row_styles[0], clr_er_f, clr_er_b)
+
+            clr_or_f, clr_or_b = getattr(args, 'odd_row_color', None), getattr(args, 'odd_row_bg_color', None)
+            if clr_or_f or clr_or_b:
+                if 1 not in table._alt_row_styles: table._alt_row_styles[1] = {}
+                _apply_clr(table._alt_row_styles[1], clr_or_f, clr_or_b)
+                
+            clr_ec_f, clr_ec_b = getattr(args, 'even_col_color', None), getattr(args, 'even_col_bg_color', None)
+            clr_oc_f, clr_oc_b = getattr(args, 'odd_col_color', None), getattr(args, 'odd_col_bg_color', None)
+            if clr_oc_f or clr_oc_b:
+                if 1 not in table._alt_col_styles: table._alt_col_styles[1] = {}
+                _apply_clr(table._alt_col_styles[1], clr_oc_f, clr_oc_b)
+
+            clr_lr_f, clr_lr_b = getattr(args, 'last_row_color', None), getattr(args, 'last_row_bg_color', None)
+            if clr_lr_f or clr_lr_b:
+                if -1 not in table._row_styles: table._row_styles[-1] = {}
+                _apply_clr(table._row_styles[-1], clr_lr_f, clr_lr_b)
+
+            clr_lc_f, clr_lc_b = getattr(args, 'last_col_color', None), getattr(args, 'last_col_bg_color', None)
+            if clr_lc_f or clr_lc_b:
+                if -1 not in table._col_styles: table._col_styles[-1] = {}
+                _apply_clr(table._col_styles[-1], clr_lc_f, clr_lc_b)
+
+            if clr_oc_f or clr_oc_b:
+                if 1 not in table._alt_col_styles: table._alt_col_styles[1] = {}
+                _apply_clr(table._alt_col_styles[1], clr_oc_f, clr_oc_b)
+                
+            # Evaluate save-theme and show-code intercept logic cleanly referencing active state
+            if getattr(args, 'save_theme', None) or getattr(args, 'show_code', False):
+                rev_fg = {v: k for k, v in Vistab.COLORS.items()}
+                rev_bg = {v: k for k, v in Vistab.BG_COLORS.items()}
+                rev_st = {v: k for k, v in Vistab.TEXT_STYLES.items()}
+                
+                def _rev(d):
+                    o = {}
+                    if "fg" in d: o["fg"] = rev_fg.get(d["fg"])
+                    if "bg" in d: o["bg"] = rev_bg.get(d["bg"])
+                    for k, v in d.items():
+                        if k not in ["fg", "bg"] and v in rev_st: o[rev_st[v]] = True
+                    return o
+                    
+                compiled_theme = {}
+                if table._style != "light": compiled_theme["style"] = table._style
+                if table._pad != 1: compiled_theme["padding"] = table._pad
+                compiled_theme["decorations"] = table._deco
+                if not table._has_border: compiled_theme["has_border"] = False
+                if not table._has_header: compiled_theme["has_header"] = False
+                
+                if table._table_style: compiled_theme["table"] = _rev(table._table_style)
+                if table._header_style: compiled_theme["header"] = _rev(table._header_style)
+                if table._border_style: compiled_theme["border"] = _rev(table._border_style)
+                if 0 in table._col_styles: compiled_theme["col_0"] = _rev(table._col_styles[0])
+                if -1 in table._col_styles: compiled_theme["col_-1"] = _rev(table._col_styles[-1])
+                if -1 in table._row_styles: compiled_theme["row_-1"] = _rev(table._row_styles[-1])
+                
+                if 0 in table._alt_row_styles and 1 in table._alt_row_styles:
+                    compiled_theme["alt_rows"] = [_rev(table._alt_row_styles[0]), _rev(table._alt_row_styles[1])]
+                if 0 in table._alt_col_styles and 1 in table._alt_col_styles:
+                    compiled_theme["alt_cols"] = [_rev(table._alt_col_styles[0]), _rev(table._alt_col_styles[1])]
+                    
+                if getattr(args, 'save_theme', None):
+                    os.makedirs(config_dir, exist_ok=True)
+                    if not os.path.exists(themes_file):
+                        with open(themes_file, "w") as f: json.dump({}, f)
+                    try:
+                        with open(themes_file, "r") as f: tdb = json.load(f)
+                    except Exception: tdb = {}
+                    tdb[args.save_theme] = compiled_theme
+                    with open(themes_file, "w", encoding="utf8") as f: json.dump(tdb, f, indent=4)
+                    print(f"[\033[32mSUCCESS\033[0m] Saved layout globally as '{args.save_theme}' in {themes_file}")
+                    
+                if getattr(args, 'show_code', False):
+                    print("import vistab\n")
+                    print("custom_theme = " + json.dumps(compiled_theme, indent=4) + "\n")
+                    print("table = vistab.Vistab().apply_theme(custom_theme)")
+                    
+                    has_geometry = any([
+                        getattr(args, 'col_widths', None), getattr(args, 'align', None), 
+                        getattr(args, 'valign', None), getattr(args, 'dtype', None), 
+                        getattr(args, 'precision', None) is not None, getattr(args, 'title', None), 
+                        getattr(args, 'width', 0) > 0, getattr(args, 'max_rows', 0) > 0, getattr(args, 'max_cols', 0) > 0
+                    ])
+                    
+                    if has_geometry:
+                        print("\n# Data-specific parameters are mapped explicitly outside the theme registry")
+                        print("# This prevents shape-specific geometries from breaking theme reusability")
+                        if getattr(args, 'col_widths', None): print(f"table.set_cols_width([{args.col_widths}])")
+                        if getattr(args, 'align', None): print(f"table.set_cols_align('{args.align}')")
+                        if getattr(args, 'valign', None): print(f"table.set_cols_valign('{args.valign}')")
+                        if getattr(args, 'dtype', None): print(f"table.set_cols_dtype('{args.dtype}')")
+                        if getattr(args, 'precision', None) is not None: print(f"table.set_precision({args.precision})")
+                        if getattr(args, 'title', None): print(f"table.set_title('{args.title}')")
+                        if getattr(args, 'width', 0) > 0: print(f"table.set_max_width({args.width})")
+                        if getattr(args, 'max_rows', 0) > 0: print(f"table.set_max_rows({args.max_rows})")
+                        if getattr(args, 'max_cols', 0) > 0: print(f"table.set_max_cols({args.max_cols})")
+                        
+                    print("\n# ... map inputs cleanly and execute drawing natively")
+                    print("print(table.draw())")
+                    
+                sys.exit(0)
+                
+            print(table.draw())
+            _printed_anything = True
+            
+        except Exception as eval_err:
+            print(f"\n\033[1;31m[COMMAND-LINE FORMAT ERROR]\033[0m within stream '{source_name}'")
+            print(f"Details: {eval_err}\n")
+            print("Tip: Ensure your formatting inputs perfectly map to your CSV column lengths!")
+            print("--align:  l (left), c (center), r (right)                   | e.g., 'lrc'")
+            print("--valign: t (top), m (middle), b (bottom)                   | e.g., 'tmb'")
+            print("--dtype:  t (text), f (float), i (int), e (exp), a (auto)   | e.g., 'ttfi'")
+            print("--col-widths: Comma-separated integers                      | e.g., '40,10,15'")
+            sys.exit(1)
+            
+    for i, (source_type, source_name) in enumerate(streams_to_parse):
+        if _printed_anything or i > 0:
+            print("\n")
+        try:
+            if source_type == "file":
+                with open(source_name, "r", encoding="utf8", errors="replace") as f_stream:
+                    _process_stream(f_stream, source_name, source_type)
+            elif source_type == "stdin":
+                _process_stream(sys.stdin, source_name, source_type)
+            else:
+                _process_stream(io.StringIO("foo,bar\n1,2"), source_name, source_type)
         except Exception as e:
             print(f"[\033[1;31mERROR\033[0m] parsing output matrix safely '{source_name}': {e}")
             sys.exit(1)
 
+
 if __name__ == '__main__':
+
     main()
