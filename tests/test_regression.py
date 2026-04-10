@@ -24,6 +24,7 @@ class TestVistabRegression(unittest.TestCase):
         cmd = ["python", str(self.cli_path)] + args
         # Sandbox execution natively forcing ~ to map inside tests dir structurally
         env = os.environ.copy()
+        env["PYTHONIOENCODING"] = "utf-8"
         temp_home = self.tests_dir / "temp_home"
         os.makedirs(temp_home, exist_ok=True)
         env["HOME"] = str(temp_home)

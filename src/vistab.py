@@ -2957,7 +2957,7 @@ def main():
                 rows = list(reader)
                 
             if not rows:
-                print(f"[\033[33mWARN\033[0m] The parsed stream '{source_name}' is physically mathematically empty.")
+                print(f"[\033[33mWARN\033[0m] The parsed stream '{source_name}' is empty.")
                 return
 
         # Instantiate physical mapping structure cleanly
