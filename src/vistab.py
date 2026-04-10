@@ -2667,6 +2667,11 @@ def main():
     import json
     import os
     
+    # Safely force standard output boundaries to use UTF-8 natively on Windows environments.
+    # By default, Windows maps `sys.stdout` natively to rigid region-specific charmaps (e.g. `cp1252`).
+    # Because Vistab draws deeply complex table boundaries using rich Unicode box-drawing characters 
+    # natively (e.g. `┌`, `─`), attempting to blast those sequences into CP1252 pipes forcefully 
+    # triggers fatal `UnicodeEncodeError` crashes. Reconfiguring the buffer cleanly bypasses this safely.
     if sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
         try:
             sys.stdout.reconfigure(encoding='utf-8')
