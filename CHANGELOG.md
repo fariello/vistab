@@ -10,20 +10,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2026-04-10
 
 ### Added
-- **Infinite Generator Streaming**: Introduced `Vistab.stream()` providing native, memoryless mapping bounds for infinite streams, cleanly integrating pipeline pipes bypassing full memory allocations organically. Added `--stream` and `--stream-probe` cleanly.
-- **True Caveat Emptor Boundary Routing**: Explicitly evaluated the core engine implicitly handling memory constraints on OS natively efficiently. Combining `--stream` with highly constrained pipeline structural mappings natively triggers safe fallback array buffering iteratively cleanly naturally structurally naturally seamlessly.
-- **Jagged Matrix Resolution**: Added structural boundaries explicitly padding (`--on-short=pad`) and truncating (`--on-long=truncate`) irregular CSV row formats efficiently organically securely. Included dynamic cell highlighting (`--mark-abnormal COLOR`) natively evaluating pipeline flaws seamlessly natively smoothly cleanly tightly cleanly.
-- **Dynamic Array Routing System**: Added `--sort-by` and `--sort-reverse` inherently natively dynamically handling pipeline structures locally accurately organically successfully seamlessly organically mapping.
-- **Dialect Pipeline Controls**: Added `--csv-dialect` explicitly directing CSV pipeline resolution seamlessly reliably transparently natively securely effectively cleanly effectively correctly explicitly securely natively sequentially natively.
+- **Infinite Generator Streaming**: Introduced `Vistab.stream()` providing natively memoryless mapping bounds for infinite streams, integrating pipe streams without full memory allocations. Added `--stream` and `--stream-probe`.
+- **True Caveat Emptor Boundary Routing**: Explicitly evaluated the core engine implicitly handling memory constraints on OS efficiently. Combining `--stream` with highly constrained pipeline structural mappings natively triggers safe fallback to array buffering iteratively.
+- **Jagged Matrix Resolution**: Added structural boundaries padding (`--on-short=pad`) and truncating (`--on-long=truncate`) irregular CSV row formats efficiently. Included dynamic cell highlighting (`--mark-abnormal COLOR`) to point out pipeline flaws visually.
+- **Dynamic Array Routing System**: Added `--sort-by` and `--sort-reverse` inherently sorting pipeline structures locally accurately.
+- **Dialect Pipeline Controls**: Added `--csv-dialect` explicitly directing CSV pipeline resolution seamlessly reliably.
 - **Global Theme Washes**: Implemented `table.set_table_style()` and the `--table-bg-color` (`-g`) flag, allowing users to apply universal foregrounds or backgrounds behind table grids natively.
 - **Negative Coordinate Architecture**: Re-engineered core rendering logic to accept `-1` indexing natively. Added `--last-col-color` (`-x`), `--last-col-bg-color` (`-y`), `--last-row-color` (`-l`), and `--last-row-bg-color` (`-A`) cleanly.
 - **CLI Configuration Workflows**: Added native `--save-theme` workflow generating `~/.config/vistab/themes.json` allowing user-defined themes to persist locally across projects.
-- **Python Initialization Expansion**: Enhanced `--show-code` to explicitly output explicit method bindings for data-specific dimensions (like `--align` or `--width`), cleanly decoupling them from reusable color targets.
+- **Python Initialization Expansion**: Enhanced `--show-code` to output method bindings explicitly for data parameters (like `--align` or `--width`), decoupling them from base layout calls.
 
 ### Fixed
-- **State Corruption on Generator Intersections**: Addressed internal generator pipelines purging physical table states dynamically completely explicitly iteratively correctly properly functionally dynamically. 
-- **CLI Parser Mappings**: Resolved an internal mapping conflict renaming the visual `--row0-color` flag internally properly assigning it functionally to `--col0-color` (`-0`) directly mapping the physical columns visually flawlessly.
-- **Comprehensive API Structuring**: Completely refactored `docs/API.md` documenting the entire suite explicitly capturing typing and functionality for 40+ methods organically mapping Python project quality boundaries safely.
+- **State Corruption on Generator Intersections**: Addressed internal generator pipelines to explicitly prevent purging primary table geometries dynamically on stream intersections.
+- **CLI Parser Mappings**: Resolved an internal mapping conflict renaming the internal visual `--row0-color` parameter properly assigning it directly to `--col0-color` (`-0`).
+- **Comprehensive API Structuring**: Refactored `docs/API.md` explicitly capturing typing and functionality for 40+ boundaries.
 
 ## [1.0.3] - 2026-04-06
 

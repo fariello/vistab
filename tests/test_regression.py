@@ -29,7 +29,7 @@ class TestVistabRegression(unittest.TestCase):
             input=input_data,
             encoding="utf-8"
         )
-        return result.stdout
+        return result.stdout + result.stderr
 
     def _assert_against_fixture(self, name: str, output: str):
         """

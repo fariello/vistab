@@ -1,3 +1,17 @@
 [1m[1;36mBuilt-In Theme Macro Demonstrations[0m
 Predefined themes combining geometry layouts with zebra-striping and boundary padding natively!
 
+Traceback (most recent call last):
+  File "C:\Users\gabri\OneDrive\Projects\vistab\src\vistab.py", line 3156, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\gabri\OneDrive\Projects\vistab\src\vistab.py", line 2824, in main
+    print_themes_demo()
+    ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\gabri\OneDrive\Projects\vistab\src\vistab.py", line 2660, in print_themes_demo
+    print(demo_tb.draw())
+    ~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\gabri\AppData\Local\Python\pythoncore-3.14-64\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 0-150: character maps to <undefined>

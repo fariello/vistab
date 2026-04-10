@@ -57,6 +57,13 @@ Result:
     delta   0.045     1.000e+10   92        8.900e+13
 """
 
+import os
+import sys
+
+# Ensure Windows legacy cmd.exe supports ANSI formatting naturally
+if os.name == 'nt':
+    os.system("")
+
 from typing import Union
 
 try:
@@ -580,7 +587,7 @@ class Vistab:
         THEMES[f"{_name}-solid"] = {**_base, "alt_rows": [_solid_base, _solid_base]}
         THEMES[f"{_name}-solid-index"] = {**_base, "alt_rows": [_solid_base, _solid_base], "col_0": _config["col_0"]}
 
-    def __init__(self, rows: Optional[Iterable[Iterable[Any]]] = None, header: Union[bool, Iterable[Any], str, None] = True, max_width: int = 0, alignment: Optional[str] = None, style: Optional[str] = None, padding: Optional[int] = None) -> None:
+    def __init__(self, rows: Optional[Iterable[Iterable[Any]]] = None, header: Optional[Iterable[Any]] = None, max_width: int = 0, alignment: Optional[str] = None, style: Optional[str] = None, padding: Optional[int] = None, title: Optional[str] = None, max_rows: int = 0, max_cols: int = 0) -> None:
         """
         Initializes a new instance of the Vistab styling rendering class.
 
@@ -628,6 +635,12 @@ class Vistab:
             The style of the table. Default is 'light' or whatever is in .config/vistab.toml.
         padding : int, optional
             The amount of padding (left and right) for the cells. Default is 1 or whatever is in .config/vistab.toml.
+        title : str, optional
+            Optional title printed above the table.
+        max_rows : int, optional
+            Maximum rows to render natively (0 = infinite).
+        max_cols : int, optional
+            Maximum columns to render natively (0 = infinite).
 
         Example:
         --------
@@ -669,7 +682,7 @@ class Vistab:
         if header is False or header is None or header == "":
             is_header = False
         elif getattr(header, '__iter__', False) and not isinstance(header, (str, bytes, bool)):
-            self.header(header)
+            self.set_header(header)
             is_header = False  # The explicit header was added, don't consume the first row structurally
 
         if rows is not None:
@@ -695,6 +708,13 @@ class Vistab:
         if alignment is not None:
             self.set_cols_align(alignment)  # Set the column alignment if provided
             pass # for auto-indentation
+            
+        if title is not None:
+            self.set_title(title)
+        if max_rows > 0:
+            self.set_max_rows(max_rows)
+        if max_cols > 0:
+            self.set_max_cols(max_cols)
 
         pass # for auto-indentation
 
@@ -1523,6 +1543,12 @@ class Vistab:
         return self
 
     def header(self, array: List[Any]) -> 'Vistab':
+        """[DEPRECATED] Alias for set_header()."""
+        import warnings
+        warnings.warn("table.header() is deprecated and will be removed. Please use table.set_header() instead.", DeprecationWarning)
+        return self.set_header(array)
+        
+    def set_header(self, array: List[Any]) -> 'Vistab':
         """Specify the header of the table.
 
         Args:
@@ -2675,9 +2701,9 @@ def main():
     parser.add_argument("-c", "--max-cols", type=int, default=0, help="Maximum number of columns to render (default: 0 / infinite)")
     parser.add_argument("--on-short", type=str, choices=["pad", "skip", "raise"], default="pad", help="Jagged array handler for missing fields (pad|skip|raise)")
     parser.add_argument("--on-long", type=str, choices=["truncate", "skip", "raise"], default="truncate", help="Jagged array handler for overflow fields (truncate|skip|raise)")
-    parser.add_argument("--mark-abnormal", type=str, metavar="COLOR", help="Highlight skipped strings mutated implicitly dynamically cleanly natively securely.")
+    parser.add_argument("--mark-abnormal", type=str, metavar="COLOR", help="Highlight skipped strings mutated implicitly dynamically.")
     parser.add_argument("--stream", action="store_true", help="Force infinite memoryless streaming output explicitly over buffer allocations.")
-    parser.add_argument("--stream-probe", type=int, default=100, help="Number of records to safely probe formatting constraints synchronously cleanly (default: 100)")
+    parser.add_argument("--stream-probe", type=int, default=100, help="Number of records to probe formatting constraints synchronously (default: 100)")
     parser.add_argument("-p", "--padding", type=int, default=1, help="Cell padding integer (default: 1)")
     parser.add_argument("-a", "--align", type=str, help="Column alignment string (e.g. 'lrc')")
     parser.add_argument("-v", "--valign", type=str, help="Column vertical alignment string (e.g. 'tmb')")
@@ -2688,10 +2714,10 @@ def main():
     parser.add_argument("-B", "--no-borders", action="store_true", help="Disable the outer table border natively")
     parser.add_argument("-X", "--no-hlines", action="store_true", help="Disable horizontal lines iteratively between rows")
     parser.add_argument("-V", "--no-vlines", action="store_true", help="Disable vertical lines strictly between columns")
-    parser.add_argument("-U", "--no-header-line", action="store_true", help="Disable the horizontal divider below the header cleanly")
-    parser.add_argument("--sort-by", type=int, help="Column index (0-indexed) to fully buffer and sort the standard input natively (Caveat Emptor: memory intensive over streams).")
-    parser.add_argument("--sort-reverse", action="store_true", help="Reverse the sorting order logic structurally.")
-    parser.add_argument("--csv-dialect", type=str, help="Enforce explicit CSV dialect cleanly mechanically without sniffing (e.g. 'excel-tab').")
+    parser.add_argument("-U", "--no-header-line", action="store_true", help="Disable the horizontal divider below the header.")
+    parser.add_argument("--sort-by", type=int, help="Column index (0-indexed) to buffer and sort standard input (Caveat Emptor: memory intensive over streams).")
+    parser.add_argument("--sort-reverse", action="store_true", help="Reverse the sorting order.")
+    parser.add_argument("--csv-dialect", type=str, help="Enforce explicit CSV dialect mechanically without sniffing (e.g. 'excel-tab').")
     parser.add_argument("-b", "--border-color", type=str, metavar="COLOR", help="Override table outer border color")
     parser.add_argument("-f", "--header-color", type=str, metavar="COLOR", help="Override header row color")
     parser.add_argument("-0", "--col0-color", type=str, metavar="COLOR", help="Override first data column color (index 0)")
@@ -2722,29 +2748,27 @@ def main():
 
     # CLI Validation Safety Nets
     if args.style and args.style not in Vistab.STYLES:
-        print(f"\033[1;31m[ERROR]\033[0m Unknown layout style '{args.style}'")
-        print(f"Available styles: {', '.join(sorted(Vistab.STYLES.keys()))}")
-        print("Tip: Run 'vistab -L' to view a rendered matrix of all available layout stylings.")
+        print(f"\033[1;31m[ERROR]\033[0m Unknown layout style '{args.style}'", file=sys.stderr)
+        print(f"Available styles: {', '.join(sorted(Vistab.STYLES.keys()))}", file=sys.stderr)
+        print("Tip: Run 'vistab -L' to view a rendered matrix of all available layout stylings.", file=sys.stderr)
         sys.exit(1)
         
     if getattr(args, 'theme', None) and args.theme not in Vistab.THEMES:
-        print(f"\033[1;31m[ERROR]\033[0m Unknown color theme '{args.theme}'")
-        print(f"Available themes: {', '.join(sorted(Vistab.THEMES.keys()))}")
-        print("Tip: Run 'vistab -M' to view a rendered matrix of all available color themes.")
+        print(f"\033[1;31m[ERROR]\033[0m Unknown color theme '{args.theme}'", file=sys.stderr)
+        print(f"Available themes: {', '.join(sorted(Vistab.THEMES.keys()))}", file=sys.stderr)
+        print("Tip: Run 'vistab -M' to view a rendered matrix of all available color themes.", file=sys.stderr)
         sys.exit(1)
         
     for color_arg in ['border_color', 'header_color', 'row0_color', 'even_row_color', 'odd_row_color', 'even_col_color', 'odd_col_color', 'last_row_color', 'last_col_color']:
         val = getattr(args, color_arg, None)
         if val and val.lower() != "none" and val not in Vistab.COLORS:
-            print_colors_list()
-            print(f"\n\033[1;31m[ERROR]\033[0m Foreground color '{val}' is not a valid color. See above for available colors. You may also use 'none' to remove colors.")
+            print(f"\n\033[1;31m[ERROR]\033[0m Foreground color '{val}' is not a valid color. You may also use 'none' to remove colors.", file=sys.stderr)
             sys.exit(1)
             
     for color_arg in ['border_bg_color', 'header_bg_color', 'row0_bg_color', 'even_row_bg_color', 'odd_row_bg_color', 'even_col_bg_color', 'odd_col_bg_color', 'last_row_bg_color', 'last_col_bg_color', 'table_bg_color']:
         val = getattr(args, color_arg, None)
         if val and val.lower() != "none" and val not in Vistab.BG_COLORS:
-            print_colors_list()
-            print(f"\n\033[1;31m[ERROR]\033[0m Background color '{val}' is not a valid background color. See above for available background colors. You may also use 'none'.")
+            print(f"\n\033[1;31m[ERROR]\033[0m Background color '{val}' is not a valid background color. You may also use 'none'.", file=sys.stderr)
             sys.exit(1)
 
     if args.show_config:
@@ -3123,7 +3147,7 @@ def main():
             else:
                 _process_stream(io.StringIO("foo,bar\n1,2"), source_name, source_type)
         except Exception as e:
-            print(f"[\033[1;31mERROR\033[0m] parsing output matrix safely '{source_name}': {e}")
+            print(f"\033[1;31m[ERROR]\033[0m parsing output matrix '{source_name}': {e}", file=sys.stderr)
             sys.exit(1)
 
 

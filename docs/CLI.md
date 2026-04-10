@@ -48,34 +48,34 @@ The CLI lets you manage data layout, spacing, and wrapper constraints via standa
 If predefined themes aren't enough, you can explicitly override coordinate elements using discrete color arguments (`red`, `blue`, `bright_black`, `none` to remove):
 - **`--border-color` / `--border-bg-color`**: Surrounding frame color.
 - **`--col0-bg-color`**: Target the first column data explicitly.
-- **`-l, --last-row-color` / `-A, --last-row-bg-color`**: Auto-resolves targeting the dynamic bottom offset (`-1`) natively.
-- **`-x, --last-col-color` / `-y, --last-col-bg-color`**: Auto-resolves targeting the dynamic rightmost boundary.
-- **`-g, --table-bg-color`**: Safely injects a global fallback background wash uniformly across the layout.
+- **`-l, --last-row-color` / `-A, --last-row-bg-color`**: Target the dynamic bottom offset (`-1`).
+- **`-x, --last-col-color` / `-y, --last-col-bg-color`**: Target the dynamic rightmost boundary.
+- **`-g, --table-bg-color`**: Apply a global background wash uniformly across the layout.
 
 ## Diagnostic Endpoints & Theme Customization
 
 The CLI provides visual evaluation matrices to verify layouts locally:
 - **`--create-config TARGET`**: Generate a standard configuration file for the current local directory (e.g., `vistab --create-config .vistab.toml`).
-- **`-Q, --show-config`**: Print the paths mapping global dynamic configuration directories cleanly and exit.
+- **`-Q, --show-config`**: Print the paths mapping global dynamic configuration directories and exit.
 - **`vistab -M`**: Render a color matrix showcasing every pre-built Theme algorithm.
 - **`vistab -L`**: Visualize structural framework limits parsing valid physical Table styles.
-- **`vistab -C`**: Print the terminal execution dictionary safely displaying CLI colors.
+- **`vistab -C`**: Print the terminal execution dictionary displaying CLI colors.
 
 ### The Configuration Workflow (`--save-theme` & `--show-code`)
 You can lock in CLI outputs saving configurations mapped to `~/.config/vistab/themes.json` using `--save-theme`:
 ```bash
-# Safely bind complex global bounds preventing dictionary bleed natively
+# Bind global layout styles to a custom alias
 vistab data.csv --theme minimalist --table-bg-color bright_black --last-row-color magenta --save-theme my_custom_theme
 ```
 
-Use `--show-code` to generate the literal Python initialization dictionary reproducing your aesthetic layout. 
-**Note:** Built-in Vistab configurations intentionally strictly strip *rigid data modifiers* (like `--align` and `--width`) from the global dictionary registry so styles can adapt modularly across arbitrary datasets safely without throwing boundary exceptions.
+Use `--show-code` to generate the literal Python dictionary reproducing your aesthetic layout. 
+**Note:** Built-in Vistab configurations intentionally strip *rigid data modifiers* (like `--align` and `--width`) from the theme registry so styles can adapt modularly across arbitrary datasets without throwing boundary exceptions.
 
 ```bash
 vistab data.csv --theme minimalist --table-bg-color bright_black --align lrl --show-code
 ```
 
-![Screenshot: Massive colorful logical matrix block structurally displaying 15 different theme executions mapped perfectly across distinct visual borders sequentially rendering dynamic zebra-striping.](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-M-themes-output.png)
+![Screenshot: Massive colorful matrix structurally displaying 15 different pre-configured theme executions mapped across distinct visual borders.](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-M-themes-output.png)
 
 ---
 [README](../README.md) | [API](API.md) | [CLI](CLI.md) | [SPEC](../FUNCTIONAL_SPEC.md) | [CHANGELOG](../CHANGELOG.md)

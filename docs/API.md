@@ -32,97 +32,97 @@ Initializes the Vistab framework.
 
 ## 2. Data Ingestion & State Modification
 
-### `header(array: List[Any])`
+### `set_header(array: List[Any])`
 Sets the explicit table header list. Passing this forces `self.has_header = True`.
 
 ### `add_row(array: List[Any])`
-Appends a single dataset line array targeting the bottom structural row computationally.
+Appends a single dataset line array to the bottom of the table.
 
 ### `add_rows(rows: Iterable[Iterable[Any]], header: bool = True)`
-Iterates and maps a complex 2D block. If `header=True` and the table lacks one natively, index `0` binds to the header element cleanly.
+Iterates and appends a 2D block. If `header=True` and the table lacks one, index `0` binds to the header element.
 
 ### `set_rows(rows: Iterable[Iterable[Any]], header: bool = True)`
-Clears existing memory completely replacing structural boundaries entirely with the inserted `rows`.
+Clears existing memory completely replacing structural boundaries with the inserted `rows`.
 
 ### `sort_by(col_idx: int, reverse: bool = False, key: callable = None)`
-Rearranges row structures internally tracking a dedicated physical column iteratively matching native python mapping mechanics safely.
+Rearranges row structures internally tracking a dedicated physical column logic.
 
 ### `reset()`
-Obliterates rendering history, returning the internal states safely functionally matching `Vistab` initial parameters smoothly!
+Obliterates rendering history, returning internal states functionally matching initial parameters.
 
 ---
 
 ## 3. Aesthetic Structure & Space Limits
 
 ### `set_title(title: str)`
-Renders a centered global text label gracefully resting above the primary top border execution natively.
+Renders a centered global text label above the primary top border execution.
 
 ### `set_style(style_str: str = 'light')`
 Instantly reassigns the logical border characters driving table grid formats.
 
 ### `set_padding(amount: int)`
-Updates internal blank-space offsets securely padding column alignments.
+Updates internal blank-space padding around column alignments.
 
 ### `set_max_cols(max_cols: int)`
-Truncates right-most values mapping constraints natively strictly preventing boundary bloat.
+Truncates right-most values mapping constraints strictly preventing boundary bloat.
 
 ### `set_max_rows(max_rows: int)`
-Truncates bottom execution safely explicitly bounding vertical output bounds.
+Truncates bottom rows bounding vertical limits natively.
 
 ### `set_max_width(max_width: int)`
-Triggers line-wrapping heuristics mapping constraints actively intercepting text before executing terminal geometry breaks cleanly.
+Triggers line-wrapping heuristics intercepting text before exceeding terminal boundaries.
 
 ### `set_decorations(decorations: int)`
-Toggles inner structural grids natively securely utilizing bitmask flags (`Vistab.BORDER | Vistab.HEADER | Vistab.VLINES`).
+Toggles inner structural grids securely utilizing bitmask flags (`Vistab.BORDER | Vistab.HEADER | Vistab.VLINES`).
 
 ### `set_table_lines(table_lines: str)`
-Customizes granular interior lines passing strings targeting intersections selectively.
+Customizes granular interior lines passing strings targeting intersections.
 
 ---
 
 ## 4. Alignment & Format Type Coercion
 
-*Parameters evaluating formatting arrays natively evaluate list structures or single continuous strings securely (`"lrc"`).*
+*Parameters evaluating formatting arrays natively evaluate list structures or single continuous strings (`"lrc"`).*
 
 ### `set_cols_width(array: Union[str, List[Any]])`
-Forces column geometry adhering firmly globally mapping integer widths cleanly restricting variable expansions.
+Forces column geometry adhering strictly mapping integer widths restricting variable expansions.
 
 ### `set_cols_align(array: Union[str, List[str]])`
-Evaluates explicit mappings resolving horizontal cell justification explicitly (`'l'=left`, `'c'=center`, `'r'=right`).
+Evaluates explicit mappings resolving horizontal cell justification (`'l'=left`, `'c'=center`, `'r'=right`).
 
 ### `set_cols_valign(array: Union[str, List[str]])`
-Evaluates positional geometry mapping vertical alignments organically securely (`'t'=top`, `'m'=middle`, `'b'=bottom`).
+Evaluates positional geometry mapping vertical alignments (`'t'=top`, `'m'=middle`, `'b'=bottom`).
 
 ### `set_cols_dtype(array: Union[str, List[str]])`
 Applies robust precision formats natively wrapping types safely (`'a'=auto`, `'t'=text`, `'f'=float`, `'i'=int`, `'e'=exp`).
 
 ### `set_precision(width: int)`
-Establishes the default float point accuracy natively resolving boundaries globally intelligently cleanly.
+Establishes default float point accuracy resolving boundaries accurately.
 
 ---
 
 ## 5. Geometric Wrapping Rules
 
-*Vistab uses coordinate-targeting methods resolving wrapping. By setting `wrap=False` you disable invisible formatting bounds completely securely locking boundaries safely!*
+*Vistab uses coordinate-targeting methods resolving wrapping. By setting `wrap=False` you disable invisible formatting bounds.*
 
 ### `set_table_wrap(wrap: bool)` 
-Overrides logical evaluations globally protecting geometry structurally wrapping outputs consistently!
+Overrides logical evaluations globally protecting geometry structurally.
 ### `set_row_wrap(row_idx: int, wrap: bool)` 
-Locks structural limits spanning completely horizontally matching boundaries uniformly!
+Locks structural limits horizontally matching boundaries uniformly!
 ### `set_col_wrap(col_idx: int, wrap: bool)` 
 Locks layout parameters vertically explicitly.
 ### `set_cell_wrap(row_idx: int, col_idx: int, wrap: bool)` 
-Locks specific cell boundaries specifically protecting manual geometries structurally.
+Locks specific cell boundaries specifically protecting manual geometries.
 
 ---
 
 ## 6. Color Layout Integrations & Thematics
 
-Vistab provides discrete coordinate styling enabling robust parameter modifications elegantly targeting boundaries explicitly intuitively.
+Vistab provides discrete coordinate styling enabling robust parameter modifications elegantly targeting boundaries explicitly.
 All color keywords map to CLI counterparts natively (`red`, `green`, `black`, `bright_black`, `none`).
 
 ### `apply_theme(theme: Union[str, dict])`
-Injects pre-configured algorithms logically matching Zebra-matrices natively utilizing configurations natively.
+Injects pre-configured algorithms logically matching Zebra-matrices.
 
 ```python
 table.apply_theme({
@@ -163,11 +163,11 @@ table.apply_theme({
 ## 7. Operational Properties & Outputs
 
 ### `draw() -> str`
-Computes all styling rules globally, measuring byte boundaries safely processing geometry logic perfectly outputting the final comprehensive multi-line string natively.
+Computes all styling rules globally, measuring byte boundaries safely processing geometry logic perfectly outputting the final comprehensive multi-line string.
 
 ### Properties
-- `table.has_header` `(bool)`: Programmatically disable header tracking safely without stripping matrix sizes dynamically correctly cleanly.
-- `table.on_wrap_conflict` `(str)`: Explicitly defines evaluation behaviors cleanly mapping routing bounds safely (`"warn"`, `"error"`, `"clip"`, `"overflow"`).
+- `table.has_header` `(bool)`: Programmatically disable header tracking safely without stripping matrix sizes dynamically correctly.
+- `table.on_wrap_conflict` `(str)`: Explicitly defines evaluation behaviors mapping routing bounds safely (`"warn"`, `"error"`, `"clip"`, `"overflow"`).
 
 ---
 [README](../README.md) | [API](API.md) | [CLI](CLI.md) | [SPEC](../FUNCTIONAL_SPEC.md) | [CHANGELOG](../CHANGELOG.md)
