@@ -74,7 +74,7 @@ class TestVistabRegression(unittest.TestCase):
         
     def test_regression_diagnostic_matrix(self):
         """Safeguard structural matrix calculations implicitly testing rendering offsets natively."""
-        out = self._run_cli(["-M"])
+        out = self._run_cli(["--demo", "themes"])
         self._assert_against_fixture("regression_diagnostic_matrix", out)
 
     def test_regression_pipeline_stdin(self):

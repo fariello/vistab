@@ -2676,9 +2676,19 @@ def main():
                 Vistab.THEMES.update(json.load(f))
         except Exception: pass
         
+    usage_str = (
+        "vistab [options] [files ...]\n"
+        "       cat data.csv | vistab -t ocean -w 120\n\n"
+        "       vistab --help-colors     (target-specific colors)\n"
+        "       vistab --help-advanced   (streams and jagged matrices)\n"
+        "       vistab --demo {styles|colors|capabilities|anatomy|themes}"
+    )
+
     parser = argparse.ArgumentParser(
         prog="vistab",
-        description="A zero-dependency Python utility for rendering rich terminal tables with ANSI color awareness.",
+        usage=usage_str,
+        add_help=False,
+        description="A lightweight Python utility for rendering rich terminal tables with ANSI color awareness.",
         epilog=(
             "Notes on Extensibility:\n"
             "  * Vistab gracefully uses standard built-in libraries safely.\n"
@@ -2687,74 +2697,87 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     
+    show_colors = "--help-colors" in sys.argv
+    show_adv = "--help-advanced" in sys.argv
+    show_basic = not show_colors and not show_adv
+    
+    c_help = lambda text: text if show_colors else argparse.SUPPRESS
+    a_help = lambda text: text if show_adv else argparse.SUPPRESS
+    b_help = lambda text: text if show_basic else argparse.SUPPRESS
+
+    parser.add_argument("-h", "--help", action="help", default=argparse.SUPPRESS, help=b_help("show this help message and exit"))
+
     diag_grp = parser.add_argument_group("Diagnostic & Demo Operations")
-    diag_grp.add_argument("-L", "--list-styles", action="store_true", help="Print all available built-in rendering styles")
-    diag_grp.add_argument("-C", "--list-colors", action="store_true", help="Print all predefined foreground, background, and rendering format strings")
-    diag_grp.add_argument("-T", "--test", action="store_true", help="Print a demonstration of color-wrapping and complex unicode characters")
-    diag_grp.add_argument("-D", "--demo-styling", action="store_true", help="Print a demonstration of coordinate-based row, column, and cell styling")
-    diag_grp.add_argument("-M", "--demo-themes", action="store_true", help="Print a demonstration of the integrated high-level layout color themes")
+    diag_grp.add_argument("--demo", type=str, choices=["styles", "colors", "capabilities", "anatomy", "themes"], help=b_help("Run built-in demonstrations"))
+    diag_grp.add_argument("--help-colors", action="store_true", help=b_help("Show advanced coordinate-based color parameters (-0, -E, -b, etc.)"))
+    diag_grp.add_argument("--help-advanced", action="store_true", help=b_help("Show advanced streaming, sorting, and jagged matrix behaviors"))
 
     data_grp = parser.add_argument_group("Data Ingestion & Parsing Logic")
-    data_grp.add_argument("-i", "--input", type=str, help="Auto-detect and format a delimited structural file (CSV, TSV, etc.)")
-    data_grp.add_argument("--csv-dialect", type=str, help="Enforce explicit CSV dialect mechanically without sniffing (e.g. 'excel-tab').")
-    data_grp.add_argument("--sort-by", type=int, help="Column index (0-indexed) to buffer and sort standard input (Caveat Emptor: memory intensive over streams).")
-    data_grp.add_argument("--sort-reverse", action="store_true", help="Reverse the sorting order.")
-    data_grp.add_argument("--stream", action="store_true", help="Force infinite memoryless streaming output explicitly over buffer allocations.")
-    data_grp.add_argument("--stream-probe", type=int, default=100, help="Number of records to probe formatting constraints synchronously (default: 100)")
-    data_grp.add_argument("--on-short", type=str, choices=["pad", "skip", "raise"], default="pad", help="Jagged array handler for missing fields (pad|skip|raise)")
-    data_grp.add_argument("--on-long", type=str, choices=["truncate", "skip", "raise"], default="truncate", help="Jagged array handler for overflow fields (truncate|skip|raise)")
-    data_grp.add_argument("files", nargs="*", help="Sequential file path(s) to delimited datasets. Leave empty to seamlessly parse STDIN streams.")
+    data_grp.add_argument("-i", "--input", type=str, help=b_help("Auto-detect and format a delimited structural file (CSV, TSV, etc.)"))
+    data_grp.add_argument("--csv-dialect", type=str, help=a_help("Enforce explicit CSV dialect mechanically without sniffing (e.g. 'excel-tab')."))
+    data_grp.add_argument("--sort-by", type=int, help=a_help("Column index (0-indexed) to buffer and sort standard input (Caveat Emptor: memory intensive over streams)."))
+    data_grp.add_argument("--sort-reverse", action="store_true", help=a_help("Reverse the sorting order."))
+    data_grp.add_argument("--stream", action="store_true", help=a_help("Force infinite memoryless streaming output explicitly over buffer allocations."))
+    data_grp.add_argument("--stream-probe", type=int, default=100, help=a_help("Number of records to probe formatting constraints synchronously (default: 100)"))
+    data_grp.add_argument("--on-short", type=str, choices=["pad", "skip", "raise"], default="pad", help=a_help("Jagged array handler for missing fields (pad|skip|raise)"))
+    data_grp.add_argument("--on-long", type=str, choices=["truncate", "skip", "raise"], default="truncate", help=a_help("Jagged array handler for overflow fields (truncate|skip|raise)"))
+    data_grp.add_argument("files", nargs="*", help=b_help("Sequential file path(s). Leave empty to parse STDIN."))
 
     layout_grp = parser.add_argument_group("Output Constraints & Layout Structure")
-    layout_grp.add_argument("-w", "--width", type=int, default=0, help="Maximum table width before wrapping cells (default: 0 / infinite)")
-    layout_grp.add_argument("-W", "--col-widths", type=str, help="Comma-separated list of strict integer widths for columns (e.g. '10,20,5')")
-    layout_grp.add_argument("-r", "--max-rows", type=int, default=0, help="Maximum number of rows to render (default: 0 / infinite)")
-    layout_grp.add_argument("-c", "--max-cols", type=int, default=0, help="Maximum number of columns to render (default: 0 / infinite)")
-    layout_grp.add_argument("-p", "--padding", type=int, default=1, help="Cell padding integer (default: 1)")
-    layout_grp.add_argument("-a", "--align", type=str, help="Column alignment string (e.g. 'lrc')")
-    layout_grp.add_argument("-v", "--valign", type=str, help="Column vertical alignment string (e.g. 'tmb')")
-    layout_grp.add_argument("-d", "--dtype", type=str, help="Column datatypes string (e.g. 'tfi')")
-    layout_grp.add_argument("-P", "--precision", type=int, help="Float decimal precision mapping globally")
+    layout_grp.add_argument("-w", "--width", type=int, default=0, help=b_help("Maximum table width before wrapping cells (default: 0 / infinite)"))
+    layout_grp.add_argument("-W", "--col-widths", type=str, help=b_help("Comma-separated list of strict widths for columns (e.g. '10,20,5')"))
+    layout_grp.add_argument("-r", "--max-rows", type=int, default=0, help=b_help("Maximum number of rows to render (default: 0 / infinite)"))
+    layout_grp.add_argument("-c", "--max-cols", type=int, default=0, help=b_help("Maximum number of columns to render (default: 0 / infinite)"))
+    layout_grp.add_argument("-p", "--padding", type=int, default=1, help=b_help("Cell padding integer (default: 1)"))
+    layout_grp.add_argument("-a", "--align", type=str, help=b_help("Column alignment string (e.g. 'lrc')"))
+    layout_grp.add_argument("-v", "--valign", type=str, help=b_help("Column vertical alignment string (e.g. 'tmb')"))
+    layout_grp.add_argument("-d", "--dtype", type=str, help=b_help("Column datatypes string (e.g. 'tfi')"))
+    layout_grp.add_argument("-P", "--precision", type=int, help=b_help("Float decimal precision mapping globally"))
 
     visual_grp = parser.add_argument_group("Visual Elements & Toggles")
-    visual_grp.add_argument("-N", "--title", type=str, help="Table title string rendered centered above output")
-    visual_grp.add_argument("-s", "--style", type=str, default="light", help="Override the visual rendering style (default: 'light')")
-    visual_grp.add_argument("-t", "--theme", type=str, help="Apply a dynamic color theme matrix to the input data (e.g. 'forest-cols')")
-    visual_grp.add_argument("-H", "--no-header", action="store_true", help="Bypass popping the first row as the table header")
-    visual_grp.add_argument("-B", "--no-borders", action="store_true", help="Disable the outer table border natively")
-    visual_grp.add_argument("-X", "--no-hlines", action="store_true", help="Disable horizontal lines iteratively between rows")
-    visual_grp.add_argument("-V", "--no-vlines", action="store_true", help="Disable vertical lines strictly between columns")
-    visual_grp.add_argument("-U", "--no-header-line", action="store_true", help="Disable the horizontal divider below the header.")
+    visual_grp.add_argument("-N", "--title", type=str, help=b_help("Table title string rendered centered above output"))
+    visual_grp.add_argument("-s", "--style", type=str, default="light", help=b_help("Override the visual rendering style (default: 'light')"))
+    visual_grp.add_argument("-t", "--theme", type=str, help=b_help("Apply a dynamic color theme matrix to the input data (e.g. 'forest-cols')"))
+    visual_grp.add_argument("-H", "--no-header", action="store_true", help=b_help("Bypass popping the first row as the table header"))
+    visual_grp.add_argument("-B", "--no-borders", action="store_true", help=b_help("Disable the outer table border"))
+    visual_grp.add_argument("-X", "--no-hlines", action="store_true", help=b_help("Disable horizontal lines iteratively between rows"))
+    visual_grp.add_argument("-V", "--no-vlines", action="store_true", help=b_help("Disable vertical lines strictly between columns"))
+    visual_grp.add_argument("-U", "--no-header-line", action="store_true", help=b_help("Disable the horizontal divider below the header"))
 
     color_grp = parser.add_argument_group("Coordinate-Based Targeting (Colors)")
-    color_grp.add_argument("--mark-abnormal", type=str, metavar="COLOR", help="Highlight skipped strings mutated implicitly dynamically.")
-    color_grp.add_argument("-b", "--border-color", type=str, metavar="COLOR", help="Override table outer border color")
-    color_grp.add_argument("-f", "--header-color", type=str, metavar="COLOR", help="Override header row color")
-    color_grp.add_argument("-0", "--col0-color", type=str, metavar="COLOR", help="Override first data column color (index 0)")
-    color_grp.add_argument("-E", "--even-row-color", type=str, metavar="COLOR", help="Override even data rows color")
-    color_grp.add_argument("-O", "--odd-row-color", type=str, metavar="COLOR", help="Override odd data rows color")
-    color_grp.add_argument("-e", "--even-col-color", type=str, metavar="COLOR", help="Override even columns color")
-    color_grp.add_argument("-o", "--odd-col-color", type=str, metavar="COLOR", help="Override odd columns color")
-    color_grp.add_argument("-l", "--last-row-color", type=str, metavar="COLOR", help="Override last data row color")
-    color_grp.add_argument("-x", "--last-col-color", type=str, metavar="COLOR", help="Override last data column color")
-    color_grp.add_argument("-Z", "--border-bg-color", type=str, metavar="COLOR", help="Override table outer border background color")
-    color_grp.add_argument("-G", "--header-bg-color", type=str, metavar="COLOR", help="Override header row background color")
-    color_grp.add_argument("-1", "--col0-bg-color", type=str, metavar="COLOR", help="Override first data column background color")
-    color_grp.add_argument("-2", "--even-row-bg-color", type=str, metavar="COLOR", help="Override even data rows background color")
-    color_grp.add_argument("-3", "--odd-row-bg-color", type=str, metavar="COLOR", help="Override odd data rows background color")
-    color_grp.add_argument("-4", "--even-col-bg-color", type=str, metavar="COLOR", help="Override even columns background color")
-    color_grp.add_argument("-5", "--odd-col-bg-color", type=str, metavar="COLOR", help="Override odd columns background color")
-    color_grp.add_argument("-A", "--last-row-bg-color", type=str, metavar="COLOR", help="Override last data row background color")
-    color_grp.add_argument("-y", "--last-col-bg-color", type=str, metavar="COLOR", help="Override last data column background color")
-    color_grp.add_argument("-g", "--table-bg-color", type=str, metavar="COLOR", help="Override global table background color uniformly")
+    color_grp.add_argument("--mark-abnormal", type=str, metavar="COLOR", help=a_help("Highlight skipped strings mutated implicitly dynamically."))
+    color_grp.add_argument("-b", "--border-color", type=str, metavar="COLOR", help=c_help("Override table outer border color"))
+    color_grp.add_argument("-f", "--header-color", type=str, metavar="COLOR", help=c_help("Override header row color"))
+    color_grp.add_argument("-0", "--col0-color", type=str, metavar="COLOR", help=c_help("Override first data column color (index 0)"))
+    color_grp.add_argument("-E", "--even-row-color", type=str, metavar="COLOR", help=c_help("Override even data rows color"))
+    color_grp.add_argument("-O", "--odd-row-color", type=str, metavar="COLOR", help=c_help("Override odd data rows color"))
+    color_grp.add_argument("-e", "--even-col-color", type=str, metavar="COLOR", help=c_help("Override even columns color"))
+    color_grp.add_argument("-o", "--odd-col-color", type=str, metavar="COLOR", help=c_help("Override odd columns color"))
+    color_grp.add_argument("-l", "--last-row-color", type=str, metavar="COLOR", help=c_help("Override last data row color"))
+    color_grp.add_argument("-x", "--last-col-color", type=str, metavar="COLOR", help=c_help("Override last data column color"))
+    color_grp.add_argument("-Z", "--border-bg-color", type=str, metavar="COLOR", help=c_help("Override table outer border background color"))
+    color_grp.add_argument("-G", "--header-bg-color", type=str, metavar="COLOR", help=c_help("Override header row background color"))
+    color_grp.add_argument("-1", "--col0-bg-color", type=str, metavar="COLOR", help=c_help("Override first data column background color"))
+    color_grp.add_argument("-2", "--even-row-bg-color", type=str, metavar="COLOR", help=c_help("Override even data rows background color"))
+    color_grp.add_argument("-3", "--odd-row-bg-color", type=str, metavar="COLOR", help=c_help("Override odd data rows background color"))
+    color_grp.add_argument("-4", "--even-col-bg-color", type=str, metavar="COLOR", help=c_help("Override even columns background color"))
+    color_grp.add_argument("-5", "--odd-col-bg-color", type=str, metavar="COLOR", help=c_help("Override odd columns background color"))
+    color_grp.add_argument("-A", "--last-row-bg-color", type=str, metavar="COLOR", help=c_help("Override last data row background color"))
+    color_grp.add_argument("-y", "--last-col-bg-color", type=str, metavar="COLOR", help=c_help("Override last data column background color"))
+    color_grp.add_argument("-g", "--table-bg-color", type=str, metavar="COLOR", help=c_help("Override global table background color uniformly"))
 
     config_grp = parser.add_argument_group("Configuration Workflow")
-    config_grp.add_argument("-K", "--create-config", type=str, nargs="?", const=os.path.join(config_dir, "config.toml"), metavar="TARGET", help="Generate TOML configuration internally. (default: ~/.config/vistab/config.toml)")
-    config_grp.add_argument("-Q", "--show-config", action="store_true", help="Print the paths mapping the global dynamic configuration files explicitly and exit.")
-    config_grp.add_argument("-S", "--save-theme", type=str, metavar="THEME", help="Save the current CLI styling arguments to the global themes registry under THEME")
-    config_grp.add_argument("-Y", "--show-code", action="store_true", help="Print the equivalent Python initialization code for the generated layout instead of drawing.")
+    config_grp.add_argument("-K", "--create-config", type=str, nargs="?", const=os.path.join(config_dir, "config.toml"), metavar="TARGET", help=b_help("Generate TOML configuration internally (default: ~/.config/vistab/config.toml)"))
+    config_grp.add_argument("-Q", "--show-config", action="store_true", help=b_help("Print global dynamic config paths and exit"))
+    config_grp.add_argument("-S", "--save-theme", type=str, metavar="THEME", help=b_help("Save the current CLI styling arguments to the themes registry under THEME"))
+    config_grp.add_argument("-Y", "--show-code", action="store_true", help=b_help("Print equivalent Python initialization code for the generated layout"))
 
     args = parser.parse_args()
+    
+    if args.help_colors or args.help_advanced:
+        parser.print_help()
+        sys.exit(0)
+    
     _printed_anything = False
 
     # CLI Validation Safety Nets
@@ -2821,27 +2844,26 @@ def main():
         # Exit cleanly without disrupting
         sys.exit(0)
 
-    if args.list_styles:
+    if args.demo == "styles":
         print_styles_list()
         _printed_anything = True
         
-    if args.list_colors:
+    if args.demo == "colors":
         print_colors_list()
         _printed_anything = True
         
-    if args.demo_themes:
+    if args.demo == "themes":
         if _printed_anything:
             print("\n" + "="*40 + "\n")
         print_themes_demo()
         _printed_anything = True
-
-    if args.test:
+    if args.demo == "capabilities":
         if _printed_anything:
             print("\n" + "="*40 + "\n")
         print_test_demo()
         _printed_anything = True
         
-    if args.demo_styling:
+    if args.demo == "anatomy":
         if _printed_anything:
             print("\n" + "="*40 + "\n")
         print_coordinate_styles_demo()

@@ -2,10 +2,10 @@
 Predefined themes combining geometry layouts with zebra-striping and boundary padding natively!
 
 Traceback (most recent call last):
-  File "C:\Users\gabri\OneDrive\Projects\vistab\src\vistab.py", line 3167, in <module>
+  File "C:\Users\gabri\OneDrive\Projects\vistab\src\vistab.py", line 3183, in <module>
     main()
     ~~~~^^
-  File "C:\Users\gabri\OneDrive\Projects\vistab\src\vistab.py", line 2835, in main
+  File "C:\Users\gabri\OneDrive\Projects\vistab\src\vistab.py", line 2852, in main
     print_themes_demo()
     ~~~~~~~~~~~~~~~~~^^
   File "C:\Users\gabri\OneDrive\Projects\vistab\src\vistab.py", line 2660, in print_themes_demo
