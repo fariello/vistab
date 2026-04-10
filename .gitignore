@@ -31,3 +31,5 @@ ENV/
 .vistab.toml
 api_dump.txt
 dump.txt
+
+tests/temp_home/

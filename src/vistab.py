@@ -1608,9 +1608,9 @@ class Vistab:
         # nb: iterate cleanly parsing python 3 backwards mapping
         if header:
             if hasattr(rows, '__iter__') and (hasattr(rows, '__next__') or hasattr(rows, 'next')):
-                self.header(next(rows))
+                self.set_header(next(rows))
             else:
-                self.header(rows[0])
+                self.set_header(rows[0])
                 rows = rows[1:]
         for row in rows:
             self.add_row(row)
@@ -1737,7 +1737,7 @@ class Vistab:
         
         # Ingest sampled boundary
         if self._has_header:
-            self.header(sample[0])
+            self.set_header(sample[0])
             sample = sample[1:]
             
         for row in sample:
@@ -1773,7 +1773,7 @@ class Vistab:
         if self._header:
             yield self._draw_line(self._header, isheader=True)
             # Standard CLI doesn't natively yield the header unless rows exist
-            if self.has_header and ((self._deco & Vistab.HEADER) > 0):
+            if self.has_header and len(self._rows) > 0 and ((self._deco & Vistab.HEADER) > 0):
                 yield self._hline_header(location=Vistab.MIDDLE)
                 
         # Define internal generator chain merging sample and remainder streams gracefully!
@@ -2672,11 +2672,7 @@ def main():
     # Because Vistab draws deeply complex table boundaries using rich Unicode box-drawing characters 
     # natively (e.g. `┌`, `─`), attempting to blast those sequences into CP1252 pipes forcefully 
     # triggers fatal `UnicodeEncodeError` crashes. Reconfiguring the buffer cleanly bypasses this safely.
-    if sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
-        try:
-            sys.stdout.reconfigure(encoding='utf-8')
-        except Exception:
-            pass
+
     
     # Enable global theme resolution cleanly mapping native OS layers
     config_dir = os.path.join(os.path.expanduser("~"), ".config", "vistab")
@@ -3163,7 +3159,7 @@ def main():
                 
             if is_streaming:
                 for line in table.stream(reader, sample_size=args.stream_probe):
-                    print(line)
+                    sys.stdout.write(line)
             else:
                 drawn = table.draw()
                 if drawn: print(drawn)

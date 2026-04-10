@@ -22,12 +22,20 @@ class TestVistabRegression(unittest.TestCase):
     def _run_cli(self, args: list, input_data: str = None) -> str:
         """Executes the CLI and returns the unified STDOUT."""
         cmd = ["python", str(self.cli_path)] + args
+        # Sandbox execution natively forcing ~ to map inside tests dir structurally
+        env = os.environ.copy()
+        temp_home = self.tests_dir / "temp_home"
+        os.makedirs(temp_home, exist_ok=True)
+        env["HOME"] = str(temp_home)
+        env["USERPROFILE"] = str(temp_home)
+        
         result = subprocess.run(
             cmd, 
             capture_output=True, 
             text=True, 
             input=input_data,
-            encoding="utf-8"
+            encoding="utf-8",
+            env=env
         )
         return result.stdout + result.stderr
 
@@ -230,5 +238,56 @@ class TestVistabRegression(unittest.TestCase):
         db.unlink()
 
         
+
+    def test_regression_cli_show_code(self):
+        """Test the strictly emitted python instantiation payload maps structure variables correctly."""
+        db = self.data_dir / "small_5x5.csv"
+        out = self._run_cli([str(db), "--theme", "ocean", "--padding", "3", "--show-code"])
+        self._assert_against_fixture("regression_cli_show_code", out)
+
+    def test_regression_theme_override(self):
+        """Ensure parameterized thematic outputs evaluate structurally without collapsing or truncating implicitly."""
+        db = self.data_dir / "small_7x12.csv"
+        args = [
+            str(db), 
+            "--theme", "forest", 
+            "--padding", "4",
+            "--no-hlines"
+        ]
+        out = self._run_cli(args)
+        self._assert_against_fixture("regression_theme_override", out)
+
+    def test_regression_cli_save_theme(self):
+        """Ensure CLI configurations export and compile cleanly resolving thematic structures iteratively."""
+        db = self.data_dir / "small_5x5.csv"
+        out = self._run_cli([str(db), "--theme", "ocean", "--padding", "5", "--save-theme", "test_ocean_override"])
+        
+        temp_themes_path = self.tests_dir / "temp_home" / ".config" / "vistab" / "themes.json"
+        if temp_themes_path.exists():
+            with open(temp_themes_path, "r", encoding="utf-8") as f:
+                out += "\n--- GENERATED THEMES.JSON ---\n" + f.read()
+
+        self._assert_against_fixture("regression_cli_save_theme", out)
+
+    def test_regression_edge_1x1_with_header(self):
+        """Evaluate a rigid 1-row, 1-column dataset defaulting dynamically to a header layout."""
+        out = self._run_cli([], input_data="Lone Cell\n")
+        self._assert_against_fixture("regression_edge_1x1_with_header", out)
+
+    def test_regression_edge_1x1_no_header(self):
+        """Evaluate a rigid 1-row, 1-column dataset strictly mapping as a standalone data row natively."""
+        out = self._run_cli(["--no-header"], input_data="Lone Cell\n")
+        self._assert_against_fixture("regression_edge_1x1_no_header", out)
+
+    def test_regression_edge_1xn_with_header(self):
+        """Evaluate a 1-row vector mapping mechanically strictly as pure UI headers."""
+        out = self._run_cli(["--theme", "ocean", "--padding", "2"], input_data="ID,Total,Score,Rounds\n")
+        self._assert_against_fixture("regression_edge_1xn_with_header", out)
+
+    def test_regression_edge_1xn_no_header(self):
+        """Evaluate a 1-row vector mapped linearly mirroring the documentation Image 3 parameters."""
+        out = self._run_cli(["--theme", "ocean", "--padding", "2", "--no-header"], input_data="ID,Total,Score,Rounds\n")
+        self._assert_against_fixture("regression_edge_1xn_no_header", out)
+
 if __name__ == '__main__':
     unittest.main()

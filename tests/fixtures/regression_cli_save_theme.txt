@@ -1,0 +1,28 @@
+[[32mSUCCESS[0m] Saved layout globally as 'test_ocean_override' in C:\Users\gabri\OneDrive\Projects\vistab\tests\temp_home\.config\vistab\themes.json
+
+--- GENERATED THEMES.JSON ---
+{
+    "test_ocean_override": {
+        "style": "round2",
+        "padding": 5,
+        "decorations": 15,
+        "header": {
+            "fg": "bright_white",
+            "bg": "blue",
+            "bold": true
+        },
+        "border": {
+            "fg": "bright_blue"
+        },
+        "alt_rows": [
+            {
+                "fg": "white",
+                "bg": "black"
+            },
+            {
+                "fg": "bright_white",
+                "bg": "bright_black"
+            }
+        ]
+    }
+}

@@ -1,0 +1,30 @@
+import vistab
+
+custom_theme = {
+    "style": "round2",
+    "padding": 3,
+    "decorations": 15,
+    "header": {
+        "fg": "bright_white",
+        "bg": "blue",
+        "bold": true
+    },
+    "border": {
+        "fg": "bright_blue"
+    },
+    "alt_rows": [
+        {
+            "fg": "white",
+            "bg": "black"
+        },
+        {
+            "fg": "bright_white",
+            "bg": "bright_black"
+        }
+    ]
+}
+
+table = vistab.Vistab().apply_theme(custom_theme)
+
+# ... map inputs cleanly and execute drawing natively
+print(table.draw())
