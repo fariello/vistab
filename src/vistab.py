@@ -68,7 +68,7 @@ except ImportError:
         return sum(1 for _ in text)
 import re  # Regular expressions for text processing
 import sys  # System-specific parameters and functions
-from typing import List, Optional, Iterable, Any, Union  # Type hints for better code clarity
+from typing import List, Optional, Iterable, Any, Union, Iterator  # Type hints for better code clarity
 from functools import reduce, lru_cache  # Higher-order function for performing cumulative operations
 
 __all__ = ["Vistab", "ArraySizeError", "StringLengthCalculator"]
@@ -866,7 +866,32 @@ class Vistab:
         self._border_style = {}
         self._title = None
         self.on_wrap_conflict = "warn"
+        self.on_short_row = "pad"
+        self.on_long_row = "truncate"
+        self._metrics = {"padded": 0, "truncated": 0, "skipped": 0}
+        self._abnormal_style = None  # Tuple of (fg, bg) injected directly into flawed row lines natively cleanly.
         return self
+
+    def set_abnormal_row_style(self, fg: Optional[str] = None, bg: Optional[str] = None) -> 'Vistab':
+        """
+        Sets an explicit ANSI color override for rows that were structurally jagged (padded or truncated).
+        
+        Args:
+            fg (Optional[str]): Foreground color (e.g. 'red', 'bright_yellow').
+            bg (Optional[str]): Background color.
+        """
+        self._abnormal_style = (fg, bg)
+        return self
+
+    def get_structural_metrics(self) -> dict:
+        """
+        Returns a dictionary containing tallies of how many matrix rows bypassed pure structure natively.
+        
+        Returns:
+            dict: `{"padded": X, "truncated": Y, "skipped": Z}`
+        """
+        return dict(self._metrics)
+
 
     def set_max_rows(self, max_rows: int) -> 'Vistab':
         """Set the maximum number of rows to render.
@@ -1094,7 +1119,7 @@ class Vistab:
                 
         return active
 
-    def _get_active_ansi_wrap(self, row_idx=None, col_idx=None, is_header=False):
+    def _get_active_ansi_wrap(self, row_idx=None, col_idx=None, is_header=False, is_abnormal=False):
         """Compute the final active ANSI configuration applying precedence logic gracefully."""
         active = {}
         
@@ -1130,6 +1155,16 @@ class Vistab:
         if not is_header and row_idx is not None and col_idx is not None:
             if (row_idx, col_idx) in self._cell_styles:
                 active.update(self._cell_styles[(row_idx, col_idx)])
+                
+        # 6. Apply Abnormal State Styling mapped inherently linearly
+        if is_abnormal and self._abnormal_style:
+            fg, bg = self._abnormal_style
+            if fg is not None:
+                fg_code = self.COLORS.get(fg)
+                if fg_code: active["fg"] = fg_code
+            if bg is not None:
+                bg_code = self.BG_COLORS.get(bg)
+                if bg_code: active["bg"] = bg_code
                 
         if not active:
             return "", ""
@@ -1490,8 +1525,9 @@ class Vistab:
         Example:
             table.header(["Name", "Age"])
         """
-        self._check_row_size(array)
-        self._header = list(map(obj2unicode, array))
+        processed_array = self._check_row_size(array, is_data_row=True)
+        if processed_array is not None:
+            self._header = list(map(obj2unicode, processed_array))
         return self
 
     def add_row(self, array: List[str]) -> 'Vistab':
@@ -1507,7 +1543,11 @@ class Vistab:
         Example:
             table.add_row(["Arnold", "Fitzpatrick"])
         """
-        self._check_row_size(array)
+        processed_array = self._check_row_size(array, is_data_row=True)
+        if processed_array is None:
+            return self
+            
+        array = processed_array
         if not hasattr(self, "_dtype"):
             self._dtype = ["a"] * self._row_size
         cells = []
@@ -1624,6 +1664,141 @@ class Vistab:
             self._rows = original_rows
             self._row_size = original_row_size
 
+    def stream(self, iterable: Iterable[Iterable[Any]], sample_size: int = 100) -> Iterator[str]:
+        """
+        Stream table formatting infinitely avoiding memory buffering.
+        
+        Args:
+            iterable (Iterable[Iterable[Any]]): The iterable yielding matrix rows sequentially.
+            sample_size (int): The number of rows to sample at the beginning to calculate column widths naturally.
+            
+        Yields:
+            str: Each formatted table line (borders, headers, and rows).
+        """
+        stream_iterator = iter(iterable)
+        sample = []
+        
+        # 1. Capture the initial subset to derive geometry logic seamlessly.
+        try:
+            for _ in range(sample_size):
+                sample.append(next(stream_iterator))
+        except StopIteration:
+            pass
+            
+        if not sample:
+            return
+            
+        # Temporarily back up internal state
+        original_header = self._header.copy()
+        original_rows = self._rows.copy()
+        original_row_size = self._row_size
+        
+        # We must clear physical structures to natively calculate geometries on the sample properly
+        self._header = []
+        self._rows = []
+        self._row_size = original_row_size if original_row_size else 0
+        
+        # Ingest sampled boundary
+        if self._has_header:
+            self.header(sample[0])
+            sample = sample[1:]
+            
+        for row in sample:
+            self.add_row(row)
+            
+        # Limits mappings safely on sample sizes
+        if self._max_cols:
+            self._header = self._header[:self._max_cols]
+            self._rows = [row[:self._max_cols] for row in self._rows]
+            self._row_size = self._max_cols
+            
+            # Force cache refresh so dynamic widths don't mismatch
+            for cached_prop in ["_width", "_align", "_valign", "_header_align"]:
+                if hasattr(self, cached_prop):
+                    delattr(self, cached_prop)
+                    
+        # Compute exact geometries!
+        self._compute_cols_width()
+        self._check_align()
+        
+        # Yield the top structural bounds natively
+        if self._title:
+            w_cells = sum(self._width)
+            w_pads = len(self._width) * 2 * self._pad
+            w_seps = len(self._width) - 1
+            w_borders = 2 if self.has_border else 0
+            total_width = w_cells + w_pads + w_seps + w_borders
+            yield self._title.center(total_width) + "\n"
+            
+        if self.has_border:
+            yield self._hline(location=Vistab.TOP)
+            
+        if self._header:
+            yield self._draw_line(self._header, isheader=True)
+            # Standard CLI doesn't natively yield the header unless rows exist
+            if self.has_header and ((self._deco & Vistab.HEADER) > 0):
+                yield self._hline_header(location=Vistab.MIDDLE)
+                
+        # Define internal generator chain merging sample and remainder streams gracefully!
+        def stream_exhaust():
+            # Yield pre-buffered rows parsed already mechanically
+            for parsed_row in self._rows:
+                yield parsed_row, False  # Already parsed strictly, not abnormal
+                
+            # Yield remainder rows explicitly
+            for raw_row in stream_iterator:
+                old_pad = self._metrics.get("padded", 0)
+                old_trunc = self._metrics.get("truncated", 0)
+                
+                processed_row = self._check_row_size(raw_row, is_data_row=True)
+                if processed_row is None:
+                    continue  # Skipped
+                    
+                is_abnormal = (self._metrics.get("padded", 0) > old_pad) or (self._metrics.get("truncated", 0) > old_trunc)
+                
+                if self._max_cols:
+                    processed_row = processed_row[:self._max_cols]
+                    
+                # Format cells natively
+                cells = []
+                for i, x in enumerate(processed_row):
+                    cells.append(self._str(i, x))
+                    
+                yield cells, is_abnormal
+                
+        # Final yielding phase
+        drawn_rows = 0
+        gen = stream_exhaust()
+        try:
+            prev_row, is_abn = next(gen)
+            while True:
+                # Max rows check
+                if self._max_rows and drawn_rows >= self._max_rows:
+                    break
+                    
+                drawn_rows += 1
+                try:
+                    next_row, next_abn = next(gen)
+                    # We have a next row, so yield current and hline
+                    yield self._draw_line(prev_row, row_idx=drawn_rows-1, is_abnormal=is_abn)
+                    if self.has_hlines():
+                        yield self._hline(location=Vistab.MIDDLE)
+                    prev_row, is_abn = next_row, next_abn
+                except StopIteration:
+                    # We are at the final row explicitly cleanly
+                    yield self._draw_line(prev_row, row_idx=drawn_rows-1, is_abnormal=is_abn)
+                    break
+        except StopIteration:
+            pass
+            
+        if self.has_border:
+            yield self._hline(location=Vistab.BOTTOM)
+            
+        # Cleanly restore instance properties natively
+        self._header = original_header
+        self._rows = original_rows
+        self._row_size = original_row_size
+
     @classmethod
     def _to_float(cls, x):
         if x is None:
@@ -1711,7 +1886,7 @@ class Vistab:
         }
 
         n = self._precision
-        dtype = self._dtype[i]
+        dtype = self._dtype[i] if hasattr(self, '_dtype') else "a"
         try:
             if callable(dtype):
                 return dtype(x)
@@ -1720,13 +1895,40 @@ class Vistab:
         except FallbackToText:
             return self._fmt_text(x)
 
-    def _check_row_size(self, array):
-        """Check that the specified array fits the previous rows size."""
+    def _check_row_size(self, array, is_data_row=False):
+        """Check that the specified array fits the previous rows size and apply handlers if it is jagged."""
         if not self._row_size:
             self._row_size = len(array)
-        elif self._row_size != len(array):
-            raise ArraySizeError("array should contain %d elements not %s (array=%s)"
-                                 % (self._row_size, len(array), array))
+            return array
+            
+        if self._row_size != len(array):
+            array_len = len(array)
+            
+            # Identify row being short or long
+            if array_len < self._row_size:
+                action = self.on_short_row if is_data_row else "raise"
+                if action == "raise":
+                    raise ArraySizeError("array should contain %d elements not %s (array=%s)" % (self._row_size, array_len, array))
+                elif action == "skip":
+                    self._metrics["skipped"] += 1
+                    return None
+                elif action == "pad":
+                    # Pad out to the defined max lengths
+                    array = list(array) + [""] * (self._row_size - array_len)
+                    self._metrics["padded"] += 1
+            else:
+                action = self.on_long_row if is_data_row else "raise"
+                if action == "raise":
+                    raise ArraySizeError("array should contain %d elements not %s (array=%s)" % (self._row_size, array_len, array))
+                elif action == "skip":
+                    self._metrics["skipped"] += 1
+                    return None
+                elif action == "truncate":
+                    # Slice natively truncating excess cells mapping gracefully efficiently.
+                    array = list(array)[:self._row_size]
+                    self._metrics["truncated"] += 1
+                    
+        return array
 
     def has_vlines(self):
         """Return a boolean, if vlines are required or not."""
@@ -1951,7 +2153,7 @@ class Vistab:
                 
         return clamped + "\033[0m"
 
-    def _draw_line(self, line: List[str], isheader: bool = False, row_idx: int = None) -> str:
+    def _draw_line(self, line: List[str], isheader: bool = False, row_idx: int = None, is_abnormal: bool = False) -> str:
         """
         Draw a line of the table.
 
@@ -1967,6 +2169,8 @@ class Vistab:
             Indicates if the line to be drawn is a header line. Default is False.
         row_idx : int, optional
             Indicates the 0-indexed row position for structural styling targets.
+        is_abnormal : bool, optional
+            Internal tracker checking if the row length structurally violated boundary boundaries natively.
 
         Returns:
         --------
@@ -2003,7 +2207,7 @@ class Vistab:
                 
             for col_idx, (cell, width, align) in enumerate(zip(line, self._width, self._align)):
                 # Get compiled active ANSI mapping
-                ansi_on, ansi_off = self._get_active_ansi_wrap(row_idx, col_idx, isheader)
+                ansi_on, ansi_off = self._get_active_ansi_wrap(row_idx, col_idx, isheader, is_abnormal=is_abnormal)
                 if ansi_on: out_parts.append(ansi_on)
                 
                 # Left padding block
@@ -2458,6 +2662,11 @@ def main():
     parser.add_argument("-W", "--col-widths", type=str, help="Comma-separated list of strict integer widths for columns (e.g. '10,20,5')")
     parser.add_argument("-r", "--max-rows", type=int, default=0, help="Maximum number of rows to render (default: 0 / infinite)")
     parser.add_argument("-c", "--max-cols", type=int, default=0, help="Maximum number of columns to render (default: 0 / infinite)")
+    parser.add_argument("--on-short", type=str, choices=["pad", "skip", "raise"], default="pad", help="Jagged array handler for missing fields (pad|skip|raise)")
+    parser.add_argument("--on-long", type=str, choices=["truncate", "skip", "raise"], default="truncate", help="Jagged array handler for overflow fields (truncate|skip|raise)")
+    parser.add_argument("--mark-abnormal", type=str, metavar="COLOR", help="Highlight skipped strings mutated implicitly dynamically cleanly natively securely.")
+    parser.add_argument("--stream", action="store_true", help="Force infinite memoryless streaming output explicitly over buffer allocations.")
+    parser.add_argument("--stream-probe", type=int, default=100, help="Number of records to safely probe formatting constraints synchronously cleanly (default: 100)")
     parser.add_argument("-p", "--padding", type=int, default=1, help="Cell padding integer (default: 1)")
     parser.add_argument("-a", "--align", type=str, help="Column alignment string (e.g. 'lrc')")
     parser.add_argument("-v", "--valign", type=str, help="Column vertical alignment string (e.g. 'tmb')")
@@ -2648,18 +2857,22 @@ def main():
         except csv.Error:
             reader = csv.reader(peek_stream)
             
-        if getattr(args, 'max_rows', 0) > 0:
-            rows = []
-            limit = args.max_rows + (not getattr(args, 'no_header', False))
-            for _ in range(limit):
-                try: rows.append(next(reader))
-                except StopIteration: break
-        else:
-            rows = list(reader)
-            
-        if not rows:
-            print(f"[\033[33mWARN\033[0m] The parsed stream '{source_name}' is physically mathematically empty.")
-            return
+        is_streaming = args.stream or (source_type == "stdin")
+        rows = None
+        
+        if not is_streaming:
+            if getattr(args, 'max_rows', 0) > 0:
+                rows = []
+                limit = args.max_rows + (not getattr(args, 'no_header', False))
+                for _ in range(limit):
+                    try: rows.append(next(reader))
+                    except StopIteration: break
+            else:
+                rows = list(reader)
+                
+            if not rows:
+                print(f"[\033[33mWARN\033[0m] The parsed stream '{source_name}' is physically mathematically empty.")
+                return
 
         # Instantiate physical mapping structure cleanly
         table = Vistab(
@@ -2668,12 +2881,23 @@ def main():
             padding=args.padding
         )
         
+        # Apply jagged logic mapped seamlessly constraints
+        table.on_short_row = args.on_short
+        table.on_long_row = args.on_long
+        if getattr(args, 'mark_abnormal', None):
+            table.set_abnormal_row_style(fg=args.mark_abnormal)
+        
         try:
             table.set_max_rows(args.max_rows)
             table.set_max_cols(args.max_cols)
+            if not getattr(args, 'no_header', False):
+                table.has_header = True
+            else:
+                table.has_header = False
             
-            # Lock in the physical row geometry boundaries FIRST!
-            table.set_rows(rows, header=not args.no_header)
+            # Buffer structurally explicitly if memory fallback mapped
+            if rows is not None:
+                table.set_rows(rows, header=not args.no_header)
             
             # Apply custom decorations cleanly and naturally
             deco = Vistab.BORDER | Vistab.HEADER | Vistab.HLINES | Vistab.VLINES
@@ -2769,6 +2993,9 @@ def main():
                 
             # Evaluate save-theme and show-code intercept logic cleanly referencing active state
             if getattr(args, 'save_theme', None) or getattr(args, 'show_code', False):
+                if is_streaming:
+                    raise ValueError("Cannot extract metadata while memoryless streaming. Please pass a standard file path.")
+                
                 rev_fg = {v: k for k, v in Vistab.COLORS.items()}
                 rev_bg = {v: k for k, v in Vistab.BG_COLORS.items()}
                 rev_st = {v: k for k, v in Vistab.TEXT_STYLES.items()}
@@ -2841,7 +3068,13 @@ def main():
                     
                 sys.exit(0)
                 
-            print(table.draw())
+            if is_streaming:
+                for line in table.stream(reader, sample_size=args.stream_probe):
+                    print(line)
+            else:
+                drawn = table.draw()
+                if drawn: print(drawn)
+                
             _printed_anything = True
             
         except Exception as eval_err:
