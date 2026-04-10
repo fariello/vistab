@@ -114,6 +114,18 @@ table.set_cell_wrap(0, 1, False)
 ```
 If a cell bypassed with `wrap=False` exceeds `table.max_width`, `Vistab` uses a constraint router (`table.on_wrap_conflict = "warn"`) that securely drops trailing characters while reconstructing your internal ANSI styling sequences to prevent terminal boundary collapse.
 
+## Streaming & Caveat Emptor Pipeline Constraints
+
+For extremely large or infinitely generating files, you can stream data iteratively using the `--stream` flag to bypass native memory buffering constraints:
+
+```bash
+$ cat large_dataset.csv | vistab --stream
+```
+
+> [!WARNING]
+> **Caveat Emptor System Limitations**: 
+> When executing highly constrained pipeline commands requiring complete structured arrays logically (i.e. `--sort-by`), Vistab gracefully relies on the host OS executing standard mapping limits naturally. Pipelining infinite streams containing no explicitly terminated newlines (like `cat /dev/zero`) will unconditionally lock system buffers, triggering OS native Out-Of-Memory (OOM) failures natively similarly to standard POSIX `sort` behaviors. No artificial memory caps are injected structurally. 
+
 ## Hierarchical Configuration System
 Stop re-typing your constructor arguments! `vistab` actively scans your execution environment for two distinct configuration architectures:
 

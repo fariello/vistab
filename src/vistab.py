@@ -776,7 +776,7 @@ class Vistab:
 
         Example:
         --------
-        ```python
+        ```
         table.has_border = False
         ```
         """
@@ -870,6 +870,8 @@ class Vistab:
         self.on_long_row = "truncate"
         self._metrics = {"padded": 0, "truncated": 0, "skipped": 0}
         self._abnormal_style = None  # Tuple of (fg, bg) injected directly into flawed row lines natively cleanly.
+        self._sort_col = None
+        self._sort_reverse = False
         return self
 
     def set_abnormal_row_style(self, fg: Optional[str] = None, bg: Optional[str] = None) -> 'Vistab':
@@ -943,20 +945,27 @@ class Vistab:
         self._title = title
         return self
 
-    def sort_by(self, col_idx: int, reverse: bool = False, key=None) -> 'Vistab':
-        """Sort the internal rows array by the value of a specific column.
-        
-        Args:
-            col_idx (int): The 0-indexed column to sort by.
-            reverse (bool): Reverse the sort direction (descending).
-            key: An optional callable applied to each cell before comparison.
-        """
-        def _get_key(row):
-            val = row[col_idx] if col_idx < len(row) else ""
-            return key(val) if key else val
-            
-        self._rows.sort(key=_get_key, reverse=reverse)
+    def sort_by(self, col_idx: int, reverse: bool = False) -> 'Vistab':
+        """Enable structured row caching and apply physical grid sort iterations."""
+        self._sort_col = col_idx
+        self._sort_reverse = reverse
         return self
+
+    def _apply_sorting(self):
+        """Evaluate structural sort flags dynamically securely converting natively accurately."""
+        if hasattr(self, '_sort_col') and self._sort_col is not None:
+            col_idx = self._sort_col
+            dt = self._dtype[col_idx] if hasattr(self, '_dtype') and col_idx < len(self._dtype) else 't'
+            
+            def parse_val(row):
+                if col_idx >= len(row): return ""
+                val = str(row[col_idx]).strip()
+                if dt in ('i', 'f', 'e'):
+                    try: return float(val)
+                    except ValueError: return float('-inf') if getattr(self, '_sort_reverse', False) else float('inf')
+                return val
+                
+            self._rows.sort(key=parse_val, reverse=getattr(self, '_sort_reverse', False))
 
     # --- Shorthand UX Stylers ---
     def bold_header(self, enable: bool = True) -> 'Vistab':
@@ -1611,6 +1620,8 @@ class Vistab:
         if not self._header and not self._rows:
             return
             
+        self._apply_sorting()
+
         # Back up original data to handle max_rows and max_cols dynamically
         original_header = self._header.copy()
         original_rows = self._rows.copy()
@@ -1664,18 +1675,18 @@ class Vistab:
             self._rows = original_rows
             self._row_size = original_row_size
 
-    def stream(self, iterable: Iterable[Iterable[Any]], sample_size: int = 100) -> Iterator[str]:
+    def stream(self, stream_iterator: Iterable, sample_size: int = 100) -> Iterator[str]:
         """
         Stream table formatting infinitely avoiding memory buffering.
         
         Args:
-            iterable (Iterable[Iterable[Any]]): The iterable yielding matrix rows sequentially.
+            stream_iterator (Iterable[Iterable[Any]]): The iterable yielding matrix rows sequentially.
             sample_size (int): The number of rows to sample at the beginning to calculate column widths naturally.
             
         Yields:
             str: Each formatted table line (borders, headers, and rows).
         """
-        stream_iterator = iter(iterable)
+        stream_iterator = iter(stream_iterator)
         sample = []
         
         # 1. Capture the initial subset to derive geometry logic seamlessly.
@@ -2678,6 +2689,9 @@ def main():
     parser.add_argument("-X", "--no-hlines", action="store_true", help="Disable horizontal lines iteratively between rows")
     parser.add_argument("-V", "--no-vlines", action="store_true", help="Disable vertical lines strictly between columns")
     parser.add_argument("-U", "--no-header-line", action="store_true", help="Disable the horizontal divider below the header cleanly")
+    parser.add_argument("--sort-by", type=int, help="Column index (0-indexed) to fully buffer and sort the standard input natively (Caveat Emptor: memory intensive over streams).")
+    parser.add_argument("--sort-reverse", action="store_true", help="Reverse the sorting order logic structurally.")
+    parser.add_argument("--csv-dialect", type=str, help="Enforce explicit CSV dialect cleanly mechanically without sniffing (e.g. 'excel-tab').")
     parser.add_argument("-b", "--border-color", type=str, metavar="COLOR", help="Override table outer border color")
     parser.add_argument("-f", "--header-color", type=str, metavar="COLOR", help="Override header row color")
     parser.add_argument("-0", "--col0-color", type=str, metavar="COLOR", help="Override first data column color (index 0)")
@@ -2852,12 +2866,19 @@ def main():
         peek_stream = LinePeekableStream(f_stream)
         
         try:
-            dialect = csv.Sniffer().sniff(peek_stream.sample(), delimiters=",\t|;")
-            reader = csv.reader(peek_stream, dialect)
+            if getattr(args, 'csv_dialect', None):
+                reader = csv.reader(peek_stream, dialect=args.csv_dialect)
+            else:
+                dialect = csv.Sniffer().sniff(peek_stream.sample(), delimiters=",\t|;")
+                reader = csv.reader(peek_stream, dialect)
         except csv.Error:
             reader = csv.reader(peek_stream)
             
         is_streaming = args.stream or (source_type == "stdin")
+        if getattr(args, 'sort_by', None) is not None:
+            # Caveat Emptor boundary: Implicit streaming is bypassed globally explicitly ensuring matrix loads physically into RAM for proper sort evaluations.
+            is_streaming = False
+            
         rows = None
         
         if not is_streaming:
@@ -2942,6 +2963,9 @@ def main():
                     table.set_style(args.style)
                 if "-p" in sys.argv or "--padding" in sys.argv:
                     table.set_padding(args.padding)
+                    
+            if getattr(args, 'sort_by', None) is not None:
+                table.sort_by(args.sort_by, reverse=getattr(args, 'sort_reverse', False))
                     
             # Native helper to seamlessly map CLI string states to API logic dropping keys explicitly if "none"
             def _apply_clr(style_dict, arg_fg, arg_bg):
