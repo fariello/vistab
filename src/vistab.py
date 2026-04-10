@@ -2679,8 +2679,9 @@ def main():
     usage_str = (
         "vistab [options] [files ...]\n"
         "       cat data.csv | vistab -t ocean -w 120\n\n"
-        "       vistab --help-colors     (target-specific colors)\n"
-        "       vistab --help-advanced   (streams and jagged matrices)\n"
+        "       vistab --help            (standard table formatting options)\n"
+        "       vistab --help-colors     (target-specific color coordinates)\n"
+        "       vistab --help-advanced   (streams and jagged data matrices)\n"
         "       vistab --demo {styles|colors|capabilities|anatomy|themes}"
     )
 
