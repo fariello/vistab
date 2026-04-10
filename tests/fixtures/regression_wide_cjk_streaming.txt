@@ -1,6 +1,12 @@
+╭─────────────────────────┬──────────┬─────────────────╮
+
+│         English         │ Mandarin │    Japanese     │
+
+├─────────────────────────┼──────────┼─────────────────┤
+
 
 [1;31m[COMMAND-LINE FORMAT ERROR][0m within stream 'STDIN Stream'
-Details: 'charmap' codec can't encode characters in position 0-55: character maps to <undefined>
+Details: 'utf-8' codec can't encode character '\udc81' in position 40: surrogates not allowed
 
 Tip: Ensure your formatting inputs perfectly map to your CSV column lengths!
 --align:  l (left), c (center), r (right)                   | e.g., 'lrc'

@@ -1,11 +1,16 @@
+┌────┐
 
-[1;31m[COMMAND-LINE FORMAT ERROR][0m within stream 'STDIN Stream'
-Details: 'charmap' codec can't encode characters in position 0-5: character maps to <undefined>
+│ ID │
 
-Tip: Ensure your formatting inputs perfectly map to your CSV column lengths!
---align:  l (left), c (center), r (right)                   | e.g., 'lrc'
---valign: t (top), m (middle), b (bottom)                   | e.g., 'tmb'
---dtype:  t (text), f (float), i (int), e (exp), a (auto)   | e.g., 'ttfi'
---col-widths: Comma-separated integers                      | e.g., '40,10,15'
+├────┤
+
+│  1 │
+
+├────┤
+
+│  2 │
+
+└────┘
+
 C:\Users\gabri\OneDrive\Projects\vistab\src\vistab.py:1548: DeprecationWarning: table.header() is deprecated and will be removed. Please use table.set_header() instead.
   warnings.warn("table.header() is deprecated and will be removed. Please use table.set_header() instead.", DeprecationWarning)
