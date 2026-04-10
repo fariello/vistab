@@ -6,7 +6,7 @@ This specification outlines the deterministic constraints, rendering flows, and 
 
 ## 1. Core Principles
 
-- **Zero Dependency Guarantee**: `Vistab` uses the standard Python environment. Complex features (such as `cjkwrap` for wide eastern characters) remain optional `[cjk]` extras.
+- **Lightweight Native Core**: `Vistab` relies on the standard Python library with `wcwidth` calculating explicit text padding limits. Complex external components (e.g., `cjkwrap` for Asian characters) remain optional `[cjk]` extras.
 - **Fluent Determinism**: The API state executes serially. Re-running `table.draw()` sequentially with identical datasets and unmodified object state must mathematically result in identical string output bytes.
 - **Strict Byte-Sizing**: ANSI escape sequences (colors, text styling) are treated as "invisible" string dimensions during cell boundary width logic calculations.
 
@@ -15,8 +15,8 @@ This specification outlines the deterministic constraints, rendering flows, and 
 ### 2.1 Inputs (STDIN & Parsing)
 
 - **Datasets:** The backend `Vistab.add_rows` expects standard Python iterables (e.g. `list[list[str/int]]`).
-- **Pipelined Files:** The CLI `vistab file1.csv file2.csv` pipeline implicitly generates multiple iterative tables in a single session.
-- **STDIN (`run_input()`):** If piped via standard input (`cat data.csv | vistab`), the CSV sniffer isolates column separators dynamically (prioritizing commas, tabs, and semicolons).
+- **Pipelined Files:** The CLI `vistab file1.csv file2.csv` pipeline implicitly generates multiple iterative tables.
+- **STDIN Pipeline & Generative Streams:** Standard pipe structures (`cat data.csv | vistab`) invoke CSV sniffers evaluating parsing logic dynamically. Bypassing rigid buffer allocations, `Vistab.stream()` directly converts infinite stream outputs, triggering immediate formatting evaluations mapped sequentially safely preventing out-of-memory cascades. Constraints demanding explicit pre-knowledge buffers (like `--sort-by`) natively fallback triggering a Caveat Emptor memory penalty iteratively.
 
 ### 2.2 Datatype Inference
 
@@ -26,11 +26,12 @@ The structural formatting loop isolates strings based on target datatypes define
 - `"t"` (Text): Restricts parsing mechanics, casting the input entirely as text without numeric evaluation.
 - `"i"` (Int): Casts uniformly, dropping float decimal blocks entirely.
 
-### 2.3 Constraint Wrappers
+### 2.3 Constraint Wrappers & Jagged Matrix Rules
 
 - **`max_width` (Line Wraps):** Limits the physical terminal table dimensions. Defaults to `0` (disabled). If enabled, strings are automatically sliced to respect the provided width.
 - **`max_cols` / `max_rows`:** Acts explicitly by discarding trailing indices to prevent table matrix bloat.
 - **`on_wrap_conflict`:** Defines routing bounds globally for custom styling boundaries. Permissible settings: `"warn"`, `"error"`, `"clip"`, `"overflow"`.
+- **Jagged Arrays (`on_short`, `on_long`):** Matrix structures bypassing standard rectangle alignments are resolved intelligently. Missing values align using `--on-short` bounds (`pad`, `skip`, `raise`) and overflow bounds map utilizing `--on-long` constraints (`truncate`, `skip`, `raise`). Outlier structural data boundaries correctly isolate formatting rules visually executing highlighted blocks using `--mark-abnormal`.
 
 ## 3. Formatting and Themes Execution Bounds
 
