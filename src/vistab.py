@@ -2667,6 +2667,12 @@ def main():
     import json
     import os
     
+    if sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
+        try:
+            sys.stdout.reconfigure(encoding='utf-8')
+        except Exception:
+            pass
+    
     # Enable global theme resolution cleanly mapping native OS layers
     config_dir = os.path.join(os.path.expanduser("~"), ".config", "vistab")
     themes_file = os.path.join(config_dir, "themes.json")
