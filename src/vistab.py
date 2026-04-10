@@ -1411,6 +1411,9 @@ class Vistab:
         if isinstance(array, str):
             array = [c for c in array]
             pass
+        for a in array:
+            if a not in ('l', 'c', 'r'):
+                raise ValueError(f"Alignment '{a}' is invalid. Allowed alignment characters are: 'l', 'c', 'r'.")
         self._check_row_size(array)
         self._align = array
         return self
@@ -1433,6 +1436,9 @@ class Vistab:
         if isinstance(array, str):
             array = [c for c in array]
             pass
+        for a in array:
+            if a not in ('t', 'm', 'b'):
+                raise ValueError(f"Vertical alignment '{a}' is invalid. Allowed vertical alignment characters are: 't', 'm', 'b'.")
         self._check_row_size(array)
         self._valign = array
         return self
@@ -1469,6 +1475,9 @@ class Vistab:
         if isinstance(array, str):
             array = [c for c in array]
             pass
+        for a in array:
+            if not callable(a) and a not in ('a', 't', 'f', 'e', 'i', 'I'):
+                raise ValueError(f"Data type '{a}' is invalid. Allowed data type characters are: 'a', 't', 'f', 'e', 'i', 'I' or a callable.")
         self._check_row_size(array)
         self._dtype = array
         return self
