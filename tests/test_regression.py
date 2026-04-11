@@ -290,5 +290,69 @@ class TestVistabRegression(unittest.TestCase):
         out = self._run_cli(["--theme", "ocean", "--padding", "2", "--no-header"], input_data="ID,Total,Score,Rounds\n")
         self._assert_against_fixture("regression_edge_1xn_no_header", out)
 
+
+    def test_regression_ansi_word_chunking_simple(self):
+        """Test continuous word break wrapping."""
+        raw_csv = "A,B\nSomesuperlongword,Normal\n"
+        out = self._run_cli(["--col-widths", "10,10"], input_data=raw_csv)
+        self._assert_against_fixture("regression_ansi_word_chunking_simple", out)
+
+    def test_regression_ansi_word_chunking_multi(self):
+        """Test continuous word break wrapping with spaces."""
+        raw_csv = "A,B\nSomesuperlongword Anothersuperongword,Normal\n"
+        out = self._run_cli(["--col-widths", "10,10"], input_data=raw_csv)
+        self._assert_against_fixture("regression_ansi_word_chunking_multi", out)
+
+    def test_regression_ansi_word_chunking_basic_color(self):
+        """Test continuous word break wrapping with basic ANSI."""
+        raw_csv = "A,B\n\033[31mAwesomeness\033[0m,Normal\n"
+        out = self._run_cli(["--col-widths", "4,10"], input_data=raw_csv)
+        self._assert_against_fixture("regression_ansi_word_chunking_basic_color", out)
+
+    def test_regression_ansi_word_chunking_complex_color(self):
+        """Test continuous word break wrapping with internal spaces and ANSI."""
+        raw_csv = "A,B\nThis \033[34misaverlongwordthatneeds to\033[0m be wrapped,Normal\n"
+        out = self._run_cli(["--col-widths", "10,10"], input_data=raw_csv)
+        self._assert_against_fixture("regression_ansi_word_chunking_complex_color", out)
+
+    def test_regression_ansi_word_chunking_stray_color(self):
+        """Test continuous word break wrapping when ANSI clips half the word."""
+        raw_csv = "A,B\nThis \033[31misaverlongword\033[0mthatneeds to be wrapped,Normal\n"
+        out = self._run_cli(["--col-widths", "10,10"], input_data=raw_csv)
+        self._assert_against_fixture("regression_ansi_word_chunking_stray_color", out)
+
+
+    def test_regression_ansi_word_chunking_simple(self):
+        """Test continuous word break wrapping."""
+        raw_csv = "A,B\nSomesuperlongword,Normal\n"
+        out = self._run_cli(["--col-widths", "10,10"], input_data=raw_csv)
+        self._assert_against_fixture("regression_ansi_word_chunking_simple", out)
+
+    def test_regression_ansi_word_chunking_multi(self):
+        """Test continuous word break wrapping with spaces."""
+        raw_csv = "A,B\nSomesuperlongword Anothersuperongword,Normal\n"
+        out = self._run_cli(["--col-widths", "10,10"], input_data=raw_csv)
+        self._assert_against_fixture("regression_ansi_word_chunking_multi", out)
+
+    def test_regression_ansi_word_chunking_basic_color(self):
+        """Test continuous word break wrapping with basic ANSI."""
+        raw_csv = "A,B\n\033[31mAwesomeness\033[0m,Normal\n"
+        out = self._run_cli(["--col-widths", "4,10"], input_data=raw_csv)
+        self._assert_against_fixture("regression_ansi_word_chunking_basic_color", out)
+
+    def test_regression_ansi_word_chunking_complex_color(self):
+        """Test continuous word break wrapping with internal spaces and ANSI."""
+        raw_csv = "A,B\nThis \033[34misaverlongwordthatneeds to\033[0m be wrapped,Normal\n"
+        out = self._run_cli(["--col-widths", "10,10"], input_data=raw_csv)
+        self._assert_against_fixture("regression_ansi_word_chunking_complex_color", out)
+
+    def test_regression_ansi_word_chunking_stray_color(self):
+        """Test continuous word break wrapping when ANSI clips half the word."""
+        raw_csv = "A,B\nThis \033[31misaverlongword\033[0mthatneeds to be wrapped,Normal\n"
+        out = self._run_cli(["--col-widths", "10,10"], input_data=raw_csv)
+        self._assert_against_fixture("regression_ansi_word_chunking_stray_color", out)
+
 if __name__ == '__main__':
+
+
     unittest.main()

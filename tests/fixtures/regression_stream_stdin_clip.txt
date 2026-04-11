@@ -1,8 +1,11 @@
 ┏━━━━━━━━━┳━━━━━━━━┓
 ┃    A    ┃   B    ┃
 ┣━━━━━━━━━╋━━━━━━━━┫
-┃ VeryLon[0m ┃ Normal ┃
+┃ VeryLon ┃ Normal ┃
+┃ gWordTh ┃        ┃
+┃ atMight ┃        ┃
+┃ ExceedT ┃        ┃
+┃ heClip  ┃        ┃
 ┣━━━━━━━━━╋━━━━━━━━┫
 ┃ Short   ┃ Here   ┃
 ┗━━━━━━━━━┻━━━━━━━━┛
-[[1;33mWARN[0m] Vistab geometry cell length (34) explicitly bypasses 7 max_width boundary natively. Deflecting to clipping fallback.

@@ -285,6 +285,57 @@ class ColorAwareWrapper:
         self.calculator = StringLengthCalculator()
         pass # for auto-indentation
 
+    def _break_word(self, word: str, width: int) -> List[str]:
+        """
+        Chunks a continuously contiguous string dynamically mathematically over width cleanly
+        preserving ANSI nested styles securely.
+        """
+        if width <= 0:
+            return [word]
+            
+        chunks = []
+        parts = re.split(StringLengthCalculator._ANSI_ESCAPE, word)
+        codes = StringLengthCalculator._ANSI_ESCAPE.findall(word)
+        
+        current_chunk = ''
+        current_vis_len = 0
+        active_codes = []
+            
+        for i, part in enumerate(parts):
+            for char in part:
+                char_vis_len = self.calculator.len(char)
+                if current_vis_len + char_vis_len > width:
+                    if current_vis_len > 0:
+                        if active_codes:
+                            chunks.append(current_chunk + "\033[0m")
+                            current_chunk = "".join(active_codes) + char
+                        else:
+                            chunks.append(current_chunk)
+                            current_chunk = char
+                        current_vis_len = char_vis_len
+                    else:
+                        current_chunk += char
+                        current_vis_len += char_vis_len
+                else:
+                    current_chunk += char
+                    current_vis_len += char_vis_len
+                    
+            if i < len(codes):
+                code = codes[i]
+                if code == "\033[0m":
+                    active_codes = []
+                else:
+                    active_codes.append(code)
+                current_chunk += code
+                
+        if current_chunk:
+            if active_codes and StringLengthCalculator._ANSI_ESCAPE.sub('', current_chunk) != '':
+                chunks.append(current_chunk + "\033[0m")
+            elif current_vis_len > 0 or not chunks:
+                chunks.append(current_chunk)
+                
+        return chunks
+
     def wrap_list(self, text: str, width: int) -> List[str]:
         """Core wrapping logic returning a list of lines."""
         words = text.split()
@@ -300,10 +351,15 @@ class ColorAwareWrapper:
             if line_length + space_length + word_length > width:
                 if line:
                     result.append(' '.join(line))
-                    line = [word]
+                    line = []
+                
+                if word_length > width:
+                    # Individual word is larger than column width constraint. Break it intelligently spanning ANSI.
+                    broken_chunks = self._break_word(word, width)
+                    result.extend(broken_chunks[:-1])
+                    line = [broken_chunks[-1]] if broken_chunks else []
                 else:
-                    # Individual word is larger than column width constraint. Force break it onto its own line.
-                    result.append(word)
+                    line = [word]
             else:
                 line.append(word)
 
