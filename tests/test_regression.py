@@ -291,68 +291,65 @@ class TestVistabRegression(unittest.TestCase):
         self._assert_against_fixture("regression_edge_1xn_no_header", out)
 
 
-    def test_regression_ansi_word_chunking_simple(self):
-        """Test continuous word break wrapping."""
-        raw_csv = "A,B\nSomesuperlongword,Normal\n"
-        out = self._run_cli(["--col-widths", "10,10"], input_data=raw_csv)
-        self._assert_against_fixture("regression_ansi_word_chunking_simple", out)
+    def test_regression_ansi_word_chunking_comprehensive(self):
+        """Executes a massive programmatic CJK/ANSI boundary verification logic across varying properties."""
+        from src.vistab import Vistab
+        out = []
 
-    def test_regression_ansi_word_chunking_multi(self):
-        """Test continuous word break wrapping with spaces."""
-        raw_csv = "A,B\nSomesuperlongword Anothersuperongword,Normal\n"
-        out = self._run_cli(["--col-widths", "10,10"], input_data=raw_csv)
-        self._assert_against_fixture("regression_ansi_word_chunking_multi", out)
+        def mktable(widths, style, theme):
+            table = Vistab()
+            data = [
+                "Somesuperlongword",
+                "Somesuperlongword Anothersuperongword",
+                "\033[31mAwesomeness\033[0m",
+                "This \033[34misaverlongwordthatneeds to\033[0m be wrapped",
+                "This \033[31misaverlongword\033[0mthatneeds to be wrapped",
+                "這是一個超級長的沒有空格的中文字符串",
+                "これは非常に長\033[32mい日\033[31m本語の文字列で改\033[0m行なしで続きます",
+                "\033[32m這是一個超級長的顏色的中文字符串\033[0m",
+                "EnglishWord中文長詞MixedTogetherText",
+                "EnglishWord\033[31m中文超級長詞\033[0mTrailingAscii"
+            ]
+            if style:
+                table.set_style(style)
+            if theme:
+                table.apply_theme(theme)
+            if widths:
+                table.set_cols_width(widths)
+                
+            table.set_header([1,2,3,4,5,6,7,8,9,10])
+            table.set_title(f"Widths: {widths[0] if widths else 'Auto'}, Style: {style}, Theme: {theme}")
+            
+            table.add_row(data)
+            data = data[-2:] + data[:-2]
+            table.add_row(data)
+            data = data[-2:] + data[:-2]
+            table.add_row(data)
+            data = data[-3:] + data[:-3]
+            table.add_row(data)
+            data = data[-1:] + data[:-1]
+            out.append(table.draw())
 
-    def test_regression_ansi_word_chunking_basic_color(self):
-        """Test continuous word break wrapping with basic ANSI."""
-        raw_csv = "A,B\n\033[31mAwesomeness\033[0m,Normal\n"
-        out = self._run_cli(["--col-widths", "4,10"], input_data=raw_csv)
-        self._assert_against_fixture("regression_ansi_word_chunking_basic_color", out)
-
-    def test_regression_ansi_word_chunking_complex_color(self):
-        """Test continuous word break wrapping with internal spaces and ANSI."""
-        raw_csv = "A,B\nThis \033[34misaverlongwordthatneeds to\033[0m be wrapped,Normal\n"
-        out = self._run_cli(["--col-widths", "10,10"], input_data=raw_csv)
-        self._assert_against_fixture("regression_ansi_word_chunking_complex_color", out)
-
-    def test_regression_ansi_word_chunking_stray_color(self):
-        """Test continuous word break wrapping when ANSI clips half the word."""
-        raw_csv = "A,B\nThis \033[31misaverlongword\033[0mthatneeds to be wrapped,Normal\n"
-        out = self._run_cli(["--col-widths", "10,10"], input_data=raw_csv)
-        self._assert_against_fixture("regression_ansi_word_chunking_stray_color", out)
-
-
-    def test_regression_ansi_word_chunking_simple(self):
-        """Test continuous word break wrapping."""
-        raw_csv = "A,B\nSomesuperlongword,Normal\n"
-        out = self._run_cli(["--col-widths", "10,10"], input_data=raw_csv)
-        self._assert_against_fixture("regression_ansi_word_chunking_simple", out)
-
-    def test_regression_ansi_word_chunking_multi(self):
-        """Test continuous word break wrapping with spaces."""
-        raw_csv = "A,B\nSomesuperlongword Anothersuperongword,Normal\n"
-        out = self._run_cli(["--col-widths", "10,10"], input_data=raw_csv)
-        self._assert_against_fixture("regression_ansi_word_chunking_multi", out)
-
-    def test_regression_ansi_word_chunking_basic_color(self):
-        """Test continuous word break wrapping with basic ANSI."""
-        raw_csv = "A,B\n\033[31mAwesomeness\033[0m,Normal\n"
-        out = self._run_cli(["--col-widths", "4,10"], input_data=raw_csv)
-        self._assert_against_fixture("regression_ansi_word_chunking_basic_color", out)
-
-    def test_regression_ansi_word_chunking_complex_color(self):
-        """Test continuous word break wrapping with internal spaces and ANSI."""
-        raw_csv = "A,B\nThis \033[34misaverlongwordthatneeds to\033[0m be wrapped,Normal\n"
-        out = self._run_cli(["--col-widths", "10,10"], input_data=raw_csv)
-        self._assert_against_fixture("regression_ansi_word_chunking_complex_color", out)
-
-    def test_regression_ansi_word_chunking_stray_color(self):
-        """Test continuous word break wrapping when ANSI clips half the word."""
-        raw_csv = "A,B\nThis \033[31misaverlongword\033[0mthatneeds to be wrapped,Normal\n"
-        out = self._run_cli(["--col-widths", "10,10"], input_data=raw_csv)
-        self._assert_against_fixture("regression_ansi_word_chunking_stray_color", out)
+        w1 = [5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
+        w2 = [12, 12, 12, 12, 12, 12, 12, 12, 12, 12]
+        
+        mktable(w1, None, None)
+        mktable(w2, None, None)
+        
+        for style in ["none", "light", "ascii"]:
+            mktable(w1, style, None)
+            mktable(w2, style, None)
+            
+        for theme in ["forest", "ocean-index"]:
+            mktable(w1, "light", theme)
+            mktable(w2, "light", theme)
+            
+        mktable(w1, "light", "ocean-cols-index")
+        
+        self._assert_against_fixture("regression_ansi_word_chunking_comprehensive", "\n".join(out))
 
 if __name__ == '__main__':
+
 
 
     unittest.main()
