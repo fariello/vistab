@@ -349,7 +349,4 @@ class TestVistabRegression(unittest.TestCase):
         self._assert_against_fixture("regression_ansi_word_chunking_comprehensive", "\n".join(out))
 
 if __name__ == '__main__':
-
-
-
     unittest.main()
