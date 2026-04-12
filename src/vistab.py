@@ -1019,9 +1019,9 @@ class Vistab:
                 d[style] = Vistab.TEXT_STYLES[style]
         return d
 
-    def set_border_style(self, fg=None, bg=None, **kwargs) -> 'Vistab':
+    def set_border_style(self, fg=None, bg=None, bold: bool=None, faint: bool=None, italic: bool=None, underline: bool=None, blink: bool=None, reverse: bool=None, strike: bool=None, **kwargs) -> 'Vistab':
         """Apply colors/styles strictly to the table border and intersection characters."""
-        self._border_style = self._compile_style_dict(fg, bg, **kwargs)
+        self._border_style = self._compile_style_dict(fg, bg, bold=bold, faint=faint, italic=italic, underline=underline, blink=blink, reverse=reverse, strike=strike, **kwargs)
         return self
 
 
@@ -1107,47 +1107,47 @@ class Vistab:
         return self.set_col_style(col_idx, fg=fg, bg=bg)
     # ----------------------------
 
-    def set_table_style(self, fg=None, bg=None, **kwargs) -> 'Vistab':
-        """Apply a global base style mapping uniformly to all cells inside the table natively."""
-        self._table_style = self._compile_style_dict(fg, bg, **kwargs)
+    def set_table_style(self, fg=None, bg=None, bold: bool=None, faint: bool=None, italic: bool=None, underline: bool=None, blink: bool=None, reverse: bool=None, strike: bool=None, **kwargs) -> 'Vistab':
+        """Apply a global base style mapping uniformly to all cells inside the table."""
+        self._table_style = self._compile_style_dict(fg, bg, bold=bold, faint=faint, italic=italic, underline=underline, blink=blink, reverse=reverse, strike=strike, **kwargs)
         return self
 
-    def set_header_style(self, fg=None, bg=None, **kwargs) -> 'Vistab':
+    def set_header_style(self, fg=None, bg=None, bold: bool=None, faint: bool=None, italic: bool=None, underline: bool=None, blink: bool=None, reverse: bool=None, strike: bool=None, **kwargs) -> 'Vistab':
         """Apply styles specifically to the header row.
 
         Args:
             fg (str): Foreground color (e.g. 'red').
             bg (str): Background color (e.g. 'blue').
-            kwargs: Any boolean text style (e.g. bold=True).
+            bold, faint, italic, underline, blink, reverse, strike (bool): Text styles.
         """
-        self._header_style = self._compile_style_dict(fg, bg, **kwargs)
+        self._header_style = self._compile_style_dict(fg, bg, bold=bold, faint=faint, italic=italic, underline=underline, blink=blink, reverse=reverse, strike=strike, **kwargs)
         return self
 
-    def set_row_style(self, row_idx: int, fg=None, bg=None, **kwargs) -> 'Vistab':
+    def set_row_style(self, row_idx: int, fg=None, bg=None, bold: bool=None, faint: bool=None, italic: bool=None, underline: bool=None, blink: bool=None, reverse: bool=None, strike: bool=None, **kwargs) -> 'Vistab':
         """Apply styles to a specific row index (excluding header)."""
-        self._row_styles[row_idx] = self._compile_style_dict(fg, bg, **kwargs)
+        self._row_styles[row_idx] = self._compile_style_dict(fg, bg, bold=bold, faint=faint, italic=italic, underline=underline, blink=blink, reverse=reverse, strike=strike, **kwargs)
         return self
 
-    def set_col_style(self, col_idx: int, fg=None, bg=None, **kwargs) -> 'Vistab':
+    def set_col_style(self, col_idx: int, fg=None, bg=None, bold: bool=None, faint: bool=None, italic: bool=None, underline: bool=None, blink: bool=None, reverse: bool=None, strike: bool=None, **kwargs) -> 'Vistab':
         """Apply styles to a specific column index."""
-        self._col_styles[col_idx] = self._compile_style_dict(fg, bg, **kwargs)
+        self._col_styles[col_idx] = self._compile_style_dict(fg, bg, bold=bold, faint=faint, italic=italic, underline=underline, blink=blink, reverse=reverse, strike=strike, **kwargs)
         return self
 
-    def set_cell_style(self, row_idx: int, col_idx: int, fg=None, bg=None, **kwargs) -> 'Vistab':
+    def set_cell_style(self, row_idx: int, col_idx: int, fg=None, bg=None, bold: bool=None, faint: bool=None, italic: bool=None, underline: bool=None, blink: bool=None, reverse: bool=None, strike: bool=None, **kwargs) -> 'Vistab':
         """Apply styles to a specific cell. Has highest precedence."""
-        self._cell_styles[(row_idx, col_idx)] = self._compile_style_dict(fg, bg, **kwargs)
+        self._cell_styles[(row_idx, col_idx)] = self._compile_style_dict(fg, bg, bold=bold, faint=faint, italic=italic, underline=underline, blink=blink, reverse=reverse, strike=strike, **kwargs)
         return self
 
-    def set_alternating_row_style(self, fg1=None, bg1=None, fg2=None, bg2=None, **kwargs) -> 'Vistab':
+    def set_alternating_row_style(self, fg1=None, bg1=None, fg2=None, bg2=None, bold: bool=None, faint: bool=None, italic: bool=None, underline: bool=None, blink: bool=None, reverse: bool=None, strike: bool=None, **kwargs) -> 'Vistab':
         """Set alternating row styling (zebra-striping) applied iteratively over table coordinates."""
-        self._alt_row_styles[0] = self._compile_style_dict(fg1, bg1, **kwargs)
-        self._alt_row_styles[1] = self._compile_style_dict(fg2, bg2, **kwargs)
+        self._alt_row_styles[0] = self._compile_style_dict(fg1, bg1, bold=bold, faint=faint, italic=italic, underline=underline, blink=blink, reverse=reverse, strike=strike, **kwargs)
+        self._alt_row_styles[1] = self._compile_style_dict(fg2, bg2, bold=bold, faint=faint, italic=italic, underline=underline, blink=blink, reverse=reverse, strike=strike, **kwargs)
         return self
 
-    def set_alternating_col_style(self, fg1=None, bg1=None, fg2=None, bg2=None, **kwargs) -> 'Vistab':
+    def set_alternating_col_style(self, fg1=None, bg1=None, fg2=None, bg2=None, bold: bool=None, faint: bool=None, italic: bool=None, underline: bool=None, blink: bool=None, reverse: bool=None, strike: bool=None, **kwargs) -> 'Vistab':
         """Set alternating column styling (zebra-striping)."""
-        self._alt_col_styles[0] = self._compile_style_dict(fg1, bg1, **kwargs)
-        self._alt_col_styles[1] = self._compile_style_dict(fg2, bg2, **kwargs)
+        self._alt_col_styles[0] = self._compile_style_dict(fg1, bg1, bold=bold, faint=faint, italic=italic, underline=underline, blink=blink, reverse=reverse, strike=strike, **kwargs)
+        self._alt_col_styles[1] = self._compile_style_dict(fg2, bg2, bold=bold, faint=faint, italic=italic, underline=underline, blink=blink, reverse=reverse, strike=strike, **kwargs)
         return self
 
     def apply_theme(self, theme: Union[str, dict]) -> 'Vistab':
