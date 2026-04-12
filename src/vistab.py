@@ -1375,6 +1375,12 @@ class Vistab:
         self._style = style
         if style in Vistab.STYLES:
             self.set_table_lines(Vistab.STYLES[style])
+            # Automatically disable implicitly incompatible structural decorations natively
+            if style == "markdown":
+                self._deco &= ~Vistab.HLINES
+                self._deco &= ~Vistab.BORDER
+            elif style in ("none", "none2"):
+                self._deco = 0
             return self
         raise ValueError("style must be one of '%s' not '%s'" % ("', '".join(sorted(Vistab.STYLES.keys())), style))
 
