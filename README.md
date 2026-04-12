@@ -162,7 +162,7 @@ vistab --demo themes
 
 Let's create a test table:
 ```bash
-cat > test.csv << EOF
+cat > ~/test.csv << EOF
 # ,Nam,Scor,Stat,Val
 1,Al,12,Good,0.1
 2,Bob,3,Bad,1.1
@@ -181,7 +181,7 @@ EOF
 Running:
 
 ```bash
-vistab test.csv --theme ocean-index
+vistab ~/test.csv --theme ocean-index
 ```
 
 produces:
@@ -190,7 +190,7 @@ produces:
 
 You may then change that theme by running:
 ```bash
-vistab test.csv --theme ocean-index --no-hlines \
+vistab ~/test.csv --theme ocean-index --no-hlines \
     --header-bg-color cyan --last-row-bg-color red --last-row-color black \
     --col0-bg-color green
 ```
@@ -201,7 +201,7 @@ Which results in:
 To see how to generate that specific output using code, you can run:
 
 ```bash
-vistab tests/data/test_5x11.csv --theme ocean-index --no-hlines \
+vistab ~/test.csv --theme ocean-index --no-hlines \
     --header-bg-color cyan --last-row-bg-color red --last-row-color black \
     --col0-bg-color green --show-code
 ```
@@ -249,7 +249,7 @@ print(table.draw())
 
 OR you can save it for later use using the `--save-theme` flag:
 ```bash
-vistab tests/data/test_5x11.csv --theme ocean-index --no-hlines --header-bg-color cyan --last-row-bg-color red --last-row-color black --col0-bg-color green --save-theme my_custom_theme
+vistab ~/test.csv --theme ocean-index --no-hlines --header-bg-color cyan --last-row-bg-color red --last-row-color black --col0-bg-color green --save-theme my_custom_theme
 ```
 You should see something like:
 ```bash
@@ -257,7 +257,7 @@ You should see something like:
 ```
 You can now use it on the command line like this:
 ```bash
-vistab tests/data/test_5x11.csv --theme my_custom_theme
+vistab ~/test.csv --theme my_custom_theme
 ```
 Or in code like this:
 ```python
