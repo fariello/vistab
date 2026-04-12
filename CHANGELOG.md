@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2026-04-10
 
 ### Added
+- **Mathematical Word Chunking**: Dynamically chunks contiguous strings to cleanly map executing color contexts while spanning ANSI bounds securely natively.
+- **ANSI Layout Reassertion / Masking**: Exposed `sanitize_ansi` property on the `Vistab` class gracefully purging destructive positional cursor control sequences, alongside intelligent context reassertion mapping nested text styles spanning wrapped grid cell boundaries dynamically.
 - **Infinite Generator Streaming**: Introduced `Vistab.stream()` providing natively memoryless mapping bounds for infinite streams, integrating pipe streams without full memory allocations. Added `--stream` and `--stream-probe`.
 - **True Caveat Emptor Boundary Routing**: Explicitly evaluated the core engine implicitly handling memory constraints on OS efficiently. Combining `--stream` with highly constrained pipeline structural mappings natively triggers safe fallback to array buffering iteratively.
 - **Jagged Matrix Resolution**: Added structural boundaries padding (`--on-short=pad`) and truncating (`--on-long=truncate`) irregular CSV row formats efficiently. Included dynamic cell highlighting (`--mark-abnormal COLOR`) to point out pipeline flaws visually.

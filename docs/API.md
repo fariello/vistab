@@ -1,6 +1,6 @@
 [README](../README.md) | [API](API.md) | [CLI](CLI.md) | [SPEC](../FUNCTIONAL_SPEC.md) | [CHANGELOG](../CHANGELOG.md)
 
-# Vistab API Reference (v1.0.3)
+# Vistab API Reference (v1.1.0)
 
 `Vistab` uses a **fluent API**. Almost all manipulation and styling methods return the instance itself (`self`), allowing developers to chain operations cleanly:
 
@@ -43,6 +43,9 @@ Iterates and appends a 2D block. If `header=True` and the table lacks one, index
 
 ### `set_rows(rows: Iterable[Iterable[Any]], header: bool = True)`
 Clears existing memory completely replacing structural boundaries with the inserted `rows`.
+
+### `stream(iterable: Iterable[Any], header: bool = True) -> Iterator[str]`
+Consumes an infinite generator stream mapping and formatting rows sequentially without buffering matrix arrays into memory.
 
 ### `sort_by(col_idx: int, reverse: bool = False, key: callable = None)`
 Rearranges row structures internally tracking a dedicated physical column logic.
@@ -168,6 +171,7 @@ Computes all styling rules globally, measuring byte boundaries safely processing
 ### Properties
 - `table.has_header` `(bool)`: Programmatically disable header tracking safely without stripping matrix sizes dynamically correctly.
 - `table.on_wrap_conflict` `(str)`: Explicitly defines evaluation behaviors mapping routing bounds safely (`"warn"`, `"error"`, `"clip"`, `"overflow"`).
+- `table.sanitize_ansi` `(bool)`: Configures destructive behavior intercepts purging broken cursor movements natively safely securing bounds.
 
 ---
 [README](../README.md) | [API](API.md) | [CLI](CLI.md) | [SPEC](../FUNCTIONAL_SPEC.md) | [CHANGELOG](../CHANGELOG.md)

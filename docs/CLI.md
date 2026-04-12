@@ -35,7 +35,17 @@ The CLI lets you manage data layout, spacing, and wrapper constraints via standa
 - **`--valign`**: Target vertical alignments (`t=top`, `m=middle`, `b=bottom`). Example: `--valign ttb`
 - **`--dtype`**: Force datatypes to ensure consistent output formatting (`a=auto`, `t=text`, `f=float`, `i=int`, `e=exp`).
 
-### 3. Aesthetics & Themes
+### 3. Data Pipelines & Streaming
+- **`--stream`**: Bypasses absolute array structures printing mapped iterations continuously (infinite STDIN).
+- **`--stream-probe`**: Scans the first N rows structurally aligning the continuous widths dynamically (default: 50).
+- **`--sort-by INDEX`**: Reorder arrays logically executing numeric or string evaluation bounds.
+- **`--sort-reverse`**: Execute descending logic correctly mapped off `--sort-by`.
+- **`--csv-dialect NAME`**: Enforce native Python CSV sniff logic directly parsing structures cleanly.
+- **`--on-short ACTION`**: Direct boundary routing padding irregular CSV columns (`pad`, `skip`, `raise`).
+- **`--on-long ACTION`**: Route overflowing row values seamlessly (`truncate`, `skip`, `raise`).
+- **`--mark-abnormal COLOR`**: Apply rapid visual diagnostics pointing to arrays conflicting explicitly mapped boundaries.
+
+### 4. Aesthetics & Themes
 - **`-t, --theme`**: Apply predefined dynamic Zebra-Striping matrix algorithms (`ocean-cols`, `forest`).
 - **`-s, --style`**: Modify the table border characters (`light`, `round2`, `markdown`).
 - **`-p, --padding`**: Expand the internal whitespace padding of cells by a standard integer.
@@ -44,7 +54,7 @@ The CLI lets you manage data layout, spacing, and wrapper constraints via standa
 
 ![Screenshot: Terminal output displaying an execution block utilizing formatting constraints and showing --no-header flags.](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-CLI-formatting.png)
 
-### 4. Granular Color Targeting
+### 5. Granular Color Targeting
 If predefined themes aren't enough, you can explicitly override coordinate elements using discrete color arguments (`red`, `blue`, `bright_black`, `none` to remove):
 - **`--border-color` / `--border-bg-color`**: Surrounding frame color.
 - **`--col0-bg-color`**: Target the first column data explicitly.
