@@ -248,35 +248,13 @@ table = vistab.Vistab().apply_theme("my_custom_theme")
 # ... map inputs cleanly and execute drawing natively
 print(table.draw())
 ```
+## Styles
 
-### The Curated Color Theme Matrix
-
-In addition to ASCII-structural styles, `Vistab` dynamically computes 18 color layout themes utilizing Zebra-Striping. You can paint entire layouts instantly using `.apply_theme()`.
-
-The library supports three base color palettes (`ocean`, `forest`, `minimalist`). Each color palette is distributed across six visual geometries matching the systematic format `<palette>-<striping>-<index>`. For example:
-
-- `table.apply_theme("ocean")` *(Default Alternating Zebra Rows)*
-- `table.apply_theme("ocean-index")` *(Alternating Rows + First Column Index Highlight applied)*
-- `table.apply_theme("ocean-cols")` *(Alternating Column Striping)*
-- `table.apply_theme("ocean-solid")` *(Static Background, No striping)*
-
-If these 18 themes aren't enough, you can dynamically construct custom matrices by pushing a dictionary configuration directly into the global static boundary `Vistab.THEMES["my_blue_theme"] = {...}` in your own scripts.
-
-View the curated themes rendered stacked by executing:
+To view available styles, run:
 ```bash
-vistab -M
+vistab --demo styles
 ```
-![Theme Output](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-M-themes-output.png)
-
-#### Applying Themes via CLI
-You can inject these structural formats directly onto raw CSVs leveraging the command line endpoints:
-```bash
-# Parsing files iteratively via positional bindings
-vistab data.csv --theme ocean-cols-index --style round
-
-# Routing pipes over STDIN straight from bash
-echo -e "Value,Metric\n99,Speed" | vistab --theme minimalist
-```
+![Available Styles](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-demo-styles.png)
 
 ## Discovering Output Colors (CLI)
 
