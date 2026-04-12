@@ -3105,8 +3105,8 @@ def main():
             if rows is not None:
                 table.set_rows(rows, header=not args.no_header)
 
-            # Apply custom decorations cleanly and naturally
-            deco = Vistab.BORDER | Vistab.HEADER | Vistab.HLINES | Vistab.VLINES
+            # Apply custom decorations cleanly and naturally natively inheriting table style boundaries
+            deco = table._deco
             if args.no_borders:
                 deco &= ~Vistab.BORDER
             if args.no_hlines:
