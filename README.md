@@ -148,15 +148,37 @@ vistab data.csv --table-bg-color bright_black --last-row-color magenta --save-th
 vistab another_data.csv --theme my_custom_theme
 ```
 
-## Built-in Structural Themes
+## Built-in Themes
 
-`vistab` comes with predefined structural themes including `light`, `bold`, `double`, `ascii`, `round2`, `markdown`, and others.
+`vistab` comes with predefined themes including `ocean`, `forest`, `minimalist`, and others.
 
-You can view a full structural geometry matrix printed on your terminal by executing:
+You can view the built-in themes (which you can alter and save as new themes) by running:
 ```bash
-vistab -L
+vistab --demo themes
 ```
-![Available Styles](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-L-available-styles.png)
+![Available Themes](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-demo-themes.png)
+
+## Custom Themes
+
+`vistab` allows you to create or modify themese and save them. For example, `tests/data/test_5x11.csv` contains the following data:
+| #  | Nam  | Scor |  Stat   |  Val   |
+|----|------|------|---------|--------|
+|  1 | Al   |   12 | Good    |  0.1   |
+|  2 | Bob  |    3 | Bad     |  1.1   |
+|  3 | Cat  |   67 | Ugly    |  1.2   |
+|  4 | Dan  |   12 | Okay    |  3.0   |
+|  5 | Eve  |   15 | Fine    |  0.4   |
+|  6 | Will |   18 | Meh     |  9.1   |
+|  7 | Pat  |   21 | Great   | 10.2   |
+|  8 | Kim  |   24 | Super   |  4.9   |
+|  9 | Sam  |   27 | Awesome |  5.9   |
+| 10 | Jo   |   30 | Amazing |  0.1   |
+
+Running `vistab tests/data/test_5x11.csv --theme ocean-index` produces:
+![Theme ocean-index table example](docs/assets/vistab-theme-ocean-index-example.png)
+
+You may then change that theme by running `vistab tests/data/test_5x11.csv --theme ocean-index --no-hlines --header-bg-color cyan --last-row-bg-color red --last-row-color black --col0-bg-color green` which results in:
+![Example of a modified theme](docs/assets/vistab-theme-ocean-index-example-modified.png)
 
 ### The Curated Color Theme Matrix
 
