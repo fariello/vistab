@@ -65,7 +65,7 @@ If predefined themes aren't enough, you can explicitly override coordinate eleme
 ## Diagnostic Endpoints & Theme Customization
 
 The CLI provides visual evaluation matrices to verify layouts locally:
-- **`--create-config TARGET`**: Generate a standard configuration file for the current local directory (e.g., `vistab --create-config .vistab.toml`).
+- **`-K, --create-config TARGET`**: Generate a standard configuration file globally by default, or mapped to a passed target path (e.g. `vistab --create-config` creates `~/.config/vistab/config.toml`).
 - **`-Q, --show-config`**: Print the paths mapping global dynamic configuration directories and exit.
 - **`vistab -M`**: Render a color matrix showcasing every pre-built Theme algorithm.
 - **`vistab -L`**: Visualize structural framework limits parsing valid physical Table styles.

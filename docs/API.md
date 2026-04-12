@@ -171,6 +171,8 @@ Computes all styling rules globally, measuring byte boundaries safely processing
 ### Properties
 - `table.has_header` `(bool)`: Programmatically disable header tracking safely without stripping matrix sizes dynamically correctly.
 - `table.on_wrap_conflict` `(str)`: Explicitly defines evaluation behaviors mapping routing bounds safely (`"warn"`, `"error"`, `"clip"`, `"overflow"`).
+- `table.on_short_row` `(str)`: Configures array truncation bounds when incoming data matrices explicitly violate length (`"pad"`, `"skip"`, `"raise"`).
+- `table.on_long_row` `(str)`: Configures jagged bounds handling values that dangerously overflow formatting boundaries (`"truncate"`, `"skip"`, `"raise"`).
 - `table.sanitize_ansi` `(bool)`: Configures destructive behavior intercepts purging broken cursor movements natively safely securing bounds.
 
 ---

@@ -129,12 +129,12 @@ $ cat large_dataset.csv | vistab --stream
 ## Hierarchical Configuration System
 Stop re-typing your constructor arguments! `vistab` actively scans your execution environment for two distinct configuration architectures:
 
-### 1. Default Fallbacks (`vistab.toml`)
-It searches `[./.config/vistab.toml, ./.vistab.toml, ~/.config/vistab.toml, ~/.vistab.toml]` for generic table properties. 
+### 1. Default Fallbacks (`vistab.toml` / `config.toml`)
+It evaluates paths sequentially, merging configurations gracefully: `[./vistab.toml, ./.vistab.toml, ./.config/vistab.toml, ~/.config/vistab/config.toml, ~/.config/vistab.toml, ~/.vistab.toml]`.
 
-You can generate a template configuration file to test using the CLI command:
+You can generate a default configuration file into the global user profile directly using the CLI:
 ```bash
-vistab --create-config .vistab.toml
+vistab --create-config
 ```
 
 ### 2. Custom Aesthetic Themes (`themes.json`)

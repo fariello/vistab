@@ -800,6 +800,7 @@ class Vistab:
             Path(__file__).parent / "vistab.toml",
             Path.home() / ".vistab.toml",
             Path.home() / ".config" / "vistab.toml",
+            Path.home() / ".config" / "vistab" / "config.toml",
             Path.cwd() / "vistab.toml",
             Path.cwd() / ".vistab.toml",
             Path.cwd() / ".config" / "vistab.toml",
