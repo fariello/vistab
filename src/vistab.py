@@ -539,6 +539,9 @@ class Vistab:
     MIDDLE = 1  # Middle position for lines
     BOTTOM = 2  # Bottom border position
 
+    _ANSI_DESTRUCTIVE_RE = __import__('re').compile(r'\x1b\[[0-9;]*[A-DEFGHJKST]')
+    _ANSI_RESET_RE_INTERCEPT = __import__('re').compile(r'(\x1b\[[0-9;]*m)')
+
     # ANSI Formatting Constants
     COLORS = {
         "black": "30", "red": "31", "green": "32", "yellow": "33",
@@ -946,6 +949,7 @@ class Vistab:
         self._title = None
         self.on_wrap_conflict = "warn"
         self.on_short_row = "pad"
+        self._sanitize_ansi = True
         self.on_long_row = "truncate"
         self._metrics = {"padded": 0, "truncated": 0, "skipped": 0}
         self._abnormal_style = None  # Tuple of (fg, bg) injected directly into flawed row lines natively cleanly.
@@ -1018,6 +1022,36 @@ class Vistab:
         """Apply colors/styles strictly to the table border and intersection characters."""
         self._border_style = self._compile_style_dict(fg, bg, **kwargs)
         return self
+
+
+    @property
+    def sanitize_ansi(self) -> bool:
+        """Gets whether grid values strip layout-destructive positional mapping."""
+        return self._sanitize_ansi
+
+    @sanitize_ansi.setter
+    def sanitize_ansi(self, value: bool) -> None:
+        """Sets boolean state restricting destructive grid layout mappings natively."""
+        self._sanitize_ansi = value
+
+    def _sanitize_destructive_ansi(self, cell_text: str) -> str:
+        """Purges absolute positional cursor modifiers that warp row rendering natively."""
+        if not self._sanitize_ansi:
+            return cell_text
+        return self._ANSI_DESTRUCTIVE_RE.sub('', cell_text)
+
+    def _reassert_ansi_context(self, cell_text: str, ansi_on: str) -> str:
+        """Scans for embedded inner graphics resets and re-wraps their trailing values identically to bounding context."""
+        if not ansi_on or not cell_text:
+            return cell_text
+        import re
+        def replacer(m):
+            code = m.group(1)
+            nums = re.findall(r'\d+', code)
+            if not nums or any(n in ['0', '22', '23', '24', '25', '27', '29', '39', '49'] for n in nums):
+                return code + ansi_on
+            return code
+        return self._ANSI_RESET_RE_INTERCEPT.sub(replacer, cell_text)
 
     def set_title(self, title: str) -> 'Vistab':
         """Set a title string to be rendered centered above the table."""
@@ -2320,6 +2354,14 @@ class Vistab:
                     out_parts.append(pad_str)
 
                 cell_line = cell[i]
+                
+                # 1. Strip destructive sequences natively (e.g. Cursor Up)
+                cell_line = self._sanitize_destructive_ansi(cell_line)
+                
+                # 2. Intercept inner resets seamlessly bypassing context tracking
+                if ansi_on:
+                    cell_line = self._reassert_ansi_context(cell_line, ansi_on)
+                    
                 fill = width - self.vislen(cell_line)
 
                 # Routing strict native layout bounding collisions seamlessly

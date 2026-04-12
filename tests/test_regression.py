@@ -348,5 +348,63 @@ class TestVistabRegression(unittest.TestCase):
         
         self._assert_against_fixture("regression_ansi_word_chunking_comprehensive", "\n".join(out))
 
+
+    def test_regression_ansi_context_leak_prevention(self):
+        """Validates that inner cell resets do not destroy active cell styling bounding padding structure."""
+        from src.vistab import Vistab
+        
+        table = Vistab()
+        # Create a layout where cell 2 explicitly has a forest theme blue background.
+        table.apply_theme("forest")
+        table.set_cols_width([15, 20])
+        
+        # Test 1: Inject a stray reset code \033[0m right into the middle of the cell.
+        # Test 2: Inject a cursor movement \033[A to verify it gets securely completely stripped.
+        table.add_row([
+            "Normal cell",
+            "Starts bright \033[0mTries resetting \x1b[Aand moving"
+        ])
+        
+        out = table.draw()
+        
+        # Verify cursor A got wiped:
+        self.assertNotIn("\x1b[A", out)
+        self.assertNotIn("\033[A", out)
+        
+        # The padding spaces at the end of cell 2 MUST be themed. 
+        # Inside the generated string, the padding will have the active ANSI block re-appended.
+        
+        self._assert_against_fixture("regression_ansi_context_leak_prevention", out)
+
+
+    def test_regression_ansi_context_leak_prevention(self):
+        """Validates that inner cell resets do not destroy active cell styling bounding padding structure."""
+        from src.vistab import Vistab
+        
+        table = Vistab()
+        # Create a layout where cell 2 explicitly has a forest theme blue background.
+        table.apply_theme("forest")
+        table.set_cols_width([15, 20])
+        
+        # Test 1: Inject a stray reset code \033[0m right into the middle of the cell.
+        # Test 2: Inject a cursor movement \033[A to verify it gets securely completely stripped.
+        table.add_row([
+            "Normal cell",
+            "Starts bright \033[0mTries resetting \x1b[Aand moving"
+        ])
+        
+        out = table.draw()
+        
+        # Verify cursor A got wiped:
+        self.assertNotIn("\x1b[A", out)
+        self.assertNotIn("\033[A", out)
+        
+        # The padding spaces at the end of cell 2 MUST be themed. 
+        # Inside the generated string, the padding will have the active ANSI block re-appended.
+        
+        self._assert_against_fixture("regression_ansi_context_leak_prevention", out)
+
 if __name__ == '__main__':
+
+
     unittest.main()
