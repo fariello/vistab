@@ -180,6 +180,75 @@ Running `vistab tests/data/test_5x11.csv --theme ocean-index` produces:
 You may then change that theme by running `vistab tests/data/test_5x11.csv --theme ocean-index --no-hlines --header-bg-color cyan --last-row-bg-color red --last-row-color black --col0-bg-color green` which results in:
 ![Example of a modified theme](docs/assets/vistab-theme-ocean-index-example-modified.png)
 
+To see how to generate that specific output using code, you can run:
+
+```bash
+vistab tests/data/test_5x11.csv --theme ocean-index --no-hlines --header-bg-color cyan --last-row-bg-color red --last-row-color black --col0-bg-color green --show-code
+```
+Which will output the code you need to generate that table look and feel:
+```python
+import vistab
+
+custom_theme = {
+    "style": "round2",
+    "decorations": 11,
+    "header": {
+        "fg": "bright_white",
+        "bg": "cyan",
+        "bold": true
+    },
+    "border": {
+        "fg": "bright_blue"
+    },
+    "col_0": {
+        "fg": "bright_white",
+        "bg": "green",
+        "bold": true
+    },
+    "row_-1": {
+        "fg": "black",
+        "bg": "red"
+    },
+    "alt_rows": [
+        {
+            "fg": "white",
+            "bg": "black"
+        },
+        {
+            "fg": "bright_white",
+            "bg": "bright_black"
+        }
+    ]
+}
+
+table = vistab.Vistab().apply_theme(custom_theme)
+
+# ... map inputs cleanly and execute drawing natively
+print(table.draw())
+```
+
+OR you can save it for later use using the `--save-theme` flag:
+```bash
+vistab tests/data/test_5x11.csv --theme ocean-index --no-hlines --header-bg-color cyan --last-row-bg-color red --last-row-color black --col0-bg-color green --save-theme my_custom_theme
+```
+You should see something like:
+```bash
+[SUCCESS] Saved layout globally as 'my_custom_theme' in /home/USER/.config/vistab/themes.json
+```
+You can now use it on the command line like this:
+```bash
+vistab tests/data/test_5x11.csv --theme my_custom_theme
+```
+Or in code like this:
+```python
+import vistab
+
+table = vistab.Vistab().apply_theme("my_custom_theme")
+
+# ... map inputs cleanly and execute drawing natively
+print(table.draw())
+```
+
 ### The Curated Color Theme Matrix
 
 In addition to ASCII-structural styles, `Vistab` dynamically computes 18 color layout themes utilizing Zebra-Striping. You can paint entire layouts instantly using `.apply_theme()`.
