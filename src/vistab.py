@@ -741,7 +741,7 @@ class Vistab:
 
         # Added to support rows arg (i.e., adding entire table definition in initialization).
         is_header = True
-        if header is False or header is None or header == "":
+        if header is False or header == "":
             is_header = False
         elif getattr(header, '__iter__', False) and not isinstance(header, (str, bytes, bool)):
             self.set_header(header)
