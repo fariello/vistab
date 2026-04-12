@@ -1,5 +1,5 @@
 
-[1;31m[COMMAND-LINE FORMAT ERROR][0m within stream 'C:\Users\gabri\OneDrive\Projects\vistab\tests\data\small_7x12.csv'
+[1;31m[COMMAND-LINE FORMAT ERROR][0m within stream '<PROJECT_ROOT>/tests/data/small_7x12.csv'
 Details: array should contain 12 elements not 1 (array=['c'])
 
 Tip: Ensure your formatting inputs perfectly map to your CSV column lengths!

@@ -1,1 +1,1 @@
-[[33mWARN[0m] The parsed stream 'C:\Users\gabri\OneDrive\Projects\vistab\tests\data\completely_empty.csv' is empty.
+[[33mWARN[0m] The parsed stream '<PROJECT_ROOT>/tests/data/completely_empty.csv' is empty.

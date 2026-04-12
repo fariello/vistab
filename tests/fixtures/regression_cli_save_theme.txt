@@ -1,4 +1,4 @@
-[[32mSUCCESS[0m] Saved layout globally as 'test_ocean_override' in C:\Users\gabri\OneDrive\Projects\vistab\tests\temp_home\.config\vistab\themes.json
+[[32mSUCCESS[0m] Saved layout globally as 'test_ocean_override' in <PROJECT_ROOT>/tests/temp_home/.config/vistab/themes.json
 
 --- GENERATED THEMES.JSON ---
 {

@@ -45,6 +45,18 @@ class TestVistabRegression(unittest.TestCase):
         Validates output against a saved fixture. 
         If the fixture does not exist, it bootstraps it natively!
         """
+        # Normalize absolute paths for cross-platform stability
+        proj_root = str(self.tests_dir.parent)
+        output = output.replace(proj_root.replace('\\', '/'), "<PROJECT_ROOT>")
+        output = output.replace(proj_root, "<PROJECT_ROOT>")
+        
+        # Explicitly normalize Windows slashes to Linux slashes in the exact file strings printed by the CLI
+        output = output.replace("<PROJECT_ROOT>\\tests\\temp_home\\.config\\vistab\\themes.json", "<PROJECT_ROOT>/tests/temp_home/.config/vistab/themes.json")
+        output = output.replace("<PROJECT_ROOT>\\tests\\data\\small_5x5.csv", "<PROJECT_ROOT>/tests/data/small_5x5.csv")
+        output = output.replace("<PROJECT_ROOT>\\tests\\data\\small_7x12.csv", "<PROJECT_ROOT>/tests/data/small_7x12.csv")
+        output = output.replace("<PROJECT_ROOT>\\tests\\data\\completely_empty.csv", "<PROJECT_ROOT>/tests/data/completely_empty.csv")
+        output = output.replace("<PROJECT_ROOT>\\tests\\data\\small_1x1.csv", "<PROJECT_ROOT>/tests/data/small_1x1.csv")
+        
         fixture_path = self.fixtures_dir / f"{name}.txt"
         
         if not fixture_path.exists():
