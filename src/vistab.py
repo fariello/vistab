@@ -790,7 +790,7 @@ class Vistab:
             else:
                 import tomli as tomllib
         except ImportError:
-            # Silent fallback if TOML library dependencies are completely unfulfilled
+            sys.stderr.write("[\033[1;33mWARN\033[0m] For .toml configuration support on Python < 3.11, the 'tomli' library is needed. Please `pip install tomli`.\n")
             return
 
         from pathlib import Path
@@ -1612,7 +1612,7 @@ class Vistab:
             table.set_precision(5)
         """
         if not type(width) is int or width < 0:
-            raise ValueError('width must be an integer greater then 0')
+            raise ValueError('precision must be an integer greater than or equal to 0')
         self._precision = width
         return self
 
@@ -1641,7 +1641,7 @@ class Vistab:
             table.set_padding(2)
         """
         if not type(amount) is int or amount < 0:
-            raise ValueError('padding must be an integer greater then 0')
+            raise ValueError('padding must be an integer greater than or equal to 0')
         self._pad = amount
         return self
 
@@ -2954,6 +2954,9 @@ def main():
             "max_cols = 0     # Hard limit on rendered columns (0 = infinite)\n"
         )
         try:
+            config_dir_path = os.path.dirname(args.create_config)
+            if config_dir_path:
+                os.makedirs(config_dir_path, exist_ok=True)
             with open(args.create_config, "w", encoding="utf8") as f:
                 f.write(config_content)
             print(f"[\033[32mSUCCESS\033[0m] Generated Vistab config template at: {args.create_config}")
