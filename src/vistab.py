@@ -249,6 +249,36 @@ class StringLengthCalculator:
     pass  # for auto-indentation
 
 
+def _strip_ansi(text: str) -> str:
+    """
+    Remove all ANSI color and style escape sequences from a string.
+
+    Args:
+    -----
+    text : str
+        The string containing ANSI escape sequences to process.
+
+    Returns:
+    --------
+    str
+        The cleaned string strictly containing textual characters.
+
+    Important Behavior:
+    -------------------
+    This explicitly targets the standard terminal \\x1B escape mappings that define structural and foreground elements natively.
+    It leverages the compiled regex globally cached in `StringLengthCalculator` to efficiently process replacements.
+
+    Example:
+    --------
+    ```python
+    clean_text = _strip_ansi("\\033[1;31mRed text\\033[0m")
+    print(clean_text)  # "Red text"
+    ```
+    """
+    if type(text) == str:
+        return StringLengthCalculator._ANSI_ESCAPE.sub('', text)
+    return text
+
 class ColorAwareWrapper:
     """
     Class to wrap text to a specified width, excluding ANSI escape sequences.
@@ -563,17 +593,18 @@ class Vistab:
     # Dictionary defining various table styles and their corresponding border characters
     STYLES = {
         "ascii": "-|+-",  # Basic ASCII style
-        "ascii2": "-|+=",  # ASCII style with different corner characters
+        "ascii-header": "-|+=",  # ASCII style with different header separators
         "double": "═║╔╗╚╝╠╣╦╩╬═╠╣╬",  # Double line style
-        "light2": "─│┌┐└┘├┤┬┴┼═╞╡╪",  # Light line style with different corners
-        "round": "─│╭╮╰╯├┤┬┴┼─├┤┼",  # Round corners style
-        "round2": "─│╭╮╰╯├┤┬┴┼═╞╡╪",  # Another round corners style
         "light": "─│┌┐└┘├┤┬┴┼─├┤┼",  # Light line style
-        "heavy": "━┃┏┓┗┛┣┫┳┻╋━┣┫╋",  # Heavy style (same as bold but discrete name)
+        "light-header": "─│┌┐└┘├┤┬┴┼═╞╡╪",  # Light line style with double headers
+        "round": "─│╭╮╰╯├┤┬┴┼─├┤┼",  # Round corners style
+        "round-header": "─│╭╮╰╯├┤┬┴┼═╞╡╪",  # Round corners style with double headers
+        "heavy": "━┃┏┓┗┛┣┫┳┻╋━┣┫╋",  # Heavy style
         "dashed": "┄┆┌┐└┘├┤┬┴┼┄├┤┼", # Dashed lines
+        "dots": "┈┊┌┐└┘├┤┬┴┼┈├┤┼",   # Dotted dashed lines
         "markdown": " |         -|||", # GitHub Flavored Markdown
-        "none": ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ],  # No lines style
-        "none2": ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ],  # Another no lines style
+        "booktabs": ["━", "", "", "", "", "", "", "", "", "", "", "─", "", "", ""], # Academic horizontal rules
+        "none": ["", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],  # No lines style
     }
 
     # Dictionary mapping complex style patterns to specific characters
@@ -582,7 +613,7 @@ class Vistab:
             "---w": " ", "--e-": " ", "--ew": "━", "-s--": " ", "-s-w": "┓", "-se-": "┏", "-sew": "┳",
             "n---": " ", "n--w": "┛", "n-e-": "┗", "n-ew": "┻", "ns--": "┃", "ns-w": "┫", "nse-": "┣", "nsew": "╋",
         },
-        "light2": {
+        "light-header": {
             "---w": " ", "--e-": " ", "--ew": "-", "-s--": " ", "-s-w": "┐", "-se-": "┌", "-sew": "┬",
             "n---": " ", "n--w": "┘", "n-e-": "└", "n-ew": "┴", "ns--": "│", "ns-w": "┤", "nse-": "├", "nsew": "┼",
         },
@@ -609,7 +640,7 @@ class Vistab:
     # High-level color/style base palettes
     _BASE_PALETTES = {
         "ocean": {
-            "style": "round2",
+            "style": "round-header",
             "header": {"fg": "bright_white", "bg": "blue", "bold": True},
             "border": {"fg": "bright_blue"},
             "col_0": {"fg": "bright_white", "bg": "blue", "bold": True},
@@ -630,7 +661,7 @@ class Vistab:
             "fg2": "bright_white"
         },
         "orchid": {
-            "style": "round2",
+            "style": "round-header",
             "header": {"fg": "bright_white", "bg": "magenta", "bold": True},
             "border": {"fg": "bright_magenta"},
             "col_0": {"fg": "bright_white", "bg": "magenta", "bold": True},
@@ -700,7 +731,7 @@ class Vistab:
         Example:
         --------
         ```python
-        table = Vistab(style="round2", padding=1, max_width=100)
+        table = Vistab(style="round-header", padding=1, max_width=100)
         ```
 
         Args:
@@ -1180,7 +1211,7 @@ class Vistab:
         --------
         ```python
         custom_theme = {
-            "style": "round2",
+            "style": "round-header",
             "padding": 2,
             "header": {"fg": "black", "bg": "bright_blue", "bold": True},
             "border": {"fg": "blue"}
@@ -1399,7 +1430,9 @@ class Vistab:
             if style == "markdown":
                 self._deco &= ~Vistab.HLINES
                 self._deco &= ~Vistab.BORDER
-            elif style in ("none", "none2"):
+            elif style == "booktabs":
+                self._deco &= ~Vistab.VLINES
+            elif style == "none":
                 self._deco = 0
             return self
         raise ValueError("style must be one of '%s' not '%s'" % ("', '".join(sorted(Vistab.STYLES.keys())), style))
@@ -2704,12 +2737,20 @@ def example_table(style: str, padding: int = 1) -> str:
 
 def print_test_demo():
     tdata = [
-        ["Test 1", "Test 2", "Test 3", "Test 4"],
+        ["Test 1", "Test 2", "Test 3", "Test 4", "Test 5"],
         [
+            "\033[1;36mExtraordinar\033[0m\033[3minly\033[0m \033[43;30mlong\033[0m text mapped exactly at the \033[1;32mstart\033[0m to ensure \033[41;37mstrict\033[0m constraint wrapping.",
             "This is some \033[1;31mRed text\033[0m to show the ability to wrap \033[38;5;226mcolored text\033[0m correctly.",
             "\033[4mThis text is underlined, \033[1mbold, and \033[34mblue.\033[0m This is not.",
-            "This is some normal text in the middle to ensure that it is working properly.",
             "Some \033[1;31mRed mandarin: 这是一个 美好的世界\033[0m for testing.",
+            "RTL: هذا \033[32mأخضر\033[0m بينما هذا \033[31mأحمر\033[0m (Arabic) \nזה \033[34mכחול\033[0m וזה \033[1mמודגש\033[0m (Hebrew)",
+        ],
+        [
+            "This is some normal text to ensure that it is working properly. There is nothing special to be seen here.",
+            "\033[44;37m White on Blue \033[0m and \033[43;30m Black on Yellow \033[0m interleaved.\n\nTwo line breaks preceeded this line.",
+            "Standard paragraph containing an \033[AIncomprehensible\033[D word geometrically injected in the middle. up and left characters:[\033[A\033[D]",
+            "\033[105;30m Bright Magenta BG \033[0m + \033[106;30m Bright Cyan BG \033[0m.",
+            "Testing \033[42;37m Green \033[0m \033[41;37m Red \033[0m \033[44;37m Blue \033[0m blocks.",
         ]
     ]
 
@@ -2720,23 +2761,20 @@ def print_test_demo():
     print()
 
 
-    print("\033[1m\033[1;31mANSI\033[0m\033[1m Color / Escape Sequence Aware Text-Based Tables\033[0m:")
+    print("\033[1m\033[1;31mANSI\033[0m\033[1m Color / Escape Sequence Aware Text-Based Tables (width=80)\033[0m:")
     t1 = Vistab(tdata)
     t1.set_max_width(80)
+    t1.set_cell_style(1, 4, bg="blue")
     print(t1.draw())
 
-    print("\n\033[1mBelow is the same table but with the color controls removed. They should wrap the same way.\033[0m")
-    tdata = [
-        ["Test 1", "Test 2", "Test 3", "Test 4"],
-        [
-            "This is some Red text to show the ability to wrap colored text correctly.",
-            "This text is underlined, bold, and blue. This is not.",
-            "This is some normal text in the middle to ensure that it is working properly.",
-            "Some Red mandarin: 这是一个 美好的世界 for testing.",
-        ]
+    print("\n\033[1mBelow is the same table without ANSI color / escape sequences. They should wrap the same way.\033[0m")
+    tdata2 = [
+        [_strip_ansi(cell) for cell in row]
+        for row in tdata
     ]
-    t2 = Vistab(tdata)
+    t2 = Vistab(tdata2)
     t2.set_max_width(80)
+    t2.set_cell_style(1, 4, bg="blue")
     print(t2.draw())
 
 
@@ -2745,7 +2783,7 @@ def print_styles_list():
     print("\033[1mAvailable Styles\033[0m (Note: the default is \"light\"):")
     style_list = sorted(Vistab.STYLES.keys())
     data = []
-    for row in split_list(style_list, 4):
+    for row in split_list(style_list, 5):
         style_row = []
         tables_row = []
         for style in row:
@@ -2757,8 +2795,8 @@ def print_styles_list():
                 tables_row.append(example_table(style))
         data.append(style_row)
         data.append(tables_row)
-        data.append(["", "", "", ""])
-    t1 = Vistab(data, max_width=120, style="none", alignment="cccc")
+        data.append(["", "", "", "", ""])
+    t1 = Vistab(data, max_width=120, style="none", alignment="ccccc")
     print(t1.draw())
 
 def print_coordinate_styles_demo():
@@ -2799,7 +2837,7 @@ def print_colors_list():
             else:
                 row.extend(["", ""])
         fg_data.append(row)
-    t_fg = Vistab(style="round2", padding=0)
+    t_fg = Vistab(style="round-header", padding=0)
     t_fg.set_title("\033[1;36m\033[4mForeground Colors (fg=...)\033[0m")
     t_fg.set_rows(fg_data, header=False)
 
@@ -2816,7 +2854,7 @@ def print_colors_list():
             else:
                 row.extend(["", ""])
         bg_data.append(row)
-    t_bg = Vistab(style="round2", padding=0)
+    t_bg = Vistab(style="round-header", padding=0)
     t_bg.set_title("\033[1;36m\033[4mBackground Colors (bg=...)\033[0m")
     t_bg.set_rows(bg_data, header=False)
 
@@ -2831,7 +2869,7 @@ def print_colors_list():
             else:
                 row.extend(["", ""])
         ts_data.append(row)
-    t_ts = Vistab(style="round2", padding=0)
+    t_ts = Vistab(style="round-header", padding=0)
     t_ts.set_title("\033[1;36m\033[4mText Decorators (bold=True, etc)\033[0m")
     t_ts.set_rows(ts_data, header=False)
 
