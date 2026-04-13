@@ -3029,6 +3029,7 @@ def main():
     visual_grp = parser.add_argument_group("Visual Elements & Toggles")
     visual_grp.add_argument("-N", "--title", type=str, help=b_help("Table title string rendered centered above output"))
     visual_grp.add_argument("-s", "--style", type=str, default="light", help=b_help("Override the visual rendering style (default: 'light')"))
+    visual_grp.add_argument("--style-def", type=str, help=b_help("Explicit 15 or 4 character string defining the structural box boundaries natively"))
     visual_grp.add_argument("-t", "--theme", type=str, help=b_help("Apply a dynamic color theme matrix to the input data (e.g. 'forest-cols')"))
     visual_grp.add_argument("-H", "--no-header", action="store_true", help=b_help("Bypass popping the first row as the table header"))
     visual_grp.add_argument("-B", "--no-borders", action="store_true", help=b_help("Disable the outer table border"))
@@ -3285,6 +3286,8 @@ def main():
             table.set_decorations(deco)
 
             # Proceed with applying explicit dimension mapping arrays natively
+            if getattr(args, 'style_def', None):
+                table.set_table_lines(args.style_def)
             if args.align:
                 table.set_cols_align(args.align)
 
@@ -3422,6 +3425,7 @@ def main():
                     has_geometry = any([
                         getattr(args, 'col_widths', None), getattr(args, 'align', None),
                         getattr(args, 'valign', None), getattr(args, 'dtype', None),
+                        getattr(args, 'style_def', None),
                         getattr(args, 'precision', None) is not None, getattr(args, 'title', None),
                         getattr(args, 'width', 0) > 0, getattr(args, 'max_rows', 0) > 0, getattr(args, 'max_cols', 0) > 0
                     ])
