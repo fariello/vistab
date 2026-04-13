@@ -2775,15 +2775,13 @@ def print_colors_list():
         for key in chunk:
             if key:
                 val = Vistab.COLORS[key]
-                row.extend([key, f"\033[{val}m {val.rjust(3)} \033[0m"])
+                row.extend([key, f"\033[{val}m Sample \033[0m"])
             else:
                 row.extend(["", ""])
         fg_data.append(row)
     t_fg = Vistab(style="round2", padding=0)
-    t_fg.set_title("\033[1;36m\033[4mForeground Colors (fg=...)\033[0m\n")
-    t_fg.set_cols_align(["l"] * 8)
+    t_fg.set_title("\033[1;36m\033[4mForeground Colors (fg=...)\033[0m")
     t_fg.set_rows(fg_data, header=False)
-    print(t_fg.draw())
 
     bg_data = []
     keys = list(Vistab.BG_COLORS.keys())
@@ -2794,15 +2792,13 @@ def print_colors_list():
                 val = Vistab.BG_COLORS[key]
                 # Combine foreground contrasting text cleanly over requested background
                 fg_contrast = "30" if "white" in key or "yellow" in key or "cyan" in key else "37"
-                row.extend([key, f"\033[{val};{fg_contrast}m {val.rjust(4)} \033[0m"])
+                row.extend([key, f"\033[{val};{fg_contrast}m Sample \033[0m"])
             else:
                 row.extend(["", ""])
         bg_data.append(row)
     t_bg = Vistab(style="round2", padding=0)
-    t_bg.set_title("\n\033[1;36m\033[4mBackground Colors (bg=...)\033[0m\n")
-    t_bg.set_cols_align(["l"] * 8)
+    t_bg.set_title("\033[1;36m\033[4mBackground Colors (bg=...)\033[0m")
     t_bg.set_rows(bg_data, header=False)
-    print(t_bg.draw())
 
     ts_data = []
     keys = list(Vistab.TEXT_STYLES.keys())
@@ -2816,11 +2812,15 @@ def print_colors_list():
                 row.extend(["", ""])
         ts_data.append(row)
     t_ts = Vistab(style="round2", padding=0)
-    t_ts.set_title("\n\033[1;36m\033[4mText Decorators (bold=True, etc)\033[0m\n")
-    t_ts.set_cols_align(["l"] * 8)
+    t_ts.set_title("\033[1;36m\033[4mText Decorators (bold=True, etc)\033[0m")
     t_ts.set_rows(ts_data, header=False)
-    print(t_ts.draw())
-    print()
+
+    master = Vistab(style="round", padding=0)
+    master.set_table_wrap(False)
+    master.set_cols_align("c")
+    combined_output = f"{t_fg.draw()}\n{t_bg.draw()}\n{t_ts.draw()}"
+    master.set_rows([[combined_output]], header=False)
+    print(master.draw())
 
 def print_themes_demo():
     print("\033[1m\033[1;36mBuilt-In Theme Macro Demonstrations\033[0m")

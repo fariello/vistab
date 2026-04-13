@@ -267,7 +267,9 @@ print(table.draw())
 
 OR you can save it for later use using the `--save-theme` flag:
 ```bash
-vistab ~/test.csv --theme ocean-index --no-hlines --header-bg-color cyan --last-row-bg-color red --last-row-color black --col0-bg-color green --save-theme my_custom_theme
+vistab ~/test.csv --theme ocean-index --no-hlines \
+    --header-bg-color cyan --last-row-bg-color red --last-row-color black \
+    --col0-bg-color green --save-theme my_custom_theme
 ```
 You should see something like:
 ```bash
@@ -292,7 +294,7 @@ To view available styles, run:
 ```bash
 vistab --demo styles
 ```
-![Available Styles](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-demo-styles.png)
+![Available Styles](docs/assets/vistab-demo-styles.png)
 
 ## Discovering Output Colors (CLI)
 
@@ -300,9 +302,9 @@ Because terminal color renderings vary across different user host profiles and c
 
 You can view the palette directly on the console by executing:
 ```bash
-vistab -C
+vistab --demo colors
 ```
-![Defined Colors](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-C-defined-colors.png)
+![Defined Colors](docs/assets/vistab-C-defined-colors.png)
 
 ## ANSI Color Layout Support
 
