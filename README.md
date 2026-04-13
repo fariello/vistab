@@ -168,7 +168,7 @@ vistab another_data.csv --theme my_custom_theme
 
 ## Built-in Themes
 
-`vistab` comes with predefined themes including `ocean`, `forest`, `minimalist`, and others.
+`vistab` comes with predefined themes including `ocean`, `forest`, `graphite`, `orchid`, and `sunflower`.
 
 You can view the built-in themes (which you can alter and save as new themes) by running:
 ```bash

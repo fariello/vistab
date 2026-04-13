@@ -18,8 +18,8 @@ custom_theme = {
             "bg": "black"
         },
         {
-            "fg": "bright_white",
-            "bg": "bright_black"
+            "fg": "white",
+            "bg": "black"
         }
     ]
 }

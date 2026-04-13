@@ -622,12 +622,26 @@ class Vistab:
             "col_0": {"fg": "bright_white", "bg": "green", "bold": True},
             "fg2": "white"
         },
-        "minimalist": {
+        "graphite": {
             "style": "light",
             "header": {"fg": "black", "bg": "bright_white", "bold": True},
             "border": {"fg": "bright_black"},
             "col_0": {"fg": "black", "bg": "bright_white", "bold": True},
             "fg2": "bright_white"
+        },
+        "orchid": {
+            "style": "round2",
+            "header": {"fg": "bright_white", "bg": "magenta", "bold": True},
+            "border": {"fg": "bright_magenta"},
+            "col_0": {"fg": "bright_white", "bg": "magenta", "bold": True},
+            "fg2": "bright_white"
+        },
+        "sunflower": {
+            "style": "round",
+            "header": {"fg": "black", "bg": "yellow", "bold": True},
+            "border": {"fg": "bright_yellow"},
+            "col_0": {"fg": "black", "bg": "yellow", "bold": True},
+            "fg2": "white"
         }
     }
 
@@ -636,18 +650,24 @@ class Vistab:
         _base = {"style": _config["style"], "header": _config["header"], "border": _config["border"]}
         _alt_sequence = [{"bg": "black", "fg": "white"}, {"bg": "bright_black", "fg": _config["fg2"]}]
 
-        # 1. Alternating Rows (Default)
-        THEMES[f"{_name}"] = {**_base, "alt_rows": _alt_sequence}
-        THEMES[f"{_name}-index"] = {**_base, "alt_rows": _alt_sequence, "col_0": _config["col_0"]}
+        # 1. Solid (Default)
+        _solid_base = {"bg": "black", "fg": "white"}
+        THEMES[f"{_name}"] = {**_base, "alt_rows": [_solid_base, _solid_base]}
+        THEMES[f"{_name}-index"] = {**_base, "alt_rows": [_solid_base, _solid_base], "col_0": _config["col_0"]}
+        THEMES[f"{_name}-slim"] = {**_base, "alt_rows": [_solid_base, _solid_base], "decorations": 3}
+        THEMES[f"{_name}-slim-index"] = {**_base, "alt_rows": [_solid_base, _solid_base], "col_0": _config["col_0"], "decorations": 3}
 
-        # 2. Alternating Columns (-cols)
+        # 2. Alternating Rows (-rows)
+        THEMES[f"{_name}-rows"] = {**_base, "alt_rows": _alt_sequence}
+        THEMES[f"{_name}-rows-index"] = {**_base, "alt_rows": _alt_sequence, "col_0": _config["col_0"]}
+        THEMES[f"{_name}-rows-slim"] = {**_base, "alt_rows": _alt_sequence, "decorations": 3}
+        THEMES[f"{_name}-rows-slim-index"] = {**_base, "alt_rows": _alt_sequence, "col_0": _config["col_0"], "decorations": 3}
+
+        # 3. Alternating Columns (-cols)
         THEMES[f"{_name}-cols"] = {**_base, "alt_cols": _alt_sequence}
         THEMES[f"{_name}-cols-index"] = {**_base, "alt_cols": _alt_sequence, "col_0": _config["col_0"]}
-
-        # 3. Solid (-solid)
-        _solid_base = {"bg": "black", "fg": "white"}
-        THEMES[f"{_name}-solid"] = {**_base, "alt_rows": [_solid_base, _solid_base]}
-        THEMES[f"{_name}-solid-index"] = {**_base, "alt_rows": [_solid_base, _solid_base], "col_0": _config["col_0"]}
+        THEMES[f"{_name}-cols-slim"] = {**_base, "alt_cols": _alt_sequence, "decorations": 3}
+        THEMES[f"{_name}-cols-slim-index"] = {**_base, "alt_cols": _alt_sequence, "col_0": _config["col_0"], "decorations": 3}
 
     def __init__(self, rows: Optional[Iterable[Iterable[Any]]] = None, header: Optional[Iterable[Any]] = None, max_width: int = 0, alignment: Optional[str] = None, style: Optional[str] = None, padding: Optional[int] = None, title: Optional[str] = None, max_rows: int = 0, max_cols: int = 0) -> None:
         """
@@ -2832,18 +2852,26 @@ def print_themes_demo():
         ["2", "Bob", "122", "Bad"],
         ["3", "Cat", "111", "Good"],
         ["4", "Dan", "93", "Bad"],
-        ["5", "Ed", "41", "Good"]
+        # ["5", "Ed", "41", "Good"]
     ]
 
     t2data = []
-    for theme in ["ocean", "forest", "minimalist"]:
+    for theme in ["ocean", "forest", "graphite", "orchid", "sunflower"]:
         t2data.append([
             f"\"{theme}\"\n" + Vistab(tdata).apply_theme(f"{theme}").draw(),
             f"\"{theme}-index\"\n" + Vistab(tdata).apply_theme(f"{theme}-index").draw(),
+            f"\"{theme}-rows\"\n" + Vistab(tdata).apply_theme(f"{theme}-rows").draw(),
+            f"\"{theme}-rows-index\"\n" + Vistab(tdata).apply_theme(f"{theme}-rows-index").draw(),
             f"\"{theme}-cols\"\n" + Vistab(tdata).apply_theme(f"{theme}-cols").draw(),
-            f"\"{theme}-cols-index\"\n" + Vistab(tdata).apply_theme(f"{theme}-cols-index").draw(),
-            f"\"{theme}-solid\"\n" + Vistab(tdata).apply_theme(f"{theme}-solid").draw(),
-            f"\"{theme}-solid-index\"\n" + Vistab(tdata).apply_theme(f"{theme}-solid-index").draw()
+            f"\"{theme}-cols-index\"\n" + Vistab(tdata).apply_theme(f"{theme}-cols-index").draw()
+        ])
+        t2data.append([
+            f"\"{theme}-slim\"\n" + Vistab(tdata).apply_theme(f"{theme}-slim").draw(),
+            f"\"{theme}-slim-index\"\n" + Vistab(tdata).apply_theme(f"{theme}-slim-index").draw(),
+            f"\"{theme}-rows-slim\"\n" + Vistab(tdata).apply_theme(f"{theme}-rows-slim").draw(),
+            f"\"{theme}-rows-slim-index\"\n" + Vistab(tdata).apply_theme(f"{theme}-rows-slim-index").draw(),
+            f"\"{theme}-cols-slim\"\n" + Vistab(tdata).apply_theme(f"{theme}-cols-slim").draw(),
+            f"\"{theme}-cols-slim-index\"\n" + Vistab(tdata).apply_theme(f"{theme}-cols-slim-index").draw()
         ])
 
     demo_tb = Vistab(t2data, header=False, style="light", padding=0)
