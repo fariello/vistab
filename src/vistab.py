@@ -2314,11 +2314,15 @@ class Vistab:
             self._align = ["l"] * self._row_size
             if hasattr(self, "_dtype") and self._rows:
                 for c in range(self._row_size):
+                    # Safely map the root type definition (extracting 'f' from 'f2')
+                    dtype_val = self._dtype[c]
+                    dtype_char = dtype_val[0] if isinstance(dtype_val, str) and len(dtype_val) > 0 else dtype_val
+                    
                     # Explicit numeric types physically lock right-alignment securely
-                    if self._dtype[c] in ("i", "I", "f", "e"):
+                    if dtype_char in ("i", "I", "f", "e"):
                         self._align[c] = "r"
                     # Auto types physically parse physical storage mapping characters
-                    elif self._dtype[c] == "a":
+                    elif dtype_char == "a":
                         valid_cells = 0
                         numeric_cells = 0
                         for row in self._rows:
