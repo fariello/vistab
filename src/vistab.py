@@ -1694,9 +1694,7 @@ class Vistab:
         array = processed_array
         if not hasattr(self, "_dtype"):
             self._dtype = ["a"] * self._row_size
-        cells = []
-        for i, x in enumerate(array):
-            cells.append(self._str(i, x))
+        cells = list(array)
         self._rows.append(cells)
         return self
 
@@ -1778,6 +1776,16 @@ class Vistab:
 
         try:
             self._infer_auto_dtypes()
+
+            # Compile raw arrays sequentially integrating explicit formatting natively
+            processed_rows = []
+            for row in self._rows:
+                cells = []
+                for i, x in enumerate(row):
+                    cells.append(self._str(i, x))
+                processed_rows.append(cells)
+            self._rows = processed_rows
+
             self._compute_cols_width()
             self._check_align()
             out = ""
@@ -1863,6 +1871,15 @@ class Vistab:
             for cached_prop in ["_width", "_align", "_valign", "_header_align"]:
                 if hasattr(self, cached_prop):
                     delattr(self, cached_prop)
+
+        # Apply cell transformations sequentially structurally natively on the sample slice
+        processed_rows = []
+        for row in self._rows:
+            cells = []
+            for i, x in enumerate(row):
+                cells.append(self._str(i, x))
+            processed_rows.append(cells)
+        self._rows = processed_rows
 
         # Compute exact geometries!
         self._compute_cols_width()
