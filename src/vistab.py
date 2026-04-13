@@ -1343,15 +1343,15 @@ class Vistab:
         if not active:
             return "", ""
 
-        codes = [str(val) for val in active.values()]
-        return f"\033[{';'.join(codes)}m", "\033[0m"
+        codes = [f"\033[{val}m" for val in active.values()]
+        return "".join(codes), "\033[0m"
 
     def _get_border_ansi(self):
         """Compute the active ANSI configuration for table borders."""
         if not self._border_style:
             return "", ""
-        codes = [str(val) for val in self._border_style.values()]
-        return f"\033[{';'.join(codes)}m", "\033[0m"
+        codes = [f"\033[{val}m" for val in self._border_style.values()]
+        return "".join(codes), "\033[0m"
 
     @property
     def max_width(self) -> int:
@@ -1539,6 +1539,8 @@ class Vistab:
         Example:
             table.set_header_align("lcr")
         """
+        if isinstance(array, list) and len(array) == 1 and isinstance(array[0], str) and len(array[0]) > 1:
+            array = array[0]
         if isinstance(array, str):
             array = [c for c in array]
             pass
@@ -1561,6 +1563,8 @@ class Vistab:
         Example:
             table.set_cols_align(["l", "r", "l"])
         """
+        if isinstance(array, list) and len(array) == 1 and isinstance(array[0], str) and len(array[0]) > 1:
+            array = array[0]
         if isinstance(array, str):
             array = [c for c in array]
             pass
@@ -1586,6 +1590,8 @@ class Vistab:
         Example:
             table.set_cols_valign(["t", "m", "b"])
         """
+        if isinstance(array, list) and len(array) == 1 and isinstance(array[0], str) and len(array[0]) > 1:
+            array = array[0]
         if isinstance(array, str):
             array = [c for c in array]
             pass
@@ -1626,6 +1632,8 @@ class Vistab:
         - by default, automatic datatyping is used for each column
         """
         import re
+        if isinstance(array, list) and len(array) == 1 and isinstance(array[0], str) and len(array[0]) > 1:
+            array = array[0]
         if isinstance(array, str):
             # Parse alphanumeric blocks precisely (e.g., 'f2', 'i', 't') implicitly splitting raw strings cleanly
             array = re.findall(r'[a-zA-Z]\d*', array.replace(",", ""))
@@ -2599,15 +2607,15 @@ class Vistab:
                 valign = "t"  # Header cells are always top-aligned
             if valign == "m":
                 # Middle alignment: add missing lines evenly to the top and bottom
-                missing = max_cell_lines - self._vislen.len(cell)
+                missing = max_cell_lines - len(cell)
                 cell[:0] = [""] * (missing // 2)
                 cell.extend([""] * (missing // 2 + missing % 2))
             elif valign == "b":
                 # Bottom alignment: add missing lines to the top
-                cell[:0] = [""] * (max_cell_lines - self.vislen(cell))
+                cell[:0] = [""] * (max_cell_lines - len(cell))
             else:
                 # Top alignment (default): add missing lines to the bottom
-                cell.extend([""] * (max_cell_lines - self.vislen(cell)))
+                cell.extend([""] * (max_cell_lines - len(cell)))
                 pass
             pass
 
@@ -2804,25 +2812,44 @@ def print_coordinate_styles_demo():
     print("These styles target specific cells, columns, and rows without mutating structural padding strings or column decorators!\n")
 
     t = Vistab([
-        ["Rank", "Player", "Score", "Status"],
-        ["1", "Gabriel", "15,230", "Up"],
-        ["2", "Alice", "12,940", "Stable"],
-        ["3", "Bob", "8,100", "Down"]
-    ], style="double")
+        ["Target Node", "Configuration Profile", "Metric", "Status", "Delta"],
+        ["System Core", "x86_64 Architecture\nBoot Sequence\nHardware Layer", "98.2%", "Offline", "-1.2"],
+        ["Network Edge", "eth0 / IPv4 Bridge Interface", "10Gbps", "Active", "+4.5"],
+        ["Database", "PostgreSQL\nShard Cluster", "4,210 qs", "Syncing", "0.0"],
+        ["Memory Cache", "Redis Local Buffer Sequence", "99.9%", "Active", "+0.1"]
+    ], style="round-header", padding=2)
 
+    # 1. Structural alignments and format geometries
+    t.set_max_width(75)  # Aggressive shrink to violently force all rows to wrap and demonstrate valigns natively
+    t.set_cols_align("clrcr")
+    t.set_cols_valign("mmbmt")
+
+    # 2. Broad structural targeting
     t.set_header_style(bg="red", fg="bright_white", bold=True)
     t.set_border_style(fg="yellow")
-    t.set_col_style(0, fg="bright_cyan", bold=True)
-    t.set_cell_style(1, 1, bg="green", fg="black")  # Gabriel
-    t.set_cell_style(3, 3, fg="red", blink=True)    # Down
+
+    # 3. Column and Row orthogonal intersections
+    t.set_col_style(0, fg="bright_blue", bold=True)
+    t.set_row_style(2, bg="blue", fg="white")  # Highlight the entire Network row
+
+    # 4. Strict cellular coordinate overrides (Row, Col)
+    t.set_cell_style(1, 3, bg="bright_red", fg="white", bold=True, blink=True)  # Offline status
+    t.set_cell_style(4, 3, fg="bright_green", bold=True) # Active status
+    t.set_cell_style(1, 4, fg="red", bold=True)          # -1.2
+    t.set_cell_style(2, 4, fg="bright_white", bold=True) # Overrides the blue row style natively!
+    t.set_cell_style(3, 1, bg="magenta", fg="bright_white", italic=True) # Deep orthogonal mapping
 
     print(t.draw())
     print("\n\033[3mCode executed:\033[0m")
+    print("table.set_cols_align('clrcr')")
+    print("table.set_cols_valign('mmbmt')")
     print("table.set_header_style(bg='red', fg='bright_white', bold=True)")
     print("table.set_border_style(fg='yellow')")
-    print("table.set_col_style(0, fg='bright_cyan', bold=True)")
-    print("table.set_cell_style(1, 1, bg='green', fg='black')")
-    print("table.set_cell_style(3, 3, fg='red', blink=True)")
+    print("table.set_col_style(0, fg='bright_blue', bold=True)")
+    print("table.set_row_style(2, bg='blue', fg='white')")
+    print("table.set_cell_style(1, 3, bg='bright_red', fg='white', bold=True, blink=True) # Offline")
+    print("table.set_cell_style(2, 4, fg='bright_white', bold=True)             # Priority intercept")
+    print("table.set_cell_style(3, 1, bg='magenta', fg='bright_white')          # Deep override")
     print()
 
 def print_colors_list():
