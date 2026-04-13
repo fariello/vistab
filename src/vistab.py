@@ -2742,7 +2742,7 @@ def example_table(style: str, padding: int = 1) -> str:
     print(example_table("bold"))
     ```
     """
-    return Vistab([["Hd1", "Hd2"], ["Ce1", "Ce2"], ["Ce3", "Ce4"]], style=style, padding=padding).draw()
+    return Vistab([["Hd1", "Hd2", "Hd3"], ["Ce1", "Ce2", "Ce3"], ["Ce4", "Ce5", "Ce6"], ["Ce7", "Ce8", "Ce9"]], style=style, padding=padding).draw()
 
 
 def print_test_demo():
