@@ -1777,6 +1777,7 @@ class Vistab:
                     delattr(self, cached_prop)
 
         try:
+            self._infer_auto_dtypes()
             self._compute_cols_width()
             self._check_align()
             out = ""
@@ -2220,6 +2221,51 @@ class Vistab:
 
         # Set the computed column widths as the table's column widths.
         self._width = maxi
+
+    def _infer_auto_dtypes(self) -> None:
+        """
+        Dynamically upgrade 'a' (automatic) columns into strict numeric constraints natively.
+        
+        This prevents jagged decimal alignments (e.g. 10 mixed with 12.3456) securely by 
+        guaranteeing column-wide uniformity if the array is perfectly bounded.
+        """
+        if not self._rows:
+            return
+            
+        if not hasattr(self, "_dtype"):
+            self._dtype = ["a"] * self._row_size
+            
+        for c in range(self._row_size):
+            if self._dtype[c] == "a":
+                valid_cells = 0
+                numeric_cells = 0
+                has_scientific = False
+                has_float = False
+                
+                for row in self._rows:
+                    if c < len(row):
+                        val = str(row[c]).strip()
+                        if val:
+                            valid_cells += 1
+                            try:
+                                clean_val = val.replace(",", "")
+                                f_val = float(clean_val)
+                                numeric_cells += 1
+                                
+                                if 'e' in clean_val.lower():
+                                    has_scientific = True
+                                elif '.' in clean_val or f_val % 1 != 0:
+                                    has_float = True
+                            except ValueError:
+                                pass
+                                
+                if valid_cells > 0 and numeric_cells == valid_cells:
+                    if has_scientific:
+                        self._dtype[c] = "e"
+                    elif has_float:
+                        self._dtype[c] = "f"
+                    else:
+                        self._dtype[c] = "i"
 
     def _check_align(self) -> None:
         """
