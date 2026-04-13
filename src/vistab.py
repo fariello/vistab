@@ -2743,7 +2743,7 @@ def print_test_demo():
             "This is some \033[1;31mRed text\033[0m to show the ability to wrap \033[38;5;226mcolored text\033[0m correctly.",
             "\033[4mThis text is underlined, \033[1mbold, and \033[34mblue.\033[0m This is not.",
             "Some \033[1;31mRed mandarin: 这是一个 美好的世界\033[0m for testing.",
-            "RTL: هذا \033[32mأخضر\033[0m بينما هذا \033[31mأحمر\033[0m (Arabic) \nזה \033[34mכחול\033[0m וזה \033[1mמודגש\033[0m (Hebrew)",
+            "RTL: هذا \033[32mأخضر\033[0m بينما هذا \033[31mأحمر\033[0m (Arabic) זה \033[34mכחול\033[0m וזה \033[1mמודגש\033[0m (Hebrew)",
         ],
         [
             "This is some normal text to ensure that it is working properly. There is nothing special to be seen here.",
