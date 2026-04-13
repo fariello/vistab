@@ -595,6 +595,8 @@ class Vistab:
         "ascii": "-|+-",  # Basic ASCII style
         "ascii-header": "-|+=",  # ASCII style with different header separators
         "double": "═║╔╗╚╝╠╣╦╩╬═╠╣╬",  # Double line style
+        "double-horizontal": "═│╒╕╘╛╞╡╤╧╪═╞╡╪", # Double horizontal lines.
+        "double-vertical": "─║╓╖╙╜╟╢╥╨╫─╟╢╫", # Double vertical lines.
         "light": "─│┌┐└┘├┤┬┴┼─├┤┼",  # Light line style
         "light-header": "─│┌┐└┘├┤┬┴┼═╞╡╪",  # Light line style with double headers
         "round": "─│╭╮╰╯├┤┬┴┼─├┤┼",  # Round corners style
