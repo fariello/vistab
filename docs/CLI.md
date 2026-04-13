@@ -78,7 +78,7 @@ The CLI provides visual evaluation matrices to verify layouts locally:
 You can lock in CLI outputs saving configurations mapped to `~/.config/vistab/themes.json` using `--save-theme`:
 ```bash
 # Bind global layout styles to a custom alias
-vistab data.csv --theme minimalist --table-bg-color bright_black --last-row-color magenta --save-theme my_custom_theme
+vistab data.csv --theme graphite --table-bg-color bright_black --last-row-color magenta --save-theme my_custom_theme
 ```
 
 Use `--show-code` to generate the literal Python dictionary reproducing your aesthetic layout. 
