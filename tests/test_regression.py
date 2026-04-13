@@ -125,7 +125,7 @@ class TestVistabRegression(unittest.TestCase):
 
     def test_regression_api_dynamic_typing(self):
         """Test API directly for strict layout boundaries using dynamic typings."""
-        table = Vistab(style="round2")
+        table = Vistab(style="round-header")
         table.set_title("API Regression Data")
         table.set_cols_dtype(["t", "f", "i", "e"])
         table.set_precision(3)

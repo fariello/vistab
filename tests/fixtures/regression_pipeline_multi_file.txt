@@ -1,3 +1,3 @@
 [1;31m[ERROR][0m Unknown layout style 'bold'
-Available styles: ascii, ascii2, dashed, double, heavy, light, light2, markdown, none, none2, round, round2
+Available styles: ascii, ascii-header, booktabs, dashed, dots, double, heavy, light, light-header, markdown, none, round, round-header
 Tip: Run 'vistab -L' to view a rendered matrix of all available layout stylings.

@@ -1,7 +1,7 @@
 import vistab
 
 custom_theme = {
-    "style": "round2",
+    "style": "round-header",
     "padding": 3,
     "decorations": 15,
     "header": {

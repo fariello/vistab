@@ -3,7 +3,7 @@
 --- GENERATED THEMES.JSON ---
 {
     "test_ocean_override": {
-        "style": "round2",
+        "style": "round-header",
         "padding": 5,
         "decorations": 15,
         "header": {
