@@ -97,10 +97,13 @@ Evaluates explicit mappings resolving horizontal cell justification (`'l'=left`,
 Evaluates positional geometry mapping vertical alignments (`'t'=top`, `'m'=middle`, `'b'=bottom`).
 
 ### `set_cols_dtype(array: Union[str, List[str]])`
-Applies robust precision formats natively wrapping types safely (`'a'=auto`, `'t'=text`, `'f'=float`, `'i'=int`, `'e'=exp`).
+Applies robust precision formats natively wrapping types safely. 
+*   **Categories**: `'t'=text`, `'f'=float`, `'i'=int`, `'e'=scientific`, `'I'=comma int`.
+*   **Automatic (`'a'`)**: Natively evaluates column types systematically scaling uniform numeric sequences via internal cascading hierarchy (`scientific -> float -> integer`), bypassing formatting inconsistencies.
+*   **Dynamic Precisions (`'f2'`, `'e4'`)**: Precision overrides structurally integrate directly within dtype arrays (e.g., `["i", "f2", "e4", "a"]`) natively escaping the global baseline decimal configurations.
 
 ### `set_precision(width: int)`
-Establishes default float point accuracy resolving boundaries accurately.
+Establishes default global precision logic for all unresolved floats and sequences.
 
 ---
 

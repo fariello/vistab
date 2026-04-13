@@ -1572,11 +1572,13 @@ class Vistab:
 
         - by default, automatic datatyping is used for each column
         """
+        import re
         if isinstance(array, str):
-            array = [c for c in array]
-            pass
+            # Parse alphanumeric blocks precisely (e.g., 'f2', 'i', 't') implicitly splitting raw strings cleanly
+            array = re.findall(r'[a-zA-Z]\d*', array.replace(",", ""))
+
         for a in array:
-            if not callable(a) and a not in ('a', 't', 'f', 'e', 'i', 'I'):
+            if not callable(a) and (not isinstance(a, str) or len(a) == 0 or a[0] not in ('a', 't', 'f', 'e', 'i', 'I')):
                 raise ValueError(f"Data type '{a}' is invalid. Allowed data type characters are: 'a', 't', 'f', 'e', 'i', 'I' or a callable.")
         self._check_row_size(array)
         self._dtype = array
@@ -2051,6 +2053,11 @@ class Vistab:
 
         n = self._precision
         dtype = self._dtype[i] if hasattr(self, '_dtype') else "a"
+        
+        if isinstance(dtype, str) and len(dtype) > 1 and dtype[1:].isdigit():
+            n = int(dtype[1:])
+            dtype = dtype[0]
+            
         try:
             if callable(dtype):
                 return dtype(x)

@@ -108,5 +108,20 @@ class TestCLI(unittest.TestCase):
         self.assertIn("import vistab", output)
         self.assertIn("custom_theme =", output)
 
+    @patch('sys.stdout', new_callable=io.StringIO)
+    @patch('sys.argv', ['vistab', 'dummy_test_data.csv', '--dtype', 't,f2,f4'])
+    def test_cli_dtype_precisions(self, mock_stdout):
+        # We know "dummy_test_data.csv" -> ["Gabriel", "25", "99"]
+        # Column 0: (t) Text -> 'Gabriel'
+        # Column 1: (f2) Float mapped to 2 decimals -> '25.00'
+        # Column 2: (f4) Float mapped to 4 decimals -> '99.0000'
+        import vistab
+        vistab.main()
+        output = mock_stdout.getvalue()
+        self.assertIn("Gabriel", output)
+        self.assertIn("25.00", output)
+        self.assertNotIn("25.000", output)
+        self.assertIn("99.0000", output)
+
 if __name__ == '__main__':
     unittest.main()

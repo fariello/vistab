@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2026-04-10
 
 ### Added
+- **Dynamic Auto-Dtype Inference**: The `a` (automatic) datatype now safely scans column bounds recursively before format ingestion, seamlessly upgrading entire columns structurally to uniform floats (`f`) or scientific notation (`e`) cleanly.
+- **Inline Custom Precisions**: You can now attach custom precision overrides dynamically specifically inside the dtype string arrays locally (e.g. `set_cols_dtype(["i", "f2", "e4", "a"])` or via CLI `--dtype "if2e4a"`).
 - **Mathematical Word Chunking**: Dynamically chunks contiguous strings to cleanly map executing color contexts while spanning ANSI bounds securely natively.
 - **ANSI Layout Reassertion / Masking**: Exposed `sanitize_ansi` property on the `Vistab` class gracefully purging destructive positional cursor control sequences, alongside intelligent context reassertion mapping nested text styles spanning wrapped grid cell boundaries dynamically.
 - **Infinite Generator Streaming**: Introduced `Vistab.stream()` providing natively memoryless mapping bounds for infinite streams, integrating pipe streams without full memory allocations. Added `--stream` and `--stream-probe`.

@@ -33,7 +33,10 @@ The CLI lets you manage data layout, spacing, and wrapper constraints via standa
 *Provide a single character sequence to evaluate columns chronologically.*
 - **`-a, --align`**: Target horizontal alignments (`l=left`, `c=center`, `r=right`). Example: `-a lrc`
 - **`--valign`**: Target vertical alignments (`t=top`, `m=middle`, `b=bottom`). Example: `--valign ttb`
-- **`--dtype`**: Force datatypes to ensure consistent output formatting (`a=auto`, `t=text`, `f=float`, `i=int`, `e=exp`).
+- **`--dtype`**: Force datatypes ensuring uniform structural outputs correctly natively. 
+   * **Categories:** `a=auto`, `t=text`, `f=float`, `i=int`, `e=scientific`.
+   * **Auto Inference (`a`)**: Safely enforces uniform cascades explicitly resolving float configurations across unified columns iteratively (`scientific -> float -> integer`).
+   * **Inline Precisions (`f2`, `e5`)**: Pass exact numeric overlays dynamically attached directly parsing locally without arrays. Example: `--dtype "i,f2,e4"`
 
 ### 3. Data Pipelines & Streaming
 - **`--stream`**: Bypasses absolute array structures printing mapped iterations continuously (infinite STDIN).

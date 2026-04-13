@@ -79,7 +79,25 @@ Sometimes querying SQL leaves us with extensive data dimensions. We can protect 
 table.set_max_rows(10).set_max_cols(5)
 ```
 
-### 3. Shorthand Styling & Native Formatting
+### 3. Data Formatting & Precision
+
+You can seamlessly lock structural data evaluations dynamically mapping column overrides:
+```python
+# Globally establish floats cleanly evaluated down to precisely two digits
+table.set_precision(2)
+
+# Pass formatting arrays coercing columns sequentially! 
+# a=auto, t=text, i=int, f=float, e=sci
+table.set_cols_dtype(["a", "t", "f", "i"])
+
+# You can even bypass global precision dynamically evaluating trailing overrides logically!
+# Here, col 2 specifically maps `f4` (float + precision 4 digits) explicitly
+table.set_cols_dtype("a,t,f4,i")
+```
+
+When evaluated, the `a` (automatic) datatype natively iterates columns intelligently generating format deductions cascading iteratively (`scientific` -> `float` -> `integer`), eliminating alignment jaggedness.
+
+### 4. Shorthand Styling & Native Formatting
 
 You don't need to pass massive syntax strings to evaluate layout injections:
 ```python

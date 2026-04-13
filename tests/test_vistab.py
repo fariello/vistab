@@ -102,6 +102,27 @@ class TestVistab(unittest.TestCase):
         self.assertIn("303", out)
         self.assertNotIn("101.000", out)
         
+    def test_inline_precision_overrides(self):
+        """Test natively mapping decimals per column individually explicitly escaping global default definitions."""
+        table = Vistab(style="none")
+        table.set_precision(1) # Base global default structurally
+        table.set_cols_dtype("if2e4a") # Implicit parsing string cleanly!
+
+        table.add_rows([["1.9", "1.9", "1.9", "1.9"]], header=False)
+        out = table.draw()
+
+        # Column 0: (i) Integer rounding safely
+        self.assertIn("2", out)
+        
+        # Column 1: (f2) Explicit decimal truncation bypassing the global n=1!
+        self.assertIn("1.90", out)
+
+        # Column 2: (e4) Exponent forcing 4 decimal points bypassing global n=1
+        self.assertIn("1.9000e+00", out)
+        
+        # Column 3: (a -> f1 implicitly inferred via global)
+        self.assertIn("1.9", out)
+        
     def test_layout_modifiers(self):
         """Test structural colors applying cleanly within the ANSI boundaries."""
         table = Vistab(style="light")

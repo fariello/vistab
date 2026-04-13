@@ -98,6 +98,16 @@ class TestVistabRegression(unittest.TestCase):
         out = self._run_cli(["--demo", "themes"])
         self._assert_against_fixture("regression_diagnostic_matrix", out)
 
+    def test_regression_inline_precisions(self):
+        """Test inline dtype definitions overriding explicitly globally."""
+        db = self.data_dir / "test_precision_matrix.csv"
+        # Col 0 -> f1, Col1 -> t, Col2 -> f3, Col3 -> e2
+        out = self._run_cli([str(db), "--dtype", "f1,t,f3,e2"])
+        # Needs to universally conform path offsets correctly!
+        output = str(out).replace(str(self.data_dir).replace('\\', '/'), "<PROJECT_ROOT>/tests/data")
+        output = output.replace(str(self.data_dir), "<PROJECT_ROOT>\\tests\\data")
+        self._assert_against_fixture("regression_inline_precisions", output)
+
     def test_regression_pipeline_stdin(self):
         """Test the structural execution capturing datasets strictly through STDIN streams."""
         raw_csv_string = "ID,Name,Status\n101,Process A,Active\n102,Process B,Failed\n"
