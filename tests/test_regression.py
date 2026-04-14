@@ -111,11 +111,23 @@ class TestVistabRegression(unittest.TestCase):
 
     def test_regression_pipeline_multi_file(self):
         """Test the sequential CLI resolution targeting multiple physical files iteratively."""
-        db1 = self.data_dir / "small_1x1.csv"
-        db2 = self.data_dir / "small_5x5.csv"
+        db1 = "small_1x1.csv"
+        db2 = "small_5x5.csv"
         
-        # Pass multiple paths
-        out = self._run_cli([str(db1), str(db2), "--style", "heavy"])
+        cmd = ["python", str(self.cli_path), db1, db2, "--style", "heavy"]
+        env = os.environ.copy()
+        env["PYTHONIOENCODING"] = "utf-8"
+        
+        temp_home = self.tests_dir / "temp_home"
+        os.makedirs(temp_home, exist_ok=True)
+        env["HOME"] = str(temp_home)
+        env["USERPROFILE"] = str(temp_home)
+        
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, encoding="utf-8", env=env, cwd=self.data_dir
+        )
+        out = result.stdout + result.stderr
+        
         self._assert_against_fixture("regression_pipeline_multi_file", out)
 
     def test_regression_api_dynamic_typing(self):

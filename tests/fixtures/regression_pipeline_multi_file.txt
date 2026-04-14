@@ -1,10 +1,10 @@
-                                               [ <PROJECT_ROOT>/tests/data/small_1x1.csv ]                                              
+                                                                        [ small_1x1.csv ]                                                                        
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ This is a single cell containing exactly one moderately long sentence deployed seamlessly to test the extreme edge case of a one-by-one grid layout natively. ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 
-[ <PROJECT_ROOT>/tests/data/small_5x5.csv ]
+         [ small_5x5.csv ]          
 ┏━━━━━━┳━━━━━━┳━━━━━━┳━━━━━━┳━━━━━━┓
 ┃  A   ┃  B   ┃  C   ┃  D   ┃  E   ┃
 ┣━━━━━━╋━━━━━━╋━━━━━━╋━━━━━━╋━━━━━━┫
