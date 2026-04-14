@@ -32,4 +32,9 @@ Grid geometries currently calculate bounds on a strict row-by-row isolation loop
 *   **Architecture Requirements:** Fails instantly within current architecture natively. Terminal output executes strictly top-down. Bridging cells vertically necessitates rewriting the engine into a heavy, globally stateful 2D dimensional canvas buffer to compute overlapping row heights simultaneously.
 *   **Feasibility:** Pushes boundary from lightweight parser engine to heavy document renderer. Unlikely in the short term.
 
+### 3. CLI Usability Improvements
+*   **Explicit Delimiter Override**: Add a `--delimiter` argument to the CLI. This provides an escape hatch to bypass `csv.Sniffer` errors when evaluating anomalous or raw-log data streams natively.
+*   **Dynamic Terminal Auto-width**: Add an `--auto-width` parameter that leverages `os.get_terminal_size().columns` to automatically constrain grid output widths on narrow terminal sessions.
+*   **Data Export Formats**: Implement a `--json-out` or structured output flag that emits the parsed and successfully mapped table sequence as raw, validated data rather than ASCII text. 
+
 [README](README.md) | [API](docs/API.md) | [CLI](docs/CLI.md) | [SPEC](FUNCTIONAL_SPEC.md) | [CHANGELOG](CHANGELOG.md)
