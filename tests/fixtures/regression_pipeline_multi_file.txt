@@ -1,3 +1,18 @@
-[1;31m[ERROR][0m Unknown layout style 'bold'
-Available styles: ascii, ascii-header, booktabs, dashed, dots, double, heavy, light, light-header, markdown, none, round, round-header
-Tip: Run 'vistab -L' to view a rendered matrix of all available layout stylings.
+                                               [ <PROJECT_ROOT>/tests/data/small_1x1.csv ]                                              
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ This is a single cell containing exactly one moderately long sentence deployed seamlessly to test the extreme edge case of a one-by-one grid layout natively. ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+[ <PROJECT_ROOT>/tests/data/small_5x5.csv ]
+┏━━━━━━┳━━━━━━┳━━━━━━┳━━━━━━┳━━━━━━┓
+┃  A   ┃  B   ┃  C   ┃  D   ┃  E   ┃
+┣━━━━━━╋━━━━━━╋━━━━━━╋━━━━━━╋━━━━━━┫
+┃    1 ┃    2 ┃    3 ┃    4 ┃    5 ┃
+┣━━━━━━╋━━━━━━╋━━━━━━╋━━━━━━╋━━━━━━┫
+┃   10 ┃   20 ┃   30 ┃   40 ┃   50 ┃
+┣━━━━━━╋━━━━━━╋━━━━━━╋━━━━━━╋━━━━━━┫
+┃  100 ┃  200 ┃  300 ┃  400 ┃  500 ┃
+┣━━━━━━╋━━━━━━╋━━━━━━╋━━━━━━╋━━━━━━┫
+┃ 1000 ┃ 2000 ┃ 3000 ┃ 4000 ┃ 5000 ┃
+┗━━━━━━┻━━━━━━┻━━━━━━┻━━━━━━┻━━━━━━┛

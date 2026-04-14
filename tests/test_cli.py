@@ -123,5 +123,40 @@ class TestCLI(unittest.TestCase):
         self.assertNotIn("25.000", output)
         self.assertIn("99.0000", output)
 
+    @patch('sys.stderr', new_callable=io.StringIO)
+    @patch('sys.argv', ['vistab']) # No valid input string
+    def test_cli_empty_stream_exit(self, mock_stderr):
+        import vistab
+        # If sys.stdin.isatty() is True, it will exit
+        if sys.stdin.isatty():
+            with self.assertRaises(SystemExit) as e:
+                vistab.main()
+            self.assertEqual(e.exception.code, 1)
+            self.assertIn("No tabular dataset found", mock_stderr.getvalue())
+
+    @patch('sys.stdout', new_callable=io.StringIO)
+    @patch('sys.argv', ['vistab', 'dummy_test_data.csv', '--style', 'round-header', '--save-theme', 'testing_theme_temp'])
+    def test_cli_save_theme(self, mock_stdout):
+        import vistab
+        import tempfile
+        
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with patch('os.path.expanduser', return_value=tmpdir):
+                with self.assertRaises(SystemExit) as e:
+                    vistab.main()
+                self.assertEqual(e.exception.code, 0)
+                
+            output = mock_stdout.getvalue()
+            self.assertIn("Saved layout globally as 'testing_theme_temp'", output)
+            
+            themes_path = os.path.join(tmpdir, ".config", "vistab", "themes.json")
+            self.assertTrue(os.path.exists(themes_path))
+            
+            import json
+            with open(themes_path, "r") as f:
+                data = json.load(f)
+            self.assertIn("testing_theme_temp", data)
+            self.assertEqual(data["testing_theme_temp"]["style"], "round-header") # Default style
+
 if __name__ == '__main__':
     unittest.main()

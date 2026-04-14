@@ -162,5 +162,15 @@ class TestVistab(unittest.TestCase):
             table.add_rows([["A", "B", "C"]])
             table.set_cols_dtype(["i", "f"]) # 2 dtypes mapping to 3 columns throws ArraySizeError
 
+    def test_set_cols_dtype_callable(self):
+        """Test explicitly mapping Python callable lambda expressions resolving inside precision layouts."""
+        table = Vistab(style="none")
+        # Map first col as native str, second col via custom Python function formatting string block
+        table.set_cols_dtype(["t", lambda x: f"[[{float(x):.1f}]]"])
+        table.add_rows([["Val", "Formula"], ["ABC", "-3.1415"]])
+        out = table.draw()
+        self.assertIn("ABC", out)
+        self.assertIn("[[-3.1]]", out)
+
 if __name__ == '__main__':
     unittest.main()

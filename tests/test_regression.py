@@ -120,7 +120,7 @@ class TestVistabRegression(unittest.TestCase):
         db2 = self.data_dir / "small_5x5.csv"
         
         # Pass multiple paths explicitly
-        out = self._run_cli([str(db1), str(db2), "--style", "bold"])
+        out = self._run_cli([str(db1), str(db2), "--style", "heavy"])
         self._assert_against_fixture("regression_pipeline_multi_file", out)
 
     def test_regression_api_dynamic_typing(self):
