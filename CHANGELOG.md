@@ -10,28 +10,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2026-04-10
 
 ### Added
-- **Dynamic Auto-Dtype Inference**: The `a` (automatic) datatype now safely scans column bounds recursively before format ingestion, seamlessly upgrading entire columns structurally to uniform floats (`f`) or scientific notation (`e`) cleanly.
-- **Inline Custom Precisions**: You can now attach custom precision overrides dynamically specifically inside the dtype string arrays locally (e.g. `set_cols_dtype(["i", "f2", "e4", "a"])` or via CLI `--dtype "if2e4a"`).
-- **Single-String List Unpacking API**: Standard array API methods like `set_cols_align` now accept dynamically unboxed single-element strings (e.g., passing `["clrcr"]` unpacks cleanly back to `["c", "l", "r", "c", "r"]`).
-- **CLI Structural Override**: Added the `--style-def` CLI argument natively supporting 15-character string boundary declarations overriding built-in layout constants.
-- **Mathematical Word Chunking**: Dynamically chunks contiguous strings to cleanly map executing color contexts while spanning ANSI bounds securely natively.
-- **ANSI Layout Reassertion / Masking**: Exposed `sanitize_ansi` property on the `Vistab` class gracefully purging destructive positional cursor control sequences, alongside intelligent context reassertion mapping nested text styles spanning wrapped grid cell boundaries dynamically.
-- **Infinite Generator Streaming**: Introduced `Vistab.stream()` providing natively memoryless mapping bounds for infinite streams, integrating pipe streams without full memory allocations. Added `--stream` and `--stream-probe`.
-- **True Caveat Emptor Boundary Routing**: Explicitly evaluated the core engine implicitly handling memory constraints on OS efficiently. Combining `--stream` with highly constrained pipeline structural mappings natively triggers safe fallback to array buffering iteratively.
-- **Jagged Matrix Resolution**: Added structural boundaries padding (`--on-short=pad`) and truncating (`--on-long=truncate`) irregular CSV row formats efficiently. Included dynamic cell highlighting (`--mark-abnormal COLOR`) to point out pipeline flaws visually.
-- **Dynamic Array Routing System**: Added `--sort-by` and `--sort-reverse` inherently sorting pipeline structures locally accurately.
-- **Dialect Pipeline Controls**: Added `--csv-dialect` explicitly directing CSV pipeline resolution seamlessly reliably.
-- **Global Theme Washes**: Implemented `table.set_table_style()` and the `--table-bg-color` (`-g`) flag, allowing users to apply universal foregrounds or backgrounds behind table grids natively.
-- **Negative Coordinate Architecture**: Re-engineered core rendering logic to accept `-1` indexing natively. Added `--last-col-color` (`-x`), `--last-col-bg-color` (`-y`), `--last-row-color` (`-l`), and `--last-row-bg-color` (`-A`) cleanly.
-- **CLI Configuration Workflows**: Added native `--save-theme` workflow generating `~/.config/vistab/themes.json` allowing user-defined themes to persist locally across projects.
-- **Python Initialization Expansion**: Enhanced `--show-code` to output method bindings explicitly for data parameters (like `--align` or `--width`), decoupling them from base layout calls.
+- **Diagnostic Demo Tests**: Added `tests/test_demo.py` dedicated to tracking regression matrices for the `--demo` configurations (`styles`, `colors`, `capabilities`, `anatomy`, `themes`).
+- **Dynamic Auto-Dtype Inference**: The `a` (automatic) datatype now explicitly scans column bounds before format ingestion, upgrading columns structurally to uniform floats (`f`) or scientific notation (`e`).
+- **Inline Custom Precisions**: You can now attach custom precision overrides specifically inside dtype string arrays (e.g. `set_cols_dtype(["i", "f2", "e4", "a"])` or via CLI `--dtype "if2e4a"`).
+- **Single-String List Unpacking API**: Standard array methods like `set_cols_align` now accept dynamically unboxed single-element strings (e.g., passing `["clrcr"]` unpacks to `["c", "l", "r", "c", "r"]`).
+- **CLI Structural Override**: Added the `--style-def` CLI argument natively supporting 15-character string boundary declarations to override built-in layout constants.
+- **Mathematical Word Chunking**: Chunks contiguous strings to map colors while spanning ANSI bounds securely.
+- **ANSI Layout Reassertion / Masking**: Exposed `sanitize_ansi` to gracefully purge destructive positional cursor controls. Reasserts nested text styles bridging wrapped cell boundaries.
+- **Infinite Generator Streaming**: Introduced `Vistab.stream()` providing memoryless arrays for infinite streams. Added `--stream` and `--stream-probe`.
+- **Jagged Matrix Resolution**: Added `--on-short=pad` and `--on-long=truncate` to fix irregular CSVs. Included dynamic cell highlighting (`--mark-abnormal COLOR`).
+- **Dynamic Array Routing System**: Added `--sort-by` and `--sort-reverse` inherently sorting pipeline structures locally.
+- **Dialect Pipeline Controls**: Added `--csv-dialect` explicitly directing CSV pipeline resolution seamlessly.
+- **Global Theme Washes**: Implemented `table.set_table_style()` and `--table-bg-color` (`-g`) flag to apply universal foregrounds or backgrounds.
+- **Negative Coordinate Architecture**: Re-engineered rendering logic to accept `-1` indexing natively. Added `--last-col-color` (`-x`), `--last-col-bg-color` (`-y`), `--last-row-color` (`-l`), and `--last-row-bg-color` (`-A`).
+- **CLI Configuration Workflows**: Added native `--save-theme` workflow generating `~/.config/vistab/themes.json` allowing user-defined themes to persist.
+- **Python Initialization Expansion**: Enhanced `--show-code` to output method bindings explicitly for data parameters (like `--align` or `--width`), decoupling them from base layouts.
 
 ### Fixed
-- **State Corruption on Generator Intersections**: Addressed internal generator pipelines to explicitly prevent purging primary table geometries dynamically on stream intersections.
-- **ANSI Terminal Compatibility**: Decoupled chained ANSI escape sequences natively into distinct isolated token parameters (e.g., `\\033[97m\\033[101m`) explicitly resolving attribute clipping in older Windows and WSL terminals.
-- **Cell Vertical Alignment Crashes**: Fixed an `unhashable type: list` crash exception strictly mapping within `_splitit()` during boundary sizing logic by explicitly migrating away from `_vislen` bounds.
-- **CLI Parser Mappings**: Resolved an internal mapping conflict renaming the internal visual `--row0-color` parameter properly assigning it directly to `--col0-color` (`-0`).
-- **Comprehensive API Structuring**: Refactored `docs/API.md` explicitly capturing typing and functionality for 40+ boundaries.
+- **Documentation Overhaul**: Conducted a complete formal overhaul of `FUNCTIONAL_SPEC.md`, `README.md`, `docs/API.md`, and `docs/CLI.md` strictly removing redundant phrasing and injecting explicit "Limitations & Known Gaps". 
+- **State Corruption on Generator Intersections**: Addressed internal generator pipelines to prevent purging primary table geometries on stream intersections.
+- **ANSI Terminal Compatibility**: Decoupled chained ANSI escape sequences into distinct isolated tokens explicitly resolving attribute clipping in Windows and WSL terminals.
+- **Cell Vertical Alignment Crashes**: Fixed `unhashable type: list` crash during boundary sizing logic by explicitly migrating away from `_vislen` bounds.
+- **CLI Parser Mappings**: Resolved an internal mapping conflict renaming the visual `--row0-color` parameter properly assigning it directly to `--col0-color` (`-0`).
 
 ## [1.0.3] - 2026-04-06
 
