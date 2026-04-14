@@ -2,7 +2,7 @@
 """
 Basic Usage: Vistab
 -------------------
-This example demonstrates constructing a simple standard formatting layout manually pushing configurations cleanly.
+This example demonstrates constructing a simple standard formatting layout manually pushing configurations.
 """
 import sys
 import os
@@ -27,9 +27,9 @@ def main():
         ["Remote Overheads", 99.4, 256.12]
     ])
     
-    # 4. Provide specific visual aesthetics structurally securely
+    # 4. Provide specific visual aesthetics structurally
     table.bold_header()
-    table.color_row(-1, fg="red") # Warn the last row explicitly
+    table.color_row(-1, fg="red") # Warn the last row
     
     # 5. Execute outputs
     print(table.draw())

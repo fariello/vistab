@@ -11,7 +11,7 @@ class TestVistabStreamAndJagged(unittest.TestCase):
         table.on_short_row = "pad"
         table.on_long_row = "truncate"
         
-        # Row 1 determines width mapping cleanly
+        # Row 1 determines width mapping
         table.add_row(["Col1", "Col2", "Col3"])
         
         # Row 2 is short
@@ -26,7 +26,7 @@ class TestVistabStreamAndJagged(unittest.TestCase):
         
         out = table.draw()
         
-        # Ensure row 2 padded cleanly. Since it has 3 structural cells, drawing doesn't fail.
+        # Ensure row 2 padded. Since it has 3 structural cells, drawing doesn't fail.
         self.assertTrue(bool(out))
         
     def test_strict_grid_error(self):
@@ -42,7 +42,7 @@ class TestVistabStreamAndJagged(unittest.TestCase):
             table.add_row(["1"])
             
     def test_native_stream(self):
-        """Test natively yielding infinite string loop mechanically securely."""
+        """Test yielding infinite string loop mechanically."""
         table = Vistab(header=False)
         table.has_header = False
         iterable = [
@@ -74,7 +74,7 @@ class TestVistabStreamAndJagged(unittest.TestCase):
         
         output = "\n".join(lines)
         
-        # Output should cleanly truncate iterating gracefully
+        # Output should truncate iterating
         self.assertIn("Data4", output)
         self.assertNotIn("Data5", output)
         

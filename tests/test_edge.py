@@ -10,10 +10,10 @@ class TestEdge(unittest.TestCase):
         table.set_cols_dtype(['t', 'i', 't'])
         table.add_rows([
             ["A", "B", "C"],
-            ["1", "2"] # Missing 3rd boundary explicitly
+            ["1", "2"] # Missing 3rd boundary
         ])
         
-        table.add_row(["1"]) # Missing 2nd and 3rd boundaries explicitly
+        table.add_row(["1"]) # Missing 2nd and 3rd boundaries
         out = table.draw()
         self.assertIn("A", out)
 
@@ -26,7 +26,7 @@ class TestEdge(unittest.TestCase):
             ["1", "2"] # Missing logic
         ])
         out = table.draw()
-        self.assertNotIn("1", out) # Dropped natively by skip handler
+        self.assertNotIn("1", out) # Dropped by skip handler
 
     def test_on_short_raise(self):
         """Test missing elements raising errors."""
@@ -80,7 +80,7 @@ class TestEdge(unittest.TestCase):
         res = wrapper.wrap(ansi_long_word, width=5)
         lines = res.splitlines()
         self.assertEqual(len(lines), 2)
-        # Asserts inner sequences cleanly intercept context bounding closures
+        # Asserts inner sequences intercept context bounding closures
         self.assertIn("\033[0m", lines[0])
         self.assertIn("\033[42m", lines[1])
 

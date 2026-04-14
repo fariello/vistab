@@ -31,7 +31,7 @@ class TestConfig(unittest.TestCase):
     def test_toml_loading_dynamically(self):
         import vistab
         # We need to monkeypatch the internal vistab._load_config's Path instantiation
-        # Let's cleanly patch the whole logic
+        # Let's patch the whole logic
         original_load = vistab.Vistab._load_config
         
         def mock_load(self_instance):

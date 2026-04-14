@@ -24,16 +24,16 @@ Grid geometries currently calculate bounds on a strict row-by-row isolation loop
 
 #### Colspan (Target: v1.2.0)
 *   **Complexity:** Medium
-*   **Architecture Requirements:** Will require introducing a structured data wrapper (e.g., `Vistab.ColSpan("Title", 3)`) that `_check_row_size()` identifies dynamically. During computation, `_compute_cols_width()` must safely coalesce adjacent mapped widths, and `_draw_line()` must bypass interior vertical separators `|` across the span block locally. 
-*   **Feasibility:** Aligns natively with the current left-to-right sequential rasterization logic. 
+*   **Architecture Requirements:** Will require introducing a structured data wrapper (e.g., `Vistab.ColSpan("Title", 3)`) that `_check_row_size()` identifies. During computation, `_compute_cols_width()` must safely coalesce adjacent mapped widths, and `_draw_line()` must bypass interior vertical separators `|` across the span block locally. 
+*   **Feasibility:** Aligns with the current left-to-right sequential rasterization logic. 
 
 #### Rowspan (Future Consideration)
 *   **Complexity:** Extreme / Very High
-*   **Architecture Requirements:** Fails instantly within current architecture natively. Terminal output executes strictly top-down. Bridging cells vertically necessitates rewriting the engine into a heavy, globally stateful 2D dimensional canvas buffer to compute overlapping row heights simultaneously.
+*   **Architecture Requirements:** Fails instantly within current architecture. Terminal output executes top-down. Bridging cells vertically necessitates rewriting the engine into a heavy, globally stateful 2D dimensional canvas buffer to compute overlapping row heights simultaneously.
 *   **Feasibility:** Pushes boundary from lightweight parser engine to heavy document renderer. Unlikely in the short term.
 
 ### 3. CLI Usability Improvements
-*   **Explicit Delimiter Override**: Add a `--delimiter` argument to the CLI. This provides an escape hatch to bypass `csv.Sniffer` errors when evaluating anomalous or raw-log data streams natively.
+*   **Explicit Delimiter Override**: Add a `--delimiter` argument to the CLI. This provides an escape hatch to bypass `csv.Sniffer` errors when evaluating anomalous or raw-log data streams.
 *   **Dynamic Terminal Auto-width**: Add an `--auto-width` parameter that leverages `os.get_terminal_size().columns` to automatically constrain grid output widths on narrow terminal sessions.
 *   **Data Export Formats**: Implement a `--json-out` or structured output flag that emits the parsed and successfully mapped table sequence as raw, validated data rather than ASCII text. 
 

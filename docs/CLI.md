@@ -8,7 +8,7 @@
 `vistab` tracks standard UNIX pipeline inputs and positional arguments:
 
 ```bash
-# Process explicitly defined files
+# Process defined files
 vistab data.csv
 
 # Process multiple datasets sequentially
@@ -42,10 +42,10 @@ The CLI lets you manage data layout, spacing, and wrapper constraints via standa
 - **`--stream`**: Bypasses full array buffering, printing mapped iterations continuously.
 - **`--stream-probe`**: Scans the first N rows computationally to align continuous widths upfront (default: 50).
 - **`--sort-by INDEX`**: Sort arrays structurally based on a specified row index.
-- **`--sort-reverse`**: Flip sorting logic explicitly mapped off `--sort-by`.
+- **`--sort-reverse`**: Flip sorting logic mapped off `--sort-by`.
 - **`--csv-dialect NAME`**: Enforce native Python CSV sniffer logic for specific structure parsing.
 - **`--on-short ACTION`**: Set boundary routing for missing CSV columns (`pad`, `skip`, `raise`).
-- **`--on-long ACTION`**: Route overflowing row alignments securely (`truncate`, `skip`, `raise`).
+- **`--on-long ACTION`**: Route overflowing row alignments (`truncate`, `skip`, `raise`).
 - **`--mark-abnormal COLOR`**: Apply rapid visual diagnostics highlighting data arrays that conflict with boundaries.
 
 ### 4. Aesthetics & Themes
@@ -59,9 +59,9 @@ The CLI lets you manage data layout, spacing, and wrapper constraints via standa
 ![Screenshot: Terminal output displaying an execution block utilizing formatting constraints and showing --no-header flags.](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-CLI-formatting.png)
 
 ### 5. Granular Color Targeting
-If predefined themes aren't enough, you can explicitly override coordinate elements using discrete color arguments (`red`, `blue`, `bright_black`, `none` to remove):
+If predefined themes aren't enough, you can override coordinate elements using discrete color arguments (`red`, `blue`, `bright_black`, `none` to remove):
 - **`--border-color` / `--border-bg-color`**: Surrounding frame color.
-- **`--col0-bg-color`**: Target the first column data explicitly.
+- **`--col0-bg-color`**: Target the first column data.
 - **`-l, --last-row-color` / `-A, --last-row-bg-color`**: Target the dynamic bottom offset (`-1`).
 - **`-x, --last-col-color` / `-y, --last-col-bg-color`**: Target the dynamic rightmost boundary.
 - **`-g, --table-bg-color`**: Apply a global background wash uniformly across the layout.

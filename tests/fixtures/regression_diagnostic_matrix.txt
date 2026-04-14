@@ -1,5 +1,5 @@
 [1m[1;36mBuilt-In Theme Macro Demonstrations[0m
-Predefined themes combining geometry layouts with zebra-striping and boundary padding natively!
+Predefined themes combining geometry layouts with zebra-striping and boundary padding!
 
 ┌────────────────────────┬────────────────────────┬────────────────────────┬───────────────────────────┬────────────────────────┬───────────────────────────┐
 │"ocean"                 │"ocean-index"           │"ocean-rows"            │"ocean-rows-index"         │"ocean-cols"            │"ocean-cols-index"         │

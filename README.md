@@ -7,7 +7,7 @@
 ## Key Features
 
 - **Lightweight Native Core**: Operates primarily off the Python standard library with `wcwidth` enabling accurate string geometry calculations.
-- **Color-Aware Word Wrapping**: Dynamically measures and wraps table widths over embedded, invisible ANSI formatting sequences without breaking table geometry.
+- **Color-Aware Word Wrapping**: measures and wraps table widths over embedded, invisible ANSI formatting sequences without breaking table geometry.
 - **Coordinate-Based Styling API**: Colorize rows, columns, headers, or specific cells declaratively (e.g. `set_header_style(bg="red", bold=True)`).
 - **Hierarchical TOML Configurations**: Persist your favorite table paddings and layout themes cross-project using a localized `.vistab.toml`.
 - **Advanced Data Parsing**: Injects automatic text wrapping, infers scientific datatypes, and parses CSV files.
@@ -53,7 +53,7 @@ print(table.draw())
 
 **Output:**
 
-> **Note on Web Rendering:** We display the raw output below as an image because some package registries (like PyPI) explicitly enforce code-block font stacks (e.g., `Source Code Pro`) that lack glyphs for Unicode Extended Box Drawing characters. When falling back to secondary system fonts for characters like `╭` or `╪`, the physical grid mathematically misaligns. On your local terminal—and on full-featured renderers like GitHub or BitBucket—the actual text output mathematically aligns perfectly!
+> **Note on Web Rendering:** We display the raw output below as an image because some package registries (like PyPI) enforce code-block font stacks (e.g., `Source Code Pro`) that lack glyphs for Unicode Extended Box Drawing characters. When falling back to secondary system fonts for characters like `╭` or `╪`, the physical grid mathematically misaligns. On your local terminal—and on full-featured renderers like GitHub or BitBucket—the actual text output mathematically aligns perfectly!
 
 ![Screenshot: Terminal output displaying a formatted 3-column data matrix. The headers are 'Name', 'Age', and 'Nickname'. The table perfectly encapsulates complex multi-line text blocks across individual cells mapping 'Sarah Jones' directly alongside her age, wrapped inside exactly aligned rounded Unicode border geometries.](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-code-output-01.png)
 
@@ -99,7 +99,7 @@ table.set_precision(2)
 table.set_cols_dtype(["a", "t", "f", "i"])
 
 # Bypass the global precision using inline modifiers
-# Here, col 2 specifically maps `f4` (float + precision 4 digits)
+# Here, col 2 maps `f4` (float + precision 4 digits)
 table.set_cols_dtype("a,t,f4,i")
 ```
 
@@ -138,7 +138,7 @@ table.set_row_wrap(0, False)
 table.set_col_wrap(2, False)
 table.set_cell_wrap(0, 1, False)
 ```
-If a cell bypassed with `wrap=False` exceeds `table.max_width`, `Vistab` uses a constraint router (`table.on_wrap_conflict = "warn"`) that securely drops trailing characters while reconstructing your internal ANSI styling sequences to prevent terminal boundary collapse.
+If a cell bypassed with `wrap=False` exceeds `table.max_width`, `Vistab` uses a constraint router (`table.on_wrap_conflict = "warn"`) that drops trailing characters while reconstructing your internal ANSI styling sequences to prevent terminal boundary collapse.
 
 ## Streaming & Caveat Emptor Pipeline Constraints
 
@@ -150,13 +150,13 @@ $ cat large_dataset.csv | vistab --stream
 
 > [!WARNING]
 > **Caveat Emptor System Limitations**: 
-> When executing highly constrained pipeline commands requiring complete structured arrays logically (i.e. `--sort-by`), Vistab gracefully relies on the host OS executing standard mapping limits naturally. Pipelining infinite streams containing no explicitly terminated newlines (like `cat /dev/zero`) will unconditionally lock system buffers, triggering OS native Out-Of-Memory (OOM) failures natively similarly to standard POSIX `sort` behaviors. No artificial memory caps are injected structurally. 
+> When executing highly constrained pipeline commands requiring complete structured arrays logically (i.e. `--sort-by`), Vistab relies on the host OS executing standard mapping limits naturally. Pipelining infinite streams containing no terminated newlines (like `cat /dev/zero`) will unconditionally lock system buffers, triggering OS native Out-Of-Memory (OOM) failures similarly to standard POSIX `sort` behaviors. No artificial memory caps are injected structurally. 
 
 ## Hierarchical Configuration System
 Stop re-typing your constructor arguments! `vistab` actively scans your execution environment for two distinct configuration architectures:
 
 ### 1. Default Fallbacks (`vistab.toml` / `config.toml`)
-It evaluates paths sequentially, merging configurations gracefully: `[./vistab.toml, ./.vistab.toml, ./.config/vistab.toml, ~/.config/vistab/config.toml, ~/.config/vistab.toml, ~/.vistab.toml]`.
+It evaluates paths sequentially, merging configurations: `[./vistab.toml, ./.vistab.toml, ./.config/vistab.toml, ~/.config/vistab/config.toml, ~/.config/vistab.toml, ~/.vistab.toml]`.
 
 You can generate a default configuration file into the global user profile directly using the CLI:
 ```bash
@@ -164,7 +164,7 @@ vistab --create-config
 ```
 
 ### 2. Custom Aesthetic Themes (`themes.json`)
-You can lock in CLI layout arguments seamlessly by saving custom styles into `~/.config/vistab/themes.json` using the `--save-theme` directive. Once saved, these aesthetics become natively addressable on your machine using `--theme`.
+You can lock in CLI layout arguments by saving custom styles into `~/.config/vistab/themes.json` using the `--save-theme` directive. Once saved, these aesthetics become addressable on your machine using `--theme`.
 
 ```bash
 # Safely capture a global background wash + custom last row colors 
@@ -270,7 +270,7 @@ custom_theme = {
 
 table = vistab.Vistab().apply_theme(custom_theme)
 
-# ... map inputs cleanly and execute drawing natively
+# ... map inputs and execute drawing
 print(table.draw())
 ```
 
@@ -294,7 +294,7 @@ import vistab
 
 table = vistab.Vistab().apply_theme("my_custom_theme")
 
-# ... map inputs cleanly and execute drawing natively
+# ... map inputs and execute drawing
 print(table.draw())
 ```
 
@@ -320,7 +320,7 @@ vistab --demo capabilities
 
 ## Advanced Formatting (Datatypes)
 
-`vistab` can infer and parse formatting rules strictly by passing data types, controlling precision dynamically for scientific floats and integers seamlessly.
+`vistab` can infer and parse formatting rules by passing data types, controlling precision for scientific floats and integers.
 
 ```python
 from vistab import Vistab
@@ -340,7 +340,7 @@ table.add_rows([
 ## Limitations & Known Gaps
 
 1. **Sorting vs. Streaming**: Vistab's `--stream` capability processes inputs infinitely, rendering data row-by-row on the fly. However, attempting to sort the stream (`--sort-by`) requires the engine to cache the entire dataset in physical memory. Streaming extremely large files combined with `--sort-by` will trigger an `Out of Memory` event.
-2. **Terminal Boundaries**: The `max_width` string constraint wraps data accurately according to integer text lengths. If structural tables are placed into boundaries too thin to support physical text cells (e.g., width=2), the engine will explicitly throw a `ValueError` rather than attempting to print physically broken graphics.
+2. **Terminal Boundaries**: The `max_width` string constraint wraps data accurately according to integer text lengths. If structural tables are placed into boundaries too thin to support physical text cells (e.g., width=2), the engine will throw a `ValueError` rather than attempting to print physically broken graphics.
 
 ## Detailed API Reference
 

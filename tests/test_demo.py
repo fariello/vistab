@@ -5,7 +5,7 @@ from pathlib import Path
 
 class TestVistabDemo(unittest.TestCase):
     """
-    Validation framework specifically capturing the diagnostic demo matrices.
+    Validation framework capturing the diagnostic demo matrices.
     """
     
     def setUp(self):

@@ -47,7 +47,7 @@ class TestVistab(unittest.TestCase):
                 self.assertIsNotNone(out)
 
     def test_max_cols(self):
-        """Test limiting tables explicitly enforcing column dimensions."""
+        """Test limiting tables enforcing column dimensions."""
         table = Vistab(max_width=50)
         table.add_rows([
             ["A", "B", "C", "D", "E"],
@@ -65,7 +65,7 @@ class TestVistab(unittest.TestCase):
         self.assertNotIn("6", out) # Dropped by max_rows
 
     def test_dtype_coercion(self):
-        """Test numeric and string datatypes formatting natively."""
+        """Test numeric and string datatypes formatting."""
         table = Vistab(style="none")
         table.set_cols_dtype(["t", "i", "f"])
         table.set_precision(2)
@@ -76,7 +76,7 @@ class TestVistab(unittest.TestCase):
         self.assertIn("3.14", out)   # Precision formats float
         
     def test_auto_dtype_inferences(self):
-        """Test cascading data type inference for automatic bounds correctly formatting floats/sci explicitly over ints."""
+        """Test cascading data type inference for automatic bounds correctly formatting floats/sci over ints."""
         table = Vistab(style="none")
         table.set_precision(3)
         # Testing Mixed Decimal Inference
@@ -87,7 +87,7 @@ class TestVistab(unittest.TestCase):
         ], header=False)
         out = table.draw()
         
-        # Column 0: Mixed whole numbers and explicitly parsed floats (3.0 vs 12). Should all be Floats (.000)
+        # Column 0: Mixed whole numbers and parsed floats (3.0 vs 12). Should all be Floats (.000)
         self.assertIn("3.000", out)
         self.assertIn("12.000", out)
         self.assertIn("5.000", out)
@@ -96,17 +96,17 @@ class TestVistab(unittest.TestCase):
         self.assertIn("1.500e+00", out)
         self.assertIn("1.200e-04", out)
         
-        # Column 2: Pure integers logically exclusively. Should format exactly as purely string integers cleanly!
+        # Column 2: Pure integers logically exclusively. Should format exactly as purely string integers!
         self.assertIn("101", out)
         self.assertIn("202", out)
         self.assertIn("303", out)
         self.assertNotIn("101.000", out)
         
     def test_inline_precision_overrides(self):
-        """Test natively mapping decimals per column individually."""
+        """Test mapping decimals per column individually."""
         table = Vistab(style="none")
         table.set_precision(1) # Base global default structurally
-        table.set_cols_dtype("if2e4a") # Implicit parsing string cleanly!
+        table.set_cols_dtype("if2e4a") # Implicit parsing string!
 
         table.add_rows([["1.9", "1.9", "1.9", "1.9"]], header=False)
         out = table.draw()
@@ -120,11 +120,11 @@ class TestVistab(unittest.TestCase):
         # Column 2: (e4) Exponent forcing 4 decimal points bypassing global n=1
         self.assertIn("1.9000e+00", out)
         
-        # Column 3: (a -> f1 implicitly inferred via global)
+        # Column 3: (a -> f1 inferred via global)
         self.assertIn("1.9", out)
         
     def test_layout_modifiers(self):
-        """Test structural colors applying cleanly within the ANSI boundaries."""
+        """Test structural colors applying within the ANSI boundaries."""
         table = Vistab(style="light")
         table.add_rows([["A", "B"], ["1", "2"]])
         table.set_table_style(bg="red")
@@ -163,7 +163,7 @@ class TestVistab(unittest.TestCase):
             table.set_cols_dtype(["i", "f"]) # 2 dtypes mapping to 3 columns throws ArraySizeError
 
     def test_set_cols_dtype_callable(self):
-        """Test explicitly mapping Python callable lambda expressions resolving inside precision layouts."""
+        """Test mapping Python callable lambda expressions resolving inside precision layouts."""
         table = Vistab(style="none")
         # Map first col as native str, second col via custom Python function formatting string block
         table.set_cols_dtype(["t", lambda x: f"[[{float(x):.1f}]]"])

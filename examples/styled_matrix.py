@@ -2,7 +2,7 @@
 """
 Styled Matrix: Vistab
 ---------------------
-This example executes a highly stylized matrix pushing custom theme algorithms programmatically natively.
+This example executes a highly stylized matrix pushing custom theme algorithms programmatically.
 """
 import sys
 import os
@@ -14,7 +14,7 @@ def main():
     table = Vistab(style="double")
     table.set_title("Vistab Complex Theme Mappings")
     
-    # Generate mock test matrix logic natively
+    # Generate mock test matrix logic
     table.add_rows([
         ["Target Architecture", "Uptime", "Capacity", "Status"],
         ["Database Primary", "365d", "88%", "Stable"],
@@ -23,7 +23,7 @@ def main():
         ["Edge Node Cache", "0d", "0%", "Offline"]
     ])
     
-    # Apply a fluid dictionary tracking specific targets dynamically explicit reliably!
+    # Apply a fluid dictionary tracking specific targets explicit!
     custom_theme = {
         "padding": 3,
         "table": {"bg": "bright_black"}, # Global dark mode background

@@ -2,7 +2,7 @@
 
 # Vistab API Reference (v1.1.0)
 
-`Vistab` uses a **fluent API**. Almost all manipulation and styling methods return the instance itself (`self`), allowing developers to chain operations cleanly:
+`Vistab` uses a **fluent API**. Almost all manipulation and styling methods return the instance itself (`self`), allowing developers to chain operations:
 
 ```python
 table = (Vistab()
@@ -12,7 +12,7 @@ table = (Vistab()
          .set_max_rows(10))
 ```
 
-All standard methods documented below return `Vistab` (via `self`) unless explicitly indicated otherwise.
+All standard methods documented below return `Vistab` (via `self`) unless indicated otherwise.
 Negative indexing is universally supported for targeting structural coordinates.
 
 ---
@@ -67,16 +67,16 @@ Instantly reassigns the logical border characters driving table grid formats.
 Updates internal blank-space padding around column alignments.
 
 ### `set_max_cols(max_cols: int)`
-Truncates right-most values mapping constraints strictly preventing boundary bloat.
+Truncates right-most values mapping constraints preventing boundary bloat.
 
 ### `set_max_rows(max_rows: int)`
-Truncates bottom rows bounding vertical limits natively.
+Truncates bottom rows bounding vertical limits.
 
 ### `set_max_width(max_width: int)`
 Triggers line-wrapping heuristics intercepting text before exceeding terminal boundaries.
 
 ### `set_decorations(decorations: int)`
-Toggles inner structural grids securely utilizing bitmask flags (`Vistab.BORDER | Vistab.HEADER | Vistab.VLINES`).
+Toggles inner structural grids utilizing bitmask flags (`Vistab.BORDER | Vistab.HEADER | Vistab.VLINES`).
 
 ### `set_table_lines(table_lines: str)`
 Customizes granular interior lines passing strings targeting intersections.
@@ -85,22 +85,22 @@ Customizes granular interior lines passing strings targeting intersections.
 
 ## 4. Alignment & Format Type Coercion
 
-*Parameters evaluating formatting arrays natively evaluate list structures or single continuous strings (`"lrc"`).*
+*Parameters evaluating formatting arrays evaluate list structures or single continuous strings (`"lrc"`).*
 
 ### `set_cols_width(array: Union[str, List[Any]])`
-Forces column geometry adhering strictly mapping integer widths restricting variable expansions.
+Forces column geometry adhering mapping integer widths restricting variable expansions.
 
 ### `set_cols_align(array: Union[str, List[str]])`
-Evaluates explicit mappings resolving horizontal cell justification (`'l'=left`, `'c'=center`, `'r'=right`). Can natively unpack single-string lists containing the entire sequence (e.g., `["clrcr"]`).
+Evaluates explicit mappings resolving horizontal cell justification (`'l'=left`, `'c'=center`, `'r'=right`). Can unpack single-string lists containing the entire sequence (e.g., `["clrcr"]`).
 
 ### `set_cols_valign(array: Union[str, List[str]])`
-Evaluates positional geometry mapping vertical alignments (`'t'=top`, `'m'=middle`, `'b'=bottom`). Can natively unpack single-string lists safely (e.g., `["mmbmt"]`).
+Evaluates positional geometry mapping vertical alignments (`'t'=top`, `'m'=middle`, `'b'=bottom`). Can unpack single-string lists safely (e.g., `["mmbmt"]`).
 
 ### `set_cols_dtype(array: Union[str, List[str]])`
-Applies robust precision formats natively wrapping types safely. Can natively unpack single-string lists seamlessly (e.g., `["if2e4a"]`). 
+Applies robust precision formats wrapping types safely. Can unpack single-string lists (e.g., `["if2e4a"]`). 
 *   **Categories**: `'t'=text`, `'f'=float`, `'i'=int`, `'e'=scientific`, `'I'=comma int`.
-*   **Automatic (`'a'`)**: Natively evaluates column types systematically scaling uniform numeric sequences via internal cascading hierarchy (`scientific -> float -> integer`), bypassing formatting inconsistencies.
-*   **Dynamic Precisions (`'f2'`, `'e4'`)**: Precision overrides structurally integrate directly within dtype arrays (e.g., `["i", "f2", "e4", "a"]`) natively escaping the global baseline decimal configurations.
+*   **Automatic (`'a'`)**: evaluates column types systematically scaling uniform numeric sequences via internal cascading hierarchy (`scientific -> float -> integer`), bypassing formatting inconsistencies.
+*   **Dynamic Precisions (`'f2'`, `'e4'`)**: Precision overrides structurally integrate directly within dtype arrays (e.g., `["i", "f2", "e4", "a"]`) escaping the global baseline decimal configurations.
 
 ### `set_precision(width: int)`
 Establishes default global precision logic for all unresolved floats and sequences.
@@ -116,16 +116,16 @@ Overrides logical evaluations globally protecting geometry structurally.
 ### `set_row_wrap(row_idx: int, wrap: bool)` 
 Locks structural limits horizontally matching boundaries uniformly!
 ### `set_col_wrap(col_idx: int, wrap: bool)` 
-Locks layout parameters vertically explicitly.
+Locks layout parameters vertically.
 ### `set_cell_wrap(row_idx: int, col_idx: int, wrap: bool)` 
-Locks specific cell boundaries specifically protecting manual geometries.
+Locks specific cell boundaries protecting manual geometries.
 
 ---
 
 ## 6. Color Layout Integrations & Thematics
 
-Vistab provides discrete coordinate styling enabling robust parameter modifications elegantly targeting boundaries explicitly.
-All color keywords map to CLI counterparts natively (`red`, `green`, `black`, `bright_black`, `none`).
+Vistab provides discrete coordinate styling enabling robust parameter modifications elegantly targeting boundaries.
+All color keywords map to CLI counterparts (`red`, `green`, `black`, `bright_black`, `none`).
 
 ### `apply_theme(theme: Union[str, dict])`
 Injects pre-configured algorithms logically matching Zebra-matrices.

@@ -22,7 +22,7 @@ class TestVistabRegression(unittest.TestCase):
     def _run_cli(self, args: list, input_data: str = None) -> str:
         """Executes the CLI and returns the unified STDOUT."""
         cmd = ["python", str(self.cli_path)] + args
-        # Sandbox execution natively forcing ~ to map inside tests dir structurally
+        # Sandbox execution forcing ~ to map inside tests dir structurally
         env = os.environ.copy()
         env["PYTHONIOENCODING"] = "utf-8"
         temp_home = self.tests_dir / "temp_home"
@@ -43,14 +43,14 @@ class TestVistabRegression(unittest.TestCase):
     def _assert_against_fixture(self, name: str, output: str):
         """
         Validates output against a saved fixture. 
-        If the fixture does not exist, it bootstraps it natively!
+        If the fixture does not exist, it bootstraps it!
         """
         # Normalize absolute paths for cross-platform stability
         proj_root = str(self.tests_dir.parent)
         output = output.replace(proj_root.replace('\\', '/'), "<PROJECT_ROOT>")
         output = output.replace(proj_root, "<PROJECT_ROOT>")
         
-        # Explicitly normalize Windows slashes to Linux slashes in the exact file strings printed by the CLI
+        # normalize Windows slashes to Linux slashes in the exact file strings printed by the CLI
         output = output.replace("<PROJECT_ROOT>\\tests\\temp_home\\.config\\vistab\\themes.json", "<PROJECT_ROOT>/tests/temp_home/.config/vistab/themes.json")
         output = output.replace("<PROJECT_ROOT>\\tests\\data\\small_5x5.csv", "<PROJECT_ROOT>/tests/data/small_5x5.csv")
         output = output.replace("<PROJECT_ROOT>\\tests\\data\\small_7x12.csv", "<PROJECT_ROOT>/tests/data/small_7x12.csv")
@@ -94,7 +94,7 @@ class TestVistabRegression(unittest.TestCase):
         self._assert_against_fixture("regression_complex_theme", out)
 
     def test_regression_inline_precisions(self):
-        """Test inline dtype definitions overriding explicitly globally."""
+        """Test inline dtype definitions overriding globally."""
         db = self.data_dir / "test_precision_matrix.csv"
         # Col 0 -> f1, Col1 -> t, Col2 -> f3, Col3 -> e2
         out = self._run_cli([str(db), "--dtype", "f1,t,f3,e2"])
@@ -104,7 +104,7 @@ class TestVistabRegression(unittest.TestCase):
         self._assert_against_fixture("regression_inline_precisions", output)
 
     def test_regression_pipeline_stdin(self):
-        """Test the structural execution capturing datasets strictly through STDIN streams."""
+        """Test the structural execution capturing datasets through STDIN streams."""
         raw_csv_string = "ID,Name,Status\n101,Process A,Active\n102,Process B,Failed\n"
         out = self._run_cli(["--theme", "ocean", "--padding", "2"], input_data=raw_csv_string)
         self._assert_against_fixture("regression_pipeline_stdin", out)
@@ -114,7 +114,7 @@ class TestVistabRegression(unittest.TestCase):
         db1 = self.data_dir / "small_1x1.csv"
         db2 = self.data_dir / "small_5x5.csv"
         
-        # Pass multiple paths explicitly
+        # Pass multiple paths
         out = self._run_cli([str(db1), str(db2), "--style", "heavy"])
         self._assert_against_fixture("regression_pipeline_multi_file", out)
 
@@ -136,7 +136,7 @@ class TestVistabRegression(unittest.TestCase):
         self._assert_against_fixture("regression_api_dynamic_typing", out)
 
     def test_regression_api_theme_dictionary(self):
-        """Test the explicit API custom_theme parameter structure natively."""
+        """Test the explicit API custom_theme parameter structure."""
         custom_theme = {
             "style": "heavy",
             "padding": 2,
@@ -163,8 +163,8 @@ class TestVistabRegression(unittest.TestCase):
         cmd = ["python", str(self.cli_path), "--theme", "completely_fake_theme_name"]
         result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
         
-        # Validate that the CLI terminates gracefully mapped with standard error state
-        # Validate that the CLI terminates gracefully mapped with standard error state
+        # Validate that the CLI terminates mapped with standard error state
+        # Validate that the CLI terminates mapped with standard error state
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("error:", result.stderr.lower() + result.stdout.lower() + "error:") # Sometimes argparse puts errors in stdout or stderr
         
@@ -208,7 +208,7 @@ class TestVistabRegression(unittest.TestCase):
         self._assert_against_fixture("regression_ansi_wrap_conflict", out)
 
     def test_regression_wide_cjk_streaming(self):
-        """Submit comprehensive native wide Unicode characters gracefully padding boundaries across streaming."""
+        """Submit comprehensive native wide Unicode characters padding boundaries across streaming."""
         raw_csv = "English,Mandarin,Japanese\nHello,你好,こんにちは\nTesting wide characters,测试,テスト\n"
         out = self._run_cli(["--stream", "--style", "round"], input_data=raw_csv)
         self._assert_against_fixture("regression_wide_cjk_streaming", out)
@@ -232,13 +232,13 @@ class TestVistabRegression(unittest.TestCase):
         self._assert_against_fixture("regression_stream_no_header_borderless", out)
 
     def test_regression_conflict_stream_and_sort(self):
-        """Caveat Emptor boundary: Validate streaming seamlessly bypasses isolated generator evaluating complete memory sort bounds."""
+        """Caveat Emptor boundary: Validate streaming bypasses isolated generator evaluating complete memory sort bounds."""
         raw_csv = "ID,Score\n10,99\n12,45\n11,100\n"
         out = self._run_cli(["--stream", "--sort-by", "1", "--sort-reverse"], input_data=raw_csv)
         self._assert_against_fixture("regression_conflict_stream_and_sort", out)
 
     def test_regression_api_dynamic_padding(self):
-        """Apply boundaries seamlessly inside API edge states without panicking geometries locally."""
+        """Apply boundaries inside API edge states without panicking geometries locally."""
         table = Vistab(header=False)
         table.has_header = False
         table.set_padding(10)
@@ -247,7 +247,7 @@ class TestVistabRegression(unittest.TestCase):
         self._assert_against_fixture("regression_api_dynamic_padding", out)
 
     def test_regression_zero_data_matrices(self):
-        """Evaluate zero data environments securely mapping empty structural grids cleanly."""
+        """Evaluate zero data environments mapping empty structural grids."""
         db = self.data_dir / "completely_empty.csv"
         # Create empty file
         db.write_text("")
@@ -258,13 +258,13 @@ class TestVistabRegression(unittest.TestCase):
         
 
     def test_regression_cli_show_code(self):
-        """Test the strictly emitted python instantiation payload maps structure variables correctly."""
+        """Test the emitted python instantiation payload maps structure variables correctly."""
         db = self.data_dir / "small_5x5.csv"
         out = self._run_cli([str(db), "--theme", "ocean", "--padding", "3", "--show-code"])
         self._assert_against_fixture("regression_cli_show_code", out)
 
     def test_regression_theme_override(self):
-        """Ensure parameterized thematic outputs evaluate structurally without collapsing or truncating implicitly."""
+        """Ensure parameterized thematic outputs evaluate structurally without collapsing or truncating."""
         db = self.data_dir / "small_7x12.csv"
         args = [
             str(db), 
@@ -276,7 +276,7 @@ class TestVistabRegression(unittest.TestCase):
         self._assert_against_fixture("regression_theme_override", out)
 
     def test_regression_cli_save_theme(self):
-        """Ensure CLI configurations export and compile cleanly resolving thematic structures iteratively."""
+        """Ensure CLI configurations export and compile resolving thematic structures iteratively."""
         db = self.data_dir / "small_5x5.csv"
         out = self._run_cli([str(db), "--theme", "ocean", "--padding", "5", "--save-theme", "test_ocean_override"])
         
@@ -288,17 +288,17 @@ class TestVistabRegression(unittest.TestCase):
         self._assert_against_fixture("regression_cli_save_theme", out)
 
     def test_regression_edge_1x1_with_header(self):
-        """Evaluate a rigid 1-row, 1-column dataset defaulting dynamically to a header layout."""
+        """Evaluate a rigid 1-row, 1-column dataset defaulting to a header layout."""
         out = self._run_cli([], input_data="Lone Cell\n")
         self._assert_against_fixture("regression_edge_1x1_with_header", out)
 
     def test_regression_edge_1x1_no_header(self):
-        """Evaluate a rigid 1-row, 1-column dataset strictly mapping as a standalone data row natively."""
+        """Evaluate a rigid 1-row, 1-column dataset mapping as a standalone data row."""
         out = self._run_cli(["--no-header"], input_data="Lone Cell\n")
         self._assert_against_fixture("regression_edge_1x1_no_header", out)
 
     def test_regression_edge_1xn_with_header(self):
-        """Evaluate a 1-row vector mapping mechanically strictly as pure UI headers."""
+        """Evaluate a 1-row vector mapping mechanically as pure UI headers."""
         out = self._run_cli(["--theme", "ocean", "--padding", "2"], input_data="ID,Total,Score,Rounds\n")
         self._assert_against_fixture("regression_edge_1xn_with_header", out)
 
@@ -371,12 +371,12 @@ class TestVistabRegression(unittest.TestCase):
         from src.vistab import Vistab
         
         table = Vistab()
-        # Create a layout where cell 2 explicitly has a forest theme blue background.
+        # Create a layout where cell 2 has a forest theme blue background.
         table.apply_theme("forest")
         table.set_cols_width([15, 20])
         
         # Test 1: Inject a stray reset code \033[0m right into the middle of the cell.
-        # Test 2: Inject a cursor movement \033[A to verify it gets securely completely stripped.
+        # Test 2: Inject a cursor movement \033[A to verify it gets completely stripped.
         table.add_row([
             "Normal cell",
             "Starts bright \033[0mTries resetting \x1b[Aand moving"
@@ -399,12 +399,12 @@ class TestVistabRegression(unittest.TestCase):
         from src.vistab import Vistab
         
         table = Vistab()
-        # Create a layout where cell 2 explicitly has a forest theme blue background.
+        # Create a layout where cell 2 has a forest theme blue background.
         table.apply_theme("forest")
         table.set_cols_width([15, 20])
         
         # Test 1: Inject a stray reset code \033[0m right into the middle of the cell.
-        # Test 2: Inject a cursor movement \033[A to verify it gets securely completely stripped.
+        # Test 2: Inject a cursor movement \033[A to verify it gets completely stripped.
         table.add_row([
             "Normal cell",
             "Starts bright \033[0mTries resetting \x1b[Aand moving"
