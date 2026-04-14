@@ -1,0 +1,56 @@
+[1mTest text line-by-line:[0m
+[1;36mExtraordinar[0m[3minly[0m [43;30mlong[0m text mapped exactly at the [1;32mstart[0m to ensure [41;37mstrict[0m constraint wrapping.
+This is some [1;31mRed text[0m to show the ability to wrap [38;5;226mcolored text[0m correctly.
+[4mThis text is underlined, [1mbold, and [34mblue.[0m This is not.
+Some [1;31mRed mandarin: 这是一个 美好的世界[0m for testing.
+RTL: هذا [32mأخضر[0m بينما هذا [31mأحمر[0m (Arabic) זה [34mכחול[0m וזה [1mמודגש[0m (Hebrew)
+
+[1m[1;31mANSI[0m[1m Color / Escape Sequence Aware Text-Based Tables (width=80)[0m:
+┌───────────────┬───────────────┬───────────────┬───────────────┬──────────────┐
+│    Test 1     │    Test 2     │    Test 3     │    Test 4     │    Test 5    │
+├───────────────┼───────────────┼───────────────┼───────────────┼──────────────┤
+│ [1;36mExtraordinar[0m[3mi[0m │ This is some  │ [4mThis text is[0m  │ Some [1;31mRed[0m      │ RTL: هذا     │
+│ [3mnly[0m [43;30mlong[0m text │ [1;31mRed text[0m to   │ [4munderlined,[0m   │ [1;31mmandarin:[0m     │ [32mأخضر[0m بينما   │
+│ mapped        │ show the      │ [4m[1mbold, and[0m     │ [1;31m这是一个[0m      │ هذا [31mأحمر[0m     │
+│ exactly at    │ ability to    │ [4m[1m[34mblue.[0m This is │ [1;31m美好的世界[0m    │ (Arabic) זה  │
+│ the [1;32mstart[0m to  │ wrap [38;5;226mcolored[0m  │ not.          │ for testing.  │ [34mכחול[0m וזה     │
+│ ensure [41;37mstrict[0m │ [38;5;226mtext[0m          │               │               │ [1mמודגש[0m        │
+│ constraint    │ correctly.    │               │               │ (Hebrew)     │
+│ wrapping.     │               │               │               │              │
+├───────────────┼───────────────┼───────────────┼───────────────┼──────────────┤
+│ This is some  │ [44;37m White on[0m     │ Standard      │ [105;30m Bright[0m       │[44m Testing [42;37m[0m[44m     [0m│
+│ normal text   │ [44;37mBlue [0m and [43;30m[0m    │ paragraph     │ [105;30mMagenta BG [0m + │[44m [42;37mGreen [0m[44m [41;37m Red [0m[44m [0m│
+│ to ensure     │ [43;30mBlack on[0m      │ containing an │ [106;30m Bright Cyan[0m  │[44m [44;37m Blue [0m[44m       [0m│
+│ that it is    │ [43;30mYellow [0m       │ Incomprehensi[0m │ [106;30mBG [0m.          │[44m blocks.      [0m│
+│ working       │ interleaved.  │ ble[0m word      │               │[44m              [0m│
+│ properly.     │               │ geometrically │               │[44m              [0m│
+│ There is      │ Two line      │ injected in   │               │[44m              [0m│
+│ nothing       │ breaks        │ the middle.   │               │[44m              [0m│
+│ special to be │ preceeded     │ up and left   │               │[44m              [0m│
+│ seen here.    │ this line.    │ characters:[][0m │               │[44m              [0m│
+└───────────────┴───────────────┴───────────────┴───────────────┴──────────────┘
+
+[1mBelow is the same table without ANSI color / escape sequences. They should wrap the same way.[0m
+┌───────────────┬───────────────┬───────────────┬───────────────┬──────────────┐
+│    Test 1     │    Test 2     │    Test 3     │    Test 4     │    Test 5    │
+├───────────────┼───────────────┼───────────────┼───────────────┼──────────────┤
+│ Extraordinari │ This is some  │ This text is  │ Some Red      │ RTL: هذا     │
+│ nly long text │ Red text to   │ underlined,   │ mandarin:     │ أخضر بينما   │
+│ mapped        │ show the      │ bold, and     │ 这是一个      │ هذا أحمر     │
+│ exactly at    │ ability to    │ blue. This is │ 美好的世界    │ (Arabic) זה  │
+│ the start to  │ wrap colored  │ not.          │ for testing.  │ כחול וזה     │
+│ ensure strict │ text          │               │               │ מודגש        │
+│ constraint    │ correctly.    │               │               │ (Hebrew)     │
+│ wrapping.     │               │               │               │              │
+├───────────────┼───────────────┼───────────────┼───────────────┼──────────────┤
+│ This is some  │ White on Blue │ Standard      │ Bright        │[44m Testing      [0m│
+│ normal text   │ and Black on  │ paragraph     │ Magenta BG +  │[44m Green Red    [0m│
+│ to ensure     │ Yellow        │ containing an │ Bright Cyan   │[44m Blue blocks. [0m│
+│ that it is    │ interleaved.  │ Incomprehensi │ BG .          │[44m              [0m│
+│ working       │               │ ble word      │               │[44m              [0m│
+│ properly.     │ Two line      │ geometrically │               │[44m              [0m│
+│ There is      │ breaks        │ injected in   │               │[44m              [0m│
+│ nothing       │ preceeded     │ the middle.   │               │[44m              [0m│
+│ special to be │ this line.    │ up and left   │               │[44m              [0m│
+│ seen here.    │               │ characters:[] │               │[44m              [0m│
+└───────────────┴───────────────┴───────────────┴───────────────┴──────────────┘

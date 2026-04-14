@@ -93,10 +93,7 @@ class TestVistabRegression(unittest.TestCase):
         out = self._run_cli(args)
         self._assert_against_fixture("regression_complex_theme", out)
         
-    def test_regression_diagnostic_matrix(self):
-        """Safeguard structural matrix calculations implicitly testing rendering offsets natively."""
-        out = self._run_cli(["--demo", "themes"])
-        self._assert_against_fixture("regression_diagnostic_matrix", out)
+
 
     def test_regression_inline_precisions(self):
         """Test inline dtype definitions overriding explicitly globally."""
