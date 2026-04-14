@@ -13,7 +13,7 @@ from vistab import Vistab
 
 def main():
     # 1. Instantiate the builder fluidly
-    table = Vistab(style="round2", padding=2)
+    table = Vistab(style="round-header", padding=2)
     
     # 2. Add properties organically mapped
     table.set_title("Vistab Basic Demonstration")

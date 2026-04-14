@@ -50,7 +50,8 @@ The CLI lets you manage data layout, spacing, and wrapper constraints via standa
 
 ### 4. Aesthetics & Themes
 - **`-t, --theme`**: Apply predefined dynamic Zebra-Striping matrix algorithms (`ocean-cols`, `forest`).
-- **`-s, --style`**: Modify the table border characters (`light`, `round2`, `markdown`).
+- **`-s, --style`**: Modify the table border characters (`light`, `round-header`, `markdown`).
+- **`--style-def`**: Override standard styles using an explicit 15 or 4-character string configuring exact structural boundaries (e.g., `--style-def "═║╔╗╚╝╠╣╦╩╬═╠╣╬"`). To get a feel for which characters are used to draw which borders, try `vistab tests/data/test_5x11.csv --style-def "ABCDEFGHIJKLMNO"` or `vistab tests/data/test_5x11.csv --style-def "ABCD"`.
 - **`-p, --padding`**: Expand the internal whitespace padding of cells by a standard integer.
 - **`--title`**: Pass a title to center above the table header.
 - **`--no-header`**: Ignore header styling logic and render the first dataset row as plain data.

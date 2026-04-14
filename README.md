@@ -2,7 +2,7 @@
 
 # vistab
 
-`vistab` is a lightweight Python module for creating beautiful text-based ASCII/Unicode tables. It comes out-of-the-box with support for fluid terminal formatting (ANSI escape sequences), coordinate-based discrete cell styling, and guarantees consistent string lengths across dense color variations.
+`vistab` is a lightweight Python module for creating beautiful text-based ASCII/Unicode tables. It comes out-of-the-box with support for fluid terminal formatting (ANSI escape sequences), coordinate-based discrete cell styling, and guarantees consistent string lengths across languages and scripts (RTL and LTR) and color variations.
 
 ## Key Features
 
@@ -35,7 +35,7 @@ Getting started with `vistab` is simple. Initialize a `Vistab` instance, set up 
 ```python
 from vistab import Vistab
 
-table = Vistab(style="round2", padding=1)
+table = Vistab(style="round-header", padding=1)
 # Left, Right, Center alignment
 table.set_cols_align(["l", "r", "c"])
 # Top, Middle, Bottom vertical alignment
@@ -56,6 +56,14 @@ print(table.draw())
 > **Note on Web Rendering:** We display the raw output below as an image because some package registries (like PyPI) explicitly enforce code-block font stacks (e.g., `Source Code Pro`) that lack glyphs for Unicode Extended Box Drawing characters. When falling back to secondary system fonts for characters like `╭` or `╪`, the physical grid mathematically misaligns. On your local terminal—and on full-featured renderers like GitHub or BitBucket—the actual text output mathematically aligns perfectly!
 
 ![Screenshot: Terminal output displaying a formatted 3-column data matrix. The headers are 'Name', 'Age', and 'Nickname'. The table perfectly encapsulates complex multi-line text blocks across individual cells mapping 'Sarah Jones' directly alongside her age, wrapped inside exactly aligned rounded Unicode border geometries.](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-code-output-01.png)
+
+## Built-in Styles
+
+To view available styles, run:
+```bash
+vistab --demo styles
+```
+![Available Styles](docs/assets/vistab-demo-styles.png)
 
 ## Cookbook Examples
 
@@ -174,7 +182,8 @@ You can view the built-in themes (which you can alter and save as new themes) by
 ```bash
 vistab --demo themes
 ```
-![Available Themes](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-demo-themes.png)
+![Available Themes 1](docs/assets/vistab-demo-themes-01.png)
+![Available Themes 2](docs/assets/vistab-demo-themes-02.png)
 
 ## Custom Themes
 
@@ -199,27 +208,27 @@ EOF
 Running:
 
 ```bash
-vistab ~/test.csv --theme ocean-index
+vistab ~/test.csv --theme ocean-rows-index
 ```
 
 produces:
 
-![Theme ocean-index table example](docs/assets/vistab-theme-ocean-index-example.png)
+![Theme ocean-rows-index table example](docs/assets/vistab-theme-ocean-rows-index-example.png)
 
 You may then change that theme by running:
 ```bash
-vistab ~/test.csv --theme ocean-index --no-hlines \
+vistab ~/test.csv --theme ocean-rows-index --no-hlines \
     --header-bg-color cyan --last-row-bg-color red --last-row-color black \
     --col0-bg-color green
 ```
 Which results in:
 
-![Example of a modified theme](docs/assets/vistab-theme-ocean-index-example-modified.png)
+![Example of a modified theme](docs/assets/vistab-theme-ocean-rows-index-example-modified.png)
 
 To see how to generate that specific output using code, you can run:
 
 ```bash
-vistab ~/test.csv --theme ocean-index --no-hlines \
+vistab ~/test.csv --theme ocean-rows-index --no-hlines \
     --header-bg-color cyan --last-row-bg-color red --last-row-color black \
     --col0-bg-color green --show-code
 ```
@@ -228,7 +237,7 @@ Which will output the code you need to generate that table look and feel:
 import vistab
 
 custom_theme = {
-    "style": "round2",
+    "style": "round-header",
     "decorations": 11,
     "header": {
         "fg": "bright_white",
@@ -267,7 +276,7 @@ print(table.draw())
 
 OR you can save it for later use using the `--save-theme` flag:
 ```bash
-vistab ~/test.csv --theme ocean-index --no-hlines \
+vistab ~/test.csv --theme ocean-rows-index --no-hlines \
     --header-bg-color cyan --last-row-bg-color red --last-row-color black \
     --col0-bg-color green --save-theme my_custom_theme
 ```
@@ -288,13 +297,6 @@ table = vistab.Vistab().apply_theme("my_custom_theme")
 # ... map inputs cleanly and execute drawing natively
 print(table.draw())
 ```
-## Styles
-
-To view available styles, run:
-```bash
-vistab --demo styles
-```
-![Available Styles](docs/assets/vistab-demo-styles.png)
 
 ## Discovering Output Colors (CLI)
 
@@ -304,7 +306,7 @@ You can view the palette directly on the console by executing:
 ```bash
 vistab --demo colors
 ```
-![Defined Colors](docs/assets/vistab-C-defined-colors.png)
+![Defined Colors](docs/assets/vistab-demo-colors.png)
 
 ## ANSI Color Layout Support
 
@@ -312,9 +314,9 @@ A major benchmark advantage of `vistab` is native, invisible terminal styling su
 
 You can view a comprehensive color-wrapping conformance test demonstrating dynamic alignment across complex CJK blocks by executing:
 ```bash
-vistab -T
+vistab --demo capabilities
 ```
-![Test Output](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-T-test-output.png)
+![Test Output](docs/assets/vistab-demo-capabilities.png)
 
 ## Advanced Formatting (Datatypes)
 

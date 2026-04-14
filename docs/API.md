@@ -7,7 +7,7 @@
 ```python
 table = (Vistab()
          .set_title("System Logs")
-         .set_style("round2")
+         .set_style("round-header")
          .bold_header()
          .set_max_rows(10))
 ```
