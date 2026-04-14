@@ -1,6 +1,6 @@
 [README](../README.md) | [API](API.md) | [CLI](CLI.md) | [SPEC](../FUNCTIONAL_SPEC.md) | [CHANGELOG](../CHANGELOG.md)
 
-# Vistab API Reference (v1.1.0)
+# Vistab API Reference (v1.1.1)
 
 `Vistab` uses a **fluent API**. Almost all manipulation and styling methods return the instance itself (`self`), allowing developers to chain operations:
 

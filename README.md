@@ -63,7 +63,7 @@ To view available styles, run:
 ```bash
 vistab --demo styles
 ```
-![Available Styles](docs/assets/vistab-demo-styles.png)
+![Available Styles](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-demo-styles.png)
 
 ## Cookbook Examples
 
@@ -182,8 +182,8 @@ You can view the built-in themes (which you can alter and save as new themes) by
 ```bash
 vistab --demo themes
 ```
-![Available Themes 1](docs/assets/vistab-demo-themes-01.png)
-![Available Themes 2](docs/assets/vistab-demo-themes-02.png)
+![Available Themes 1](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-demo-themes-01.png)
+![Available Themes 2](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-demo-themes-02.png)
 
 ## Custom Themes
 
@@ -213,7 +213,7 @@ vistab ~/test.csv --theme ocean-rows-index
 
 produces:
 
-![Theme ocean-rows-index table example](docs/assets/vistab-theme-ocean-rows-index-example.png)
+![Theme ocean-rows-index table example](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-theme-ocean-rows-index-example.png)
 
 You may then change that theme by running:
 ```bash
@@ -223,7 +223,7 @@ vistab ~/test.csv --theme ocean-rows-index --no-hlines \
 ```
 Which results in:
 
-![Example of a modified theme](docs/assets/vistab-theme-ocean-rows-index-example-modified.png)
+![Example of a modified theme](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-theme-ocean-rows-index-example-modified.png)
 
 To see how to generate that specific output using code, you can run:
 
@@ -306,7 +306,7 @@ You can view the palette directly on the console by executing:
 ```bash
 vistab --demo colors
 ```
-![Defined Colors](docs/assets/vistab-demo-colors.png)
+![Defined Colors](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-demo-colors.png)
 
 ## ANSI Color Layout Support
 
@@ -316,7 +316,7 @@ You can view a comprehensive color-wrapping conformance test demonstrating dynam
 ```bash
 vistab --demo capabilities
 ```
-![Test Output](docs/assets/vistab-demo-capabilities.png)
+![Test Output](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-demo-capabilities.png)
 
 ## Advanced Formatting (Datatypes)
 

@@ -7,6 +7,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), 
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-04-13
+
+### Fixed
+- Replaced relative documentation reference links mapping to `/docs/assets/` in `README.md` natively bypassing PyPI upload image resolution drops by forcing exact GitHub URIs.
+- Reduced `pyproject.toml` dependency injection bounds limiting generic auto-discovery to build cleanly within PyPI constraints without deprecation warnings.
+
 ## [1.1.0] - 2026-04-10
 
 ### Added
