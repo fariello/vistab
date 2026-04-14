@@ -10,8 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.1] - 2026-04-13
 
 ### Fixed
-- Replaced relative documentation reference links mapping to `/docs/assets/` in `README.md` natively bypassing PyPI upload image resolution drops by forcing exact GitHub URIs.
-- Reduced `pyproject.toml` dependency injection bounds limiting generic auto-discovery to build cleanly within PyPI constraints without deprecation warnings.
+- Changed relative image links in `README.md` to absolute URLs to prevent broken images on PyPI.
+- Pinned `setuptools` build dependency to `<69.0` in `pyproject.toml` to resolve metadata parsing errors during PyPI upload.
 
 ## [1.1.0] - 2026-04-10
 
