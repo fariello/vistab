@@ -10,11 +10,11 @@ authors = [
     { name = "Gabriele Fariello", email = "gfariello@fariel.com" }
 ]
 readme = "README.md"
-license = { file = "LICENSE" }
+
+license = "BSD-3-Clause"
 requires-python = ">=3.7"
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
 ]
 dependencies = [
