@@ -26,5 +26,5 @@ custom_theme = {
 
 table = vistab.Vistab().apply_theme(custom_theme)
 
-# ... map inputs cleanly and execute drawing natively
+# ... map inputs and execute drawing
 print(table.draw())

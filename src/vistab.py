@@ -60,9 +60,17 @@ Result:
 import os
 import sys
 
-# Ensure Windows legacy cmd.exe supports ANSI formatting naturally
+# Ensure Windows legacy cmd.exe supports ANSI formatting
 if os.name == 'nt':
-    os.system("")
+    try:
+        import ctypes
+        kernel32 = ctypes.windll.kernel32
+        handle = kernel32.GetStdHandle(-11)
+        mode = ctypes.c_ulong()
+        kernel32.GetConsoleMode(handle, ctypes.byref(mode))
+        kernel32.SetConsoleMode(handle, mode.value | 0x0004)
+    except Exception:
+        pass
 
 from typing import Union
 
@@ -3229,10 +3237,10 @@ def main():
         except csv.Error:
             reader = csv.reader(peek_stream)
 
-        is_streaming = args.stream or (source_type == "stdin")
-        if getattr(args, 'sort_by', None) is not None:
-            # Caveat Emptor boundary: Implicit streaming is bypassed globally explicitly ensuring matrix loads physically into RAM for proper sort evaluations.
-            is_streaming = False
+        is_streaming = getattr(args, 'stream', False) or (source_type == "stdin")
+        if is_streaming and getattr(args, 'sort_by', None) is not None:
+            print("[\033[1;31mERROR\033[0m] Cannot use --sort-by with a stream. Sorting requires loading the full dataset into physical memory.", file=sys.stderr)
+            sys.exit(1)
 
         rows = None
 
@@ -3303,11 +3311,11 @@ def main():
                 string_array = args.col_widths.split(",")
                 table.set_cols_width(string_array)
 
-            # Dynamically apply title logic cleanly
+            # Apply title logic
             if args.title:
                 table.set_title(args.title)
             elif len(target_files) > 1 and source_type == "file":
-                table.set_title(f"[ {source_name} ]") # Add implicit filename title smoothly mapping arrays natively
+                table.set_title(f"[ {source_name} ]") # Add implicit filename title
 
             if args.precision is not None:
                 table.set_precision(args.precision)
@@ -3315,7 +3323,7 @@ def main():
             if args.theme:
                 table.apply_theme(args.theme)
 
-                # Ensure explicit command-line style or padding flag overrides theme defaults natively
+                # Ensure explicit command-line style or padding overrides theme defaults
                 if "-s" in sys.argv or "--style" in sys.argv:
                     table.set_style(args.style)
                 if "-p" in sys.argv or "--padding" in sys.argv:
@@ -3324,7 +3332,7 @@ def main():
             if getattr(args, 'sort_by', None) is not None:
                 table.sort_by(args.sort_by, reverse=getattr(args, 'sort_reverse', False))
 
-            # Native helper to seamlessly map CLI string states to API logic dropping keys explicitly if "none"
+            # Helper to map CLI string states to API logic, dropping keys if "none"
             def _apply_clr(style_dict, arg_fg, arg_bg):
                 if arg_fg:
                     if arg_fg.lower() == "none": style_dict.pop("fg", None)
@@ -3372,7 +3380,7 @@ def main():
                 if 1 not in table._alt_col_styles: table._alt_col_styles[1] = {}
                 _apply_clr(table._alt_col_styles[1], clr_oc_f, clr_oc_b)
 
-            # Evaluate save-theme and show-code intercept logic cleanly referencing active state
+            # Evaluate save-theme and show-code intercept blocks
             if getattr(args, 'save_theme', None) or getattr(args, 'show_code', False):
                 if is_streaming:
                     raise ValueError("Cannot extract metadata while memoryless streaming. Please pass a standard file path.")
@@ -3409,14 +3417,19 @@ def main():
                     compiled_theme["alt_cols"] = [_rev(table._alt_col_styles[0]), _rev(table._alt_col_styles[1])]
 
                 if getattr(args, 'save_theme', None):
+                    import tempfile
                     os.makedirs(config_dir, exist_ok=True)
-                    if not os.path.exists(themes_file):
-                        with open(themes_file, "w") as f: json.dump({}, f)
                     try:
                         with open(themes_file, "r") as f: tdb = json.load(f)
                     except Exception: tdb = {}
+                    
                     tdb[args.save_theme] = compiled_theme
-                    with open(themes_file, "w", encoding="utf8") as f: json.dump(tdb, f, indent=4)
+                    
+                    fd, temp_path = tempfile.mkstemp(dir=config_dir, suffix=".json")
+                    with os.fdopen(fd, "w", encoding="utf8") as f:
+                        json.dump(tdb, f, indent=4)
+                    
+                    os.replace(temp_path, themes_file)
                     print(f"[\033[32mSUCCESS\033[0m] Saved layout globally as '{args.save_theme}' in {themes_file}")
 
                 if getattr(args, 'show_code', False):
@@ -3445,7 +3458,7 @@ def main():
                         if getattr(args, 'max_rows', 0) > 0: print(f"table.set_max_rows({args.max_rows})")
                         if getattr(args, 'max_cols', 0) > 0: print(f"table.set_max_cols({args.max_cols})")
 
-                    print("\n# ... map inputs cleanly and execute drawing natively")
+                    print("\n# ... map inputs and execute drawing")
                     print("print(table.draw())")
 
                 sys.exit(0)

@@ -1,9 +1,1 @@
-┌────┬───────┐
-│ ID │ Score │
-├────┼───────┤
-│ 10 │    99 │
-├────┼───────┤
-│ 12 │    45 │
-├────┼───────┤
-│ 11 │   100 │
-└────┴───────┘
+[[1;31mERROR[0m] Cannot use --sort-by with a stream. Sorting requires loading the full dataset into physical memory.
