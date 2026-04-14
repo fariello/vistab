@@ -121,7 +121,7 @@ table.bold_header()
 
 `vistab` supports a fluent, declarative API to inject background colors, foreground colors, and text styles (like bolding and underlining) targeting specific grids—ranging from individual cells, whole rows, columns, headers, or borders.
 
-![Styling Demo](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-D-styling-demo.png)
+![Styling Demo](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-demo-anatomy.png)
 
 ## Coordinate-Based Word Wrapping (Nested Tables)
 
