@@ -4,59 +4,78 @@
 
 This specification outlines the deterministic constraints, rendering flows, and API invariants governing the `Vistab` library. Any additions or modifications to the core engine must preserve backward compatibility with these definitions.
 
-## 1. Core Principles
+## 1. Purpose and Scope
+Vistab is a lightweight Python library and command-line interface (CLI) tool designed for rendering structured text-based data tables in the terminal. It provides a programmatic, coordinate-based API for styling cell geometries, and it includes robust support for integer-precise ANSI escape sequence rendering. Its scope is strictly bounded to terminal text formatting, relying heavily on native standard library components.
 
-- **Lightweight Native Core**: `Vistab` relies on the standard Python library with `wcwidth` calculating explicit text padding limits. Complex external components (e.g., `cjkwrap` for Asian characters) remain optional `[cjk]` extras.
-- **Fluent Determinism**: The API state executes serially. Re-running `table.draw()` sequentially with identical datasets and unmodified object state must mathematically result in identical string output bytes.
-- **Strict Byte-Sizing**: ANSI escape sequences (colors, text styling) are treated as "invisible" string dimensions during cell boundary width logic calculations.
+## 2. Core Concepts and Terminology
+*   **Vistab**: The core class object that tracks state, applying rendering decorators iteratively across a grid.
+*   **Grid**: The two-dimensional internal array of nested rows and columns representing the physical table structure.
+*   **Cell**: The specific string boundary intersecting a single row and column.
+*   **Theme**: A persistent configuration dictionary modifying border shapes and cell attributes uniformly across the Grid.
+*   **ANSI Sanitization**: The internal mechanism (`sanitize_ansi`) that isolates and strips destructive cursor-manipulating ANSI sequences to prevent terminal display hijacking.
 
-## 2. Component Pipeline Constraints
+## 3. Supported Workflows and Use Cases
+Vistab supports three primary operational workflows:
+1.  **Programmatic Object Instantiation (`from vistab import Vistab`)**: Developers can build static tables inside Python natively using `add_rows()`.
+2.  **Sequential File Evaluation (`vistab data1.csv data2.csv`)**: The CLI can iterate over direct physical file paths sequentially.
+3.  **UNIX UNIX Pipeline Aggregations (`cat file.csv | vistab`)**: The CLI intercepts STDIN streams, feeding them through an internal CSV sniffer logic.
 
-### 2.1 Inputs (STDIN & Parsing)
+## 4. Public API and Major Internal Responsibilities
+The architecture is separated into the execution loop logic and the physical programmatic boundary.
 
-- **Datasets:** The backend `Vistab.add_rows` expects standard Python iterables (e.g. `list[list[str/int]]`).
-- **Pipelined Files:** The CLI `vistab file1.csv file2.csv` pipeline implicitly generates multiple iterative tables.
-- **STDIN Pipeline & Generative Streams:** Standard pipe structures (`cat data.csv | vistab`) invoke CSV sniffers evaluating parsing logic dynamically. Bypassing rigid buffer allocations, `Vistab.stream()` directly converts infinite stream outputs, triggering immediate formatting evaluations mapped sequentially safely preventing out-of-memory cascades. Constraints demanding explicit pre-knowledge buffers (like `--sort-by`) natively fallback triggering a Caveat Emptor memory penalty iteratively.
+**Major Public APIs:**
+*   `Vistab(rows, header)`: The primary constructor routing standard lists into the mapping boundaries.
+*   `set_cols_dtype(arrays)`: Handles precise formatting modifications iteratively.
+*   `apply_theme(theme_dict)`: Resolves active dictionary style bindings cleanly across the target variables.
+*   `draw()`: The output loop returning the finalized Unicode strings securely.
+*   `stream()`: Generates lines individually, resolving unbounded data flows dynamically.
 
-### 2.2 Datatype Inference
+**Internal Responsibilities:**
+*   `_process_stream()`: The CLI parser evaluating configuration rules directly against files and standard IO logic.
+*   `_splitit()`: The string manipulator breaking multi-line sentences securely to respect `max_width` limits while masking ANSI character lengths successfully.
 
-The structural formatting loop isolates strings based on target datatypes defined in `set_cols_dtype()`:
-- `"a"` (Auto): Intelligently casts numeric inputs, stripping `.0` from integers.
-- `"f"` (Float): Rounds outputs based on `set_precision(val)`.
-- `"t"` (Text): Restricts parsing mechanics, casting the input entirely as text without numeric evaluation.
-- `"i"` (Int): Casts uniformly, dropping float decimal blocks entirely.
+## 5. CLI Behavior and Supported Command Patterns
+The CLI utilizes `argparse` to decode operations cleanly.
+*   **Styles and Borders**: Controlled by `--style`, `--style-def`.
+*   **Global Execution Flags**: Handled via `--create-config`, `--show-config`, `--save-theme`, and `--show-code`.
+*   **Exit Semantics**: When executing successfully, the tool exits with `0`. If an empty data pipe is transmitted or fatal formatting violations occur, the program exits with code `1` and prints the error matrix cleanly to standard error (`sys.stderr`).
 
-### 2.3 Constraint Wrappers & Jagged Matrix Rules
+## 6. Inputs, Outputs, Side Effects, and Persistence Behavior
+*   **Inputs**: Iterables of iterables (`Iterable[Iterable[Any]]`) strings, floats, ints, or valid file paths.
+*   **Outputs**: Standard output stream buffers emitting UTF-8 Unicode bytes structurally.
+*   **Side Effects**: The CLI execution logic prints directly to STDOUT, triggering direct system terminal buffers.
+*   **Persistence**: Vistab does not establish databases natively except inside strictly categorized user profiles resolving configuration logic: `~/.config/vistab/themes.json` (saved theme states) and `.vistab.toml` (overarching engine defaults).
 
-- **`max_width` (Line Wraps):** Limits the physical terminal table dimensions. Defaults to `0` (disabled). If enabled, strings are automatically sliced to respect the provided width.
-- **`max_cols` / `max_rows`:** Acts explicitly by discarding trailing indices to prevent table matrix bloat.
-- **`on_wrap_conflict`:** Defines routing bounds globally for custom styling boundaries. Permissible settings: `"warn"`, `"error"`, `"clip"`, `"overflow"`.
-- **Jagged Arrays (`on_short`, `on_long`):** Matrix structures bypassing standard rectangle alignments are resolved intelligently. Missing values align using `--on-short` bounds (`pad`, `skip`, `raise`) and overflow bounds map utilizing `--on-long` constraints (`truncate`, `skip`, `raise`). Outlier structural data boundaries correctly isolate formatting rules visually executing highlighted blocks using `--mark-abnormal`.
+## 7. Configuration Sources, Defaults, and Precedence Rules
+Vistab evaluates visual formatting in a strictly defined order of operations, ranked from highest precedence to lowest:
+1.  **Direct CLI Arguments**: Exact variables explicitly designated at runtime execution (e.g., `--style bold`, `--width 80`).
+2.  **Applied Themes**: Layout rules pulled explicitly from the `themes.json` dictionary format.
+3.  **TOML Configurations**: Overriding engine defaults pulled sequentially from local or global hierarchical `.toml` definitions (e.g., `./vistab.toml`, `~/.config/vistab.toml`).
+4.  **Engine Defaults**: Factory fallback constants (e.g., `style="light"`, `padding=1`).
 
-## 3. Formatting and Themes Execution Bounds
+## 8. Data Models, Schemas, and File Formats
+Data processing handles standard structured grids natively:
+*   **Unpacking Modifiers**: API variables evaluating boundaries dynamically accept unwrapped lists or strings (e.g., `["if2e"]`).
+*   **Datatype Schema (`set_cols_dtype`)**: Supports dynamic parsing routing mechanisms:
+    *   `"a"` (Auto): Intelligently casts numeric inputs cleanly, upgrading limits based on integer logic.
+    *   `"f"` (Float) / `"f2"`: Forces round logic using core Python decimals.
+    *   `"t"` (Text): Restricts numerical modifications passing strings unmodified.
+    *   `Callable`: Safely evaluates explicit Python functions via `lambda` variables.
 
-Themes operate as dictionary structures intersecting with the internal rendering loop. 
-User-defined variables passed explicitly via the CLI (like `--align` or `--width`) or specific structural properties like `--style-def` must NEVER be cached to `themes.json` using the `--save-theme` logic, as this breaks layout reusability. Settings targeting visual colors, paddings, decorations, and styles are exclusively categorized as theme architectures.
+## 9. Validation and Error Handling Behavior
+*   **Ragged and Jagged Matrices**: Asymmetric matrices throw a structured `ArraySizeError` when evaluated strictly. However, the system allows resolution routing: `--on-short=pad` automatically fills the bounds, and `--on-long=truncate` clips them to map the grids predictably.
+*   **File Handling**: Attempting to decode unknown CSV dialects triggers the fallback Sniffer rules without throwing fatal errors. 
 
-### 3.1 Global `themes.json` Schema
+## 10. Important Edge Cases and Boundary Conditions
+*   **Zero-Width Boundaries**: If `max_width` formatting restrictions establish geometries too small to physically render, the `_draw_horizontal` string execution loop intercepts the exception and throws a generic `ValueError`.
+*   **Contiguous Words**: Extremely long words that break standard layout spacing force internal text wrapping constraints. This process respects ANSI-safe string lengths.
 
-When users execute `--save-theme`, configurations map directly into `~/.config/vistab/themes.json`. The dictionary validates these strictly structured keys:
+## 11. Assumptions, Limitations, and Non-Goals
+*   **Caveat Emptor Memory Fallback**: Vistab's `.stream()` routine actively yields memoryless arrays for immediate formatting. However, operations executing grouping restrictions (e.g., `--sort-by`) require allocating the total payload matrix into physical memory to execute sorting.
+*   **Non-Goal**: The library avoids handling graphical user interfaces (GUIs), focusing strictly on terminal text execution.
 
-1. **Global Modifiers**:
-   - `style`: (str) Frame mapping (`light`, `bold`, `markdown`).
-   - `padding`: (int) Numeric horizontal offset spacing.
-   - `decorations`: (int) Internal structural bitmask limits.
-2. **Global Architecture Targets**:
-   - `table`: Applies default background washes globally across all table coordinates.
-   - `border`: Applies colors to the exterior and interior bounding lines.
-   - `header`: Applies specific foreground and background targets to the header block.
-3. **Array Component Targets**:
-   - `row_X`, `col_X`: Targets integers explicitly. E.g. `col_0` overrides the first column.
-   - `row_-1`, `col_-1`: Resolves automatically to the dynamic bottom row or final rightmost column.
-4. **Color Syntax Definitions**:
-   - `fg`: Fore-ground text mappings (e.g., `bright_cyan`).
-   - `bg`: Background terminal cell layouts (e.g., `magenta`).
-   - `bold` / `italic` / `underline` / `dim`: Boolean definitions activating specific terminal rendering escapes.
+## 12. Security, Privacy, and Safety Considerations
+Vistab incorporates an internal `sanitize_ansi` routine. This mechanism protects terminal layout integrity by stripping positional cursor manipulation escapes, preventing potential display hijacking.
 
----
-[README](README.md) | [API](docs/API.md) | [CLI](docs/CLI.md) | [SPEC](FUNCTIONAL_SPEC.md) | [CHANGELOG](CHANGELOG.md)
+## 13. Relationships and Interactions Among Major Components
+The interaction between components is linear. The user supplies input parameters and streams to the `_process_stream` CLI loop. These streams are evaluated by the `csv.Sniffer` dialect logic. The resulting data arrays are formatted against the hierarchical configurations, instantiating the core `Vistab` execution engine to draw the final output bytes.
