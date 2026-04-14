@@ -7,7 +7,7 @@ This example demonstrates constructing a simple standard formatting layout manua
 import sys
 import os
 
-# Ensure we map the local development src tree automatically natively safely!
+# Ensure we map the local development src tree automatically!
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 from vistab import Vistab
 
@@ -29,9 +29,9 @@ def main():
     
     # 4. Provide specific visual aesthetics structurally securely
     table.bold_header()
-    table.color_row(-1, fg="red") # Warn the last row explicitly natively
+    table.color_row(-1, fg="red") # Warn the last row explicitly
     
-    # 5. Execute outputs directly securely cleanly flawlessly!
+    # 5. Execute outputs
     print(table.draw())
 
 if __name__ == "__main__":

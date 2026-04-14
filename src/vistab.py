@@ -1006,7 +1006,7 @@ class Vistab:
         self._sanitize_ansi = True
         self.on_long_row = "truncate"
         self._metrics = {"padded": 0, "truncated": 0, "skipped": 0}
-        self._abnormal_style = None  # Tuple of (fg, bg) injected directly into flawed row lines natively cleanly.
+        self._abnormal_style = None  # Tuple of (fg, bg) injected directly into flawed row lines.
         self._sort_col = None
         self._sort_reverse = False
         return self
@@ -1937,7 +1937,7 @@ class Vistab:
                 if hasattr(self, cached_prop):
                     delattr(self, cached_prop)
 
-        # Apply cell transformations sequentially structurally natively on the sample slice
+        # Apply cell transformations sequentially on the sample slice
         processed_rows = []
         for row in self._rows:
             cells = []
@@ -2014,7 +2014,7 @@ class Vistab:
                         yield self._hline(location=Vistab.MIDDLE)
                     prev_row, is_abn = next_row, next_abn
                 except StopIteration:
-                    # We are at the final row explicitly cleanly
+                    # We are at the final row
                     yield self._draw_line(prev_row, row_idx=drawn_rows-1, is_abnormal=is_abn)
                     break
         except StopIteration:
@@ -3271,11 +3271,11 @@ def main():
             else:
                 table.has_header = False
 
-            # Buffer structurally explicitly if memory fallback mapped
+            # Buffer explicitly if memory fallback mapped
             if rows is not None:
                 table.set_rows(rows, header=not args.no_header)
 
-            # Apply custom decorations cleanly and naturally natively inheriting table style boundaries
+            # Apply custom decorations inheriting table style boundaries
             deco = table._deco
             if args.no_borders:
                 deco &= ~Vistab.BORDER

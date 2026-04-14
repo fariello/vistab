@@ -89,21 +89,21 @@ table.set_max_rows(10).set_max_cols(5)
 
 ### 3. Data Formatting & Precision
 
-You can seamlessly lock structural data evaluations dynamically mapping column overrides:
+You can apply data overrides directly to lock precision across specific columns:
 ```python
-# Globally establish floats cleanly evaluated down to precisely two digits
+# Force all floats to evaluate to precisely two digits
 table.set_precision(2)
 
-# Pass formatting arrays coercing columns sequentially! 
+# Pass formatting arrays coercing columns sequentially
 # a=auto, t=text, i=int, f=float, e=sci
 table.set_cols_dtype(["a", "t", "f", "i"])
 
-# You can even bypass global precision dynamically evaluating trailing overrides logically!
-# Here, col 2 specifically maps `f4` (float + precision 4 digits) explicitly
+# Bypass the global precision using inline modifiers
+# Here, col 2 specifically maps `f4` (float + precision 4 digits)
 table.set_cols_dtype("a,t,f4,i")
 ```
 
-When evaluated, the `a` (automatic) datatype natively iterates columns intelligently generating format deductions cascading iteratively (`scientific` -> `float` -> `integer`), eliminating alignment jaggedness.
+When evaluated, the `a` (automatic) datatype parses columns by inferring numeric types (`scientific` -> `float` -> `integer`), creating uniform alignment.
 
 ### 4. Shorthand Styling & Native Formatting
 
@@ -336,6 +336,11 @@ table.add_rows([
     ["gamma", 2.718, 2e-3, 56.8, .0000000000128]
 ])
 ```
+
+## Limitations & Known Gaps
+
+1. **Sorting vs. Streaming**: Vistab's `--stream` capability processes inputs infinitely, rendering data row-by-row on the fly. However, attempting to sort the stream (`--sort-by`) requires the engine to cache the entire dataset in physical memory. Streaming extremely large files combined with `--sort-by` will trigger an `Out of Memory` event.
+2. **Terminal Boundaries**: The `max_width` string constraint wraps data accurately according to integer text lengths. If structural tables are placed into boundaries too thin to support physical text cells (e.g., width=2), the engine will explicitly throw a `ValueError` rather than attempting to print physically broken graphics.
 
 ## Detailed API Reference
 

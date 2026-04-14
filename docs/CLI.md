@@ -33,20 +33,20 @@ The CLI lets you manage data layout, spacing, and wrapper constraints via standa
 *Provide a single character sequence to evaluate columns chronologically.*
 - **`-a, --align`**: Target horizontal alignments (`l=left`, `c=center`, `r=right`). Example: `-a lrc`
 - **`--valign`**: Target vertical alignments (`t=top`, `m=middle`, `b=bottom`). Example: `--valign ttb`
-- **`--dtype`**: Force datatypes ensuring uniform structural outputs correctly natively. 
+- **`--dtype`**: Force datatypes to ensure uniform output.
    * **Categories:** `a=auto`, `t=text`, `f=float`, `i=int`, `e=scientific`.
-   * **Auto Inference (`a`)**: Safely enforces uniform cascades explicitly resolving float configurations across unified columns iteratively (`scientific -> float -> integer`).
-   * **Inline Precisions (`f2`, `e5`)**: Pass exact numeric overlays dynamically attached directly parsing locally without arrays. Example: `--dtype "i,f2,e4"`
+   * **Auto Inference (`a`)**: Applies uniform cascades resolving floating point formatting across unified columns.
+   * **Inline Precisions (`f2`, `e5`)**: Apply exact numeric overlays directly without arrays. Example: `--dtype "i,f2,e4"`
 
 ### 3. Data Pipelines & Streaming
-- **`--stream`**: Bypasses absolute array structures printing mapped iterations continuously (infinite STDIN).
-- **`--stream-probe`**: Scans the first N rows structurally aligning the continuous widths dynamically (default: 50).
-- **`--sort-by INDEX`**: Reorder arrays logically executing numeric or string evaluation bounds.
-- **`--sort-reverse`**: Execute descending logic correctly mapped off `--sort-by`.
-- **`--csv-dialect NAME`**: Enforce native Python CSV sniff logic directly parsing structures cleanly.
-- **`--on-short ACTION`**: Direct boundary routing padding irregular CSV columns (`pad`, `skip`, `raise`).
-- **`--on-long ACTION`**: Route overflowing row values seamlessly (`truncate`, `skip`, `raise`).
-- **`--mark-abnormal COLOR`**: Apply rapid visual diagnostics pointing to arrays conflicting explicitly mapped boundaries.
+- **`--stream`**: Bypasses full array buffering, printing mapped iterations continuously.
+- **`--stream-probe`**: Scans the first N rows computationally to align continuous widths upfront (default: 50).
+- **`--sort-by INDEX`**: Sort arrays structurally based on a specified row index.
+- **`--sort-reverse`**: Flip sorting logic explicitly mapped off `--sort-by`.
+- **`--csv-dialect NAME`**: Enforce native Python CSV sniffer logic for specific structure parsing.
+- **`--on-short ACTION`**: Set boundary routing for missing CSV columns (`pad`, `skip`, `raise`).
+- **`--on-long ACTION`**: Route overflowing row alignments securely (`truncate`, `skip`, `raise`).
+- **`--mark-abnormal COLOR`**: Apply rapid visual diagnostics highlighting data arrays that conflict with boundaries.
 
 ### 4. Aesthetics & Themes
 - **`-t, --theme`**: Apply predefined dynamic Zebra-Striping matrix algorithms (`ocean-cols`, `forest`).

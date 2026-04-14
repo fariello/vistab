@@ -164,7 +164,7 @@ class TestVistabRegression(unittest.TestCase):
         self._assert_against_fixture("regression_api_theme_dictionary", out)
 
     def test_cli_exit_bad_theme(self):
-        """Test the structural execution capturing failures gracefully natively routing exit conditions."""
+        """Test the structural execution capturing failures and routing exit conditions."""
         cmd = ["python", str(self.cli_path), "--theme", "completely_fake_theme_name"]
         result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
         
@@ -186,7 +186,7 @@ class TestVistabRegression(unittest.TestCase):
         self._assert_against_fixture("regression_jagged_skip_handling", out)
 
     def test_regression_jagged_raise_pipeline(self):
-        """Assert pipeline error propagates natively gracefully on rigid border grids."""
+        """Assert pipeline error propagates on rigid border grids."""
         raw_csv = "A,B\nC,D,EXTRA\n"
         cmd = ["python", str(self.cli_path), "--on-long", "raise"]
         result = subprocess.run(cmd, input=raw_csv, capture_output=True, text=True, encoding="utf-8")

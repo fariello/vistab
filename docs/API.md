@@ -169,14 +169,14 @@ table.apply_theme({
 ## 7. Operational Properties & Outputs
 
 ### `draw() -> str`
-Computes all styling rules globally, measuring byte boundaries safely processing geometry logic perfectly outputting the final comprehensive multi-line string.
+Computes all styling rules and boundary geometries to output the final multi-line string.
 
 ### Properties
-- `table.has_header` `(bool)`: Programmatically disable header tracking safely without stripping matrix sizes dynamically correctly.
-- `table.on_wrap_conflict` `(str)`: Explicitly defines evaluation behaviors mapping routing bounds safely (`"warn"`, `"error"`, `"clip"`, `"overflow"`).
-- `table.on_short_row` `(str)`: Configures array truncation bounds when incoming data matrices explicitly violate length (`"pad"`, `"skip"`, `"raise"`).
-- `table.on_long_row` `(str)`: Configures jagged bounds handling values that dangerously overflow formatting boundaries (`"truncate"`, `"skip"`, `"raise"`).
-- `table.sanitize_ansi` `(bool)`: Configures destructive behavior intercepts purging broken cursor movements natively safely securing bounds.
+- `table.has_header` `(bool)`: Disable header tracking without stripping matrix sizes.
+- `table.on_wrap_conflict` `(str)`: Defines text-wrapping fallback behaviors (`"warn"`, `"error"`, `"clip"`, `"overflow"`).
+- `table.on_short_row` `(str)`: Configures row truncation rules when incoming data matrices are too short (`"pad"`, `"skip"`, `"raise"`).
+- `table.on_long_row` `(str)`: Configures jagged bounds handling values that exceed dimension boundaries (`"truncate"`, `"skip"`, `"raise"`).
+- `table.sanitize_ansi` `(bool)`: When enabled, strips dangerous cursor manipulation sequences.
 
 ---
 [README](../README.md) | [API](API.md) | [CLI](CLI.md) | [SPEC](../FUNCTIONAL_SPEC.md) | [CHANGELOG](../CHANGELOG.md)

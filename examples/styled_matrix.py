@@ -29,10 +29,10 @@ def main():
         "table": {"bg": "bright_black"}, # Global dark mode background
         "header": {"fg": "black", "bg": "white"}, # High contrast header
         "col_0": {"fg": "cyan"}, # Standard index columns
-        "row_-1": {"fg": "red", "italic": True} # Dynamic explicitly styled failure logic
+        "row_-1": {"fg": "red", "italic": True} # Dynamic styled failure logic
     }
     
-    # Pushing mappings securely natively dynamically explicitly flawlessly
+    # Pushing mappings
     table.apply_theme(custom_theme)
     print(table.draw())
 

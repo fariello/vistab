@@ -46,8 +46,8 @@ class TestVistab(unittest.TestCase):
                 out = table.draw()
                 self.assertIsNotNone(out)
 
-    def test_dimensions_limit(self):
-        """Test limiting tables dynamically explicitly enforcing dimensions."""
+    def test_max_cols(self):
+        """Test limiting tables explicitly enforcing column dimensions."""
         table = Vistab(max_width=50)
         table.add_rows([
             ["A", "B", "C", "D", "E"],
@@ -103,7 +103,7 @@ class TestVistab(unittest.TestCase):
         self.assertNotIn("101.000", out)
         
     def test_inline_precision_overrides(self):
-        """Test natively mapping decimals per column individually explicitly escaping global default definitions."""
+        """Test natively mapping decimals per column individually."""
         table = Vistab(style="none")
         table.set_precision(1) # Base global default structurally
         table.set_cols_dtype("if2e4a") # Implicit parsing string cleanly!

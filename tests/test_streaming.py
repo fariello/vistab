@@ -29,8 +29,8 @@ class TestVistabStreamAndJagged(unittest.TestCase):
         # Ensure row 2 padded cleanly. Since it has 3 structural cells, drawing doesn't fail.
         self.assertTrue(bool(out))
         
-    def test_jagged_arrays_raise(self):
-        """Test strict grid mappings raising structurally cleanly."""
+    def test_strict_grid_error(self):
+        """Test strict grid mappings raising."""
         table = Vistab(header=False)
         table.has_header = False
         table.on_short_row = "raise"
