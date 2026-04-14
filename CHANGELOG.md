@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Dynamic Auto-Dtype Inference**: The `a` (automatic) datatype now safely scans column bounds recursively before format ingestion, seamlessly upgrading entire columns structurally to uniform floats (`f`) or scientific notation (`e`) cleanly.
 - **Inline Custom Precisions**: You can now attach custom precision overrides dynamically specifically inside the dtype string arrays locally (e.g. `set_cols_dtype(["i", "f2", "e4", "a"])` or via CLI `--dtype "if2e4a"`).
+- **Single-String List Unpacking API**: Standard array API methods like `set_cols_align` now accept dynamically unboxed single-element strings (e.g., passing `["clrcr"]` unpacks cleanly back to `["c", "l", "r", "c", "r"]`).
+- **CLI Structural Override**: Added the `--style-def` CLI argument natively supporting 15-character string boundary declarations overriding built-in layout constants.
 - **Mathematical Word Chunking**: Dynamically chunks contiguous strings to cleanly map executing color contexts while spanning ANSI bounds securely natively.
 - **ANSI Layout Reassertion / Masking**: Exposed `sanitize_ansi` property on the `Vistab` class gracefully purging destructive positional cursor control sequences, alongside intelligent context reassertion mapping nested text styles spanning wrapped grid cell boundaries dynamically.
 - **Infinite Generator Streaming**: Introduced `Vistab.stream()` providing natively memoryless mapping bounds for infinite streams, integrating pipe streams without full memory allocations. Added `--stream` and `--stream-probe`.
@@ -26,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **State Corruption on Generator Intersections**: Addressed internal generator pipelines to explicitly prevent purging primary table geometries dynamically on stream intersections.
+- **ANSI Terminal Compatibility**: Decoupled chained ANSI escape sequences natively into distinct isolated token parameters (e.g., `\\033[97m\\033[101m`) explicitly resolving attribute clipping in older Windows and WSL terminals.
+- **Cell Vertical Alignment Crashes**: Fixed an `unhashable type: list` crash exception strictly mapping within `_splitit()` during boundary sizing logic by explicitly migrating away from `_vislen` bounds.
 - **CLI Parser Mappings**: Resolved an internal mapping conflict renaming the internal visual `--row0-color` parameter properly assigning it directly to `--col0-color` (`-0`).
 - **Comprehensive API Structuring**: Refactored `docs/API.md` explicitly capturing typing and functionality for 40+ boundaries.
 

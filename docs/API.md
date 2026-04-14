@@ -91,13 +91,13 @@ Customizes granular interior lines passing strings targeting intersections.
 Forces column geometry adhering strictly mapping integer widths restricting variable expansions.
 
 ### `set_cols_align(array: Union[str, List[str]])`
-Evaluates explicit mappings resolving horizontal cell justification (`'l'=left`, `'c'=center`, `'r'=right`).
+Evaluates explicit mappings resolving horizontal cell justification (`'l'=left`, `'c'=center`, `'r'=right`). Can natively unpack single-string lists containing the entire sequence (e.g., `["clrcr"]`).
 
 ### `set_cols_valign(array: Union[str, List[str]])`
-Evaluates positional geometry mapping vertical alignments (`'t'=top`, `'m'=middle`, `'b'=bottom`).
+Evaluates positional geometry mapping vertical alignments (`'t'=top`, `'m'=middle`, `'b'=bottom`). Can natively unpack single-string lists safely (e.g., `["mmbmt"]`).
 
 ### `set_cols_dtype(array: Union[str, List[str]])`
-Applies robust precision formats natively wrapping types safely. 
+Applies robust precision formats natively wrapping types safely. Can natively unpack single-string lists seamlessly (e.g., `["if2e4a"]`). 
 *   **Categories**: `'t'=text`, `'f'=float`, `'i'=int`, `'e'=scientific`, `'I'=comma int`.
 *   **Automatic (`'a'`)**: Natively evaluates column types systematically scaling uniform numeric sequences via internal cascading hierarchy (`scientific -> float -> integer`), bypassing formatting inconsistencies.
 *   **Dynamic Precisions (`'f2'`, `'e4'`)**: Precision overrides structurally integrate directly within dtype arrays (e.g., `["i", "f2", "e4", "a"]`) natively escaping the global baseline decimal configurations.

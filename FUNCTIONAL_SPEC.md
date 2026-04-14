@@ -36,7 +36,7 @@ The structural formatting loop isolates strings based on target datatypes define
 ## 3. Formatting and Themes Execution Bounds
 
 Themes operate as dictionary structures intersecting with the internal rendering loop. 
-User-defined variables passed explicitly via the CLI (like `--align` or `--width`) or specific structural properties must NEVER be cached to `themes.json` using the `--save-theme` logic, as this breaks layout reusability. Settings targeting visual colors, paddings, decorations, and styles are exclusively categorized as theme architectures.
+User-defined variables passed explicitly via the CLI (like `--align` or `--width`) or specific structural properties like `--style-def` must NEVER be cached to `themes.json` using the `--save-theme` logic, as this breaks layout reusability. Settings targeting visual colors, paddings, decorations, and styles are exclusively categorized as theme architectures.
 
 ### 3.1 Global `themes.json` Schema
 
