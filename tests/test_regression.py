@@ -92,8 +92,6 @@ class TestVistabRegression(unittest.TestCase):
         ]
         out = self._run_cli(args)
         self._assert_against_fixture("regression_complex_theme", out)
-        
-
 
     def test_regression_inline_precisions(self):
         """Test inline dtype definitions overriding explicitly globally."""
