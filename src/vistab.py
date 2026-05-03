@@ -710,7 +710,7 @@ class Vistab:
         THEMES[f"{_name}-cols-slim"] = {**_base, "alt_cols": _alt_sequence, "decorations": 3}
         THEMES[f"{_name}-cols-slim-index"] = {**_base, "alt_cols": _alt_sequence, "col_0": _config["col_0"], "decorations": 3}
 
-    def __init__(self, rows: Optional[Iterable[Iterable[Any]]] = None, header: Optional[Iterable[Any]] = None, max_width: int = 0, alignment: Optional[str] = None, style: Optional[str] = None, padding: Optional[int] = None, title: Optional[str] = None, max_rows: int = 0, max_cols: int = 0) -> None:
+    def __init__(self, rows: Optional[Iterable[Iterable[Any]]] = None, header: Optional[Iterable[Any]] = None, max_width: int = 0, alignment: Optional[str] = None, style: Optional[str] = None, padding: Optional[int] = None, title: Optional[str] = None, max_rows: int = 0, max_cols: int = 0, theme: Optional[Union[str, dict]] = None) -> None:
         """
         Initializes a new instance of the Vistab styling rendering class.
 
@@ -756,6 +756,9 @@ class Vistab:
             The alignment of columns. See set_cols_align().
         style : str, optional
             The style of the table. Default is 'light' or whatever is in .config/vistab.toml.
+        theme : Union[str, dict], optional
+            A named theme (e.g. ``"ocean-rows"``) or a custom theme dict applied after all other
+            settings. Equivalent to calling ``set_theme()`` immediately after construction.
         padding : int, optional
             The amount of padding (left and right) for the cells. Default is 1 or whatever is in .config/vistab.toml.
         title : str, optional
@@ -838,6 +841,8 @@ class Vistab:
             self.set_max_rows(max_rows)
         if max_cols > 0:
             self.set_max_cols(max_cols)
+        if theme is not None:
+            self.set_theme(theme)  # Apply high-level color/style theme last so it can override other settings
 
         pass  # for auto-indentation
 
@@ -1211,23 +1216,37 @@ class Vistab:
         self._alt_col_styles[1] = self._compile_style_dict(fg2, bg2, bold=bold, faint=faint, italic=italic, underline=underline, blink=blink, reverse=reverse, strike=strike, **kwargs)
         return self
 
-    def apply_theme(self, theme: Union[str, dict]) -> 'Vistab':
+    def set_theme(self, theme: Union[str, dict]) -> 'Vistab':
         """Apply a predefined high-level color theme over table geometries.
 
-        Vistab provides curated default palettes (e.g. `ocean`, `forest`).
-        You may pass a string to map from `Vistab.THEMES`, or pass a literal active dictionary.
+        Vistab provides curated default palettes (e.g. ``ocean``, ``forest``).
+        You may pass a string to map from ``Vistab.THEMES``, or pass a literal active dictionary.
+
+        Args:
+        -----
+        theme : Union[str, dict]
+            A named theme key (e.g. ``"ocean-rows-index"``) or a custom theme dictionary.
+            Named themes are looked up in ``Vistab.THEMES``.
+
+        Returns:
+        --------
+        Vistab
+            The instance for method chaining.
 
         Example:
         --------
         ```python
+        # Named theme
+        table = Vistab(theme="ocean-rows")
+
+        # Custom theme dict
         custom_theme = {
             "style": "round-header",
             "padding": 2,
             "header": {"fg": "black", "bg": "bright_blue", "bold": True},
             "border": {"fg": "blue"}
         }
-
-        table = Vistab().apply_theme(custom_theme)
+        table = Vistab().set_theme(custom_theme)
         ```
         """
         if isinstance(theme, str):
@@ -1260,6 +1279,12 @@ class Vistab:
             self._alt_col_styles[1] = self._compile_style_dict(**theme["alt_cols"][1])
 
         return self
+
+    def apply_theme(self, theme: Union[str, dict]) -> 'Vistab':
+        """Deprecated alias for :meth:`set_theme`. Use ``set_theme()`` instead."""
+        import warnings
+        warnings.warn("apply_theme() is deprecated and will be removed in a future release. Use set_theme() instead.", DeprecationWarning, stacklevel=2)
+        return self.set_theme(theme)
 
     def set_table_wrap(self, wrap: bool) -> 'Vistab':
         """Set the global wrapping behavior for the table."""
