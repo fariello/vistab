@@ -90,7 +90,7 @@ __all__ = ["Vistab", "ArraySizeError", "StringLengthCalculator"]
 
 __author__ = 'Gabriele Fariello <gfariello@fariel.com>'
 __license__ = 'BSD 3-Clause 2026'
-__version__ = '1.1.2'
+__version__ = '1.1.3'
 __credits__ = """\
 Gabriele Fariello <gfariello@fariel.com>
     - Wrote this module adding robust handling for unicode characters and ANSI escape sequences

@@ -7,6 +7,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), 
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.3] - 2026-05-03
+
+### Added
+- **`theme` constructor parameter**: `Vistab()` now accepts `theme` as a keyword argument (string or dict), applied after all other settings so it can cleanly override `style`, `padding`, etc. set at construction time.
+- **`set_theme()` method**: `apply_theme()` has been renamed to `set_theme()` to match the `set_*` convention used by every other method in the class.
+
+### Deprecated
+- **`apply_theme()`**: The old name still works but emits a `DeprecationWarning`. It will be removed in a future minor release.
+
 ## [1.1.2] - 2026-04-13
 
 ### Fixed
