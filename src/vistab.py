@@ -2957,20 +2957,20 @@ def print_themes_demo():
     t2data = []
     for theme in ["ocean", "forest", "graphite", "orchid", "sunflower"]:
         t2data.append([
-            f"\"{theme}\"\n" + Vistab(tdata).apply_theme(f"{theme}").draw(),
-            f"\"{theme}-index\"\n" + Vistab(tdata).apply_theme(f"{theme}-index").draw(),
-            f"\"{theme}-rows\"\n" + Vistab(tdata).apply_theme(f"{theme}-rows").draw(),
-            f"\"{theme}-rows-index\"\n" + Vistab(tdata).apply_theme(f"{theme}-rows-index").draw(),
-            f"\"{theme}-cols\"\n" + Vistab(tdata).apply_theme(f"{theme}-cols").draw(),
-            f"\"{theme}-cols-index\"\n" + Vistab(tdata).apply_theme(f"{theme}-cols-index").draw()
+            f"\"{theme}\"\n" + Vistab(tdata).set_theme(f"{theme}").draw(),
+            f"\"{theme}-index\"\n" + Vistab(tdata).set_theme(f"{theme}-index").draw(),
+            f"\"{theme}-rows\"\n" + Vistab(tdata).set_theme(f"{theme}-rows").draw(),
+            f"\"{theme}-rows-index\"\n" + Vistab(tdata).set_theme(f"{theme}-rows-index").draw(),
+            f"\"{theme}-cols\"\n" + Vistab(tdata).set_theme(f"{theme}-cols").draw(),
+            f"\"{theme}-cols-index\"\n" + Vistab(tdata).set_theme(f"{theme}-cols-index").draw()
         ])
         t2data.append([
-            f"\"{theme}-slim\"\n" + Vistab(tdata).apply_theme(f"{theme}-slim").draw(),
-            f"\"{theme}-slim-index\"\n" + Vistab(tdata).apply_theme(f"{theme}-slim-index").draw(),
-            f"\"{theme}-rows-slim\"\n" + Vistab(tdata).apply_theme(f"{theme}-rows-slim").draw(),
-            f"\"{theme}-rows-slim-index\"\n" + Vistab(tdata).apply_theme(f"{theme}-rows-slim-index").draw(),
-            f"\"{theme}-cols-slim\"\n" + Vistab(tdata).apply_theme(f"{theme}-cols-slim").draw(),
-            f"\"{theme}-cols-slim-index\"\n" + Vistab(tdata).apply_theme(f"{theme}-cols-slim-index").draw()
+            f"\"{theme}-slim\"\n" + Vistab(tdata).set_theme(f"{theme}-slim").draw(),
+            f"\"{theme}-slim-index\"\n" + Vistab(tdata).set_theme(f"{theme}-slim-index").draw(),
+            f"\"{theme}-rows-slim\"\n" + Vistab(tdata).set_theme(f"{theme}-rows-slim").draw(),
+            f"\"{theme}-rows-slim-index\"\n" + Vistab(tdata).set_theme(f"{theme}-rows-slim-index").draw(),
+            f"\"{theme}-cols-slim\"\n" + Vistab(tdata).set_theme(f"{theme}-cols-slim").draw(),
+            f"\"{theme}-cols-slim-index\"\n" + Vistab(tdata).set_theme(f"{theme}-cols-slim-index").draw()
         ])
 
     demo_tb = Vistab(t2data, header=False, style="light", padding=0)
@@ -3032,6 +3032,7 @@ def main():
     b_help = lambda text: text if show_basic else argparse.SUPPRESS
 
     parser.add_argument("-h", "--help", action="help", default=argparse.SUPPRESS, help=b_help("show this help message and exit"))
+    parser.add_argument("--version", action="version", version=f"vistab {__version__}", help=b_help("show version and exit"))
 
     diag_grp = parser.add_argument_group("Diagnostic & Demo Operations")
     diag_grp.add_argument("--demo", type=str, choices=["styles", "colors", "capabilities", "anatomy", "themes"], help=b_help("Run built-in demonstrations"))
