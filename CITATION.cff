@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below."
+title: "vistab"
+abstract: >-
+  A terminal tool for visualizing and exploring tabular data.
+type: software
+authors:
+  - family-names: "Fariello"
+    given-names: "Gabriele G. R."
+    email: "gfariello@fariel.com"
+repository-code: "https://github.com/fariello/vistab"
+url: "https://github.com/fariello/vistab"
+license: Apache-2.0
+date-released: "2026-07-05"

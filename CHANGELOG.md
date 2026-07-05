@@ -7,6 +7,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), 
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **License changed from BSD-3-Clause to Apache-2.0.** Now licensed under the Apache License 2.0
+  (see `LICENSE` and the new `NOTICE`). Apache-2.0 requires redistributions and derivative works to
+  retain the `NOTICE` file and display its attribution reasonably prominently ("Based on the original
+  vistab by Gabriele G. R. Fariello — https://github.com/fariello/vistab"), and adds an explicit
+  patent grant. Copyright holder normalized to the full legal name **Gabriele G. R. Fariello**.
+
+### Added
+- **`NOTICE`** file with the required Apache-2.0 attribution string; **`CITATION.cff`** added for
+  citation; README gained a License/Attribution/Citation section.
+
 ## [1.1.3] - 2026-05-03
 
 ### Added
