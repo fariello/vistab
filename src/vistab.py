@@ -3350,23 +3350,23 @@ def print_themes_demo():
     t2data = []
     for theme in ["ocean", "forest", "graphite", "orchid", "sunflower"]:
         t2data.append([
-            f"\"{theme}\"\n" + Vistab(tdata).set_theme(f"{theme}").set_padding(0).draw(),
-            f"\"{theme}-index\"\n" + Vistab(tdata).set_theme(f"{theme}-index").set_padding(0).draw(),
-            f"\"{theme}-rows\"\n" + Vistab(tdata).set_theme(f"{theme}-rows").set_padding(0).draw(),
-            f"\"{theme}-rows-index\"\n" + Vistab(tdata).set_theme(f"{theme}-rows-index").set_padding(0).draw(),
-            f"\"{theme}-cols\"\n" + Vistab(tdata).set_theme(f"{theme}-cols").set_padding(0).draw(),
-            f"\"{theme}-cols-index\"\n" + Vistab(tdata).set_theme(f"{theme}-cols-index").set_padding(0).draw()
+            f"{theme}\n" + Vistab(tdata).set_theme(f"{theme}").set_padding(0).draw(),
+            f"{theme}-index\n" + Vistab(tdata).set_theme(f"{theme}-index").set_padding(0).draw(),
+            f"{theme}-rows\n" + Vistab(tdata).set_theme(f"{theme}-rows").set_padding(0).draw(),
+            f"{theme}-rows-index\n" + Vistab(tdata).set_theme(f"{theme}-rows-index").set_padding(0).draw(),
+            f"{theme}-cols\n" + Vistab(tdata).set_theme(f"{theme}-cols").set_padding(0).draw(),
+            f"{theme}-cols-index\n" + Vistab(tdata).set_theme(f"{theme}-cols-index").set_padding(0).draw()
         ])
         t2data.append([
-            f"\"{theme}-slim\"\n" + Vistab(tdata).set_theme(f"{theme}-slim").set_padding(0).draw(),
-            f"\"{theme}-slim-index\"\n" + Vistab(tdata).set_theme(f"{theme}-slim-index").set_padding(0).draw(),
-            f"\"{theme}-rows-slim\"\n" + Vistab(tdata).set_theme(f"{theme}-rows-slim").set_padding(0).draw(),
-            f"\"{theme}-rows-slim-index\"\n" + Vistab(tdata).set_theme(f"{theme}-rows-slim-index").set_padding(0).draw(),
-            f"\"{theme}-cols-slim\"\n" + Vistab(tdata).set_theme(f"{theme}-cols-slim").set_padding(0).draw(),
-            f"\"{theme}-cols-slim-index\"\n" + Vistab(tdata).set_theme(f"{theme}-cols-slim-index").set_padding(0).draw()
+            f"{theme}-slim\n" + Vistab(tdata).set_theme(f"{theme}-slim").set_padding(0).draw(),
+            f"{theme}-slim-index\n" + Vistab(tdata).set_theme(f"{theme}-slim-index").set_padding(0).draw(),
+            f"{theme}-rows-slim\n" + Vistab(tdata).set_theme(f"{theme}-rows-slim").set_padding(0).draw(),
+            f"{theme}-rows-slim-index\n" + Vistab(tdata).set_theme(f"{theme}-rows-slim-index").set_padding(0).draw(),
+            f"{theme}-cols-slim\n" + Vistab(tdata).set_theme(f"{theme}-cols-slim").set_padding(0).draw(),
+            f"{theme}-cols-slim-index\n" + Vistab(tdata).set_theme(f"{theme}-cols-slim-index").set_padding(0).draw()
         ])
 
-    demo_tb = Vistab(t2data, header=False, style="light", padding=0)
+    demo_tb = Vistab(t2data, header=False, style="none", padding=0)
     demo_tb.set_table_wrap(False)
     print(demo_tb.draw())
     print()
