@@ -63,6 +63,7 @@ Severity = impact if left alone; Remediation Risk = Fix-Bar gate. Persona = surf
 | D7 | Low | Low | Novice / SWE | Docstring references deprecated method (= DOC-03) | The `__init__` docstring says it maps into `self.header()` (deprecated); it actually calls `self.set_header()`. | [src/vistab.py:781](file:///home/gfariello/VC/vistab/src/vistab.py) |
 | D8 | Low | Low | SWE | API reference completeness | `docs/API.md` §6 omits `set_theme`; the documented `__init__` signature (line 22) is outdated — the real constructor also accepts `title`, `max_rows`, `max_cols`, `theme` (verified via `inspect.signature`). Users cannot discover those from the doc. | [docs/API.md:22](file:///home/gfariello/VC/vistab/docs/API.md); actual sig in [src/vistab.py:781](file:///home/gfariello/VC/vistab/src/vistab.py) |
 | D9 | Low | Low | Novice | README prose clarity | High-traffic README passages are verbose/aspirational to the point of obscuring the action (e.g. Key Features bullets; "protect logging interfaces elegantly"). Not inaccurate; the documentation lens favors concise/clear. Cap to the highest-traffic sections; do not gold-plate. | [README.md:9-13](file:///home/gfariello/VC/vistab/README.md), [README.md:84-88](file:///home/gfariello/VC/vistab/README.md) |
+| D10 | Medium | Low | SWE / maintainer | Docs describe stale internal data model | Since the colspan work, `table._rows` and `table._header` no longer hold raw strings — they hold `VistabCell` / `VistabPlaceholderCell` objects (with a string-transparent `__str__`). `FUNCTIONAL_SPEC.md` still defines a **Cell** as "The specific string boundary" (line 13) and §8 says nothing about the object wrapping. Client code that inspects/mutates the private `_rows`/`_header` structures directly (or does `isinstance(x, str)` on cells) can break, and the SPEC gives no honest description of the new model. (Surfaced during the post-v1.1.3 break review; corroborated by the parallel Gemini review.) | [FUNCTIONAL_SPEC.md:13](file:///home/gfariello/VC/vistab/FUNCTIONAL_SPEC.md), [FUNCTIONAL_SPEC.md:56-64](file:///home/gfariello/VC/vistab/FUNCTIONAL_SPEC.md); [src/vistab.py:193-213](file:///home/gfariello/VC/vistab/src/vistab.py) |
 
 ## Proposed changes (ordered, validatable)
 
@@ -83,6 +84,7 @@ same pass) so `tests/test_regression.py` never goes red mid-sweep.
 | 8 | D7 | Fix the `__init__` docstring to reference `self.set_header()`. | `src/vistab.py` | Low | Docstring inspection. |
 | 9 | D8 | In `docs/API.md`: correct the `__init__` signature to include `title`, `max_rows`, `max_cols`, `theme`; add `set_theme` to §6; point to `--demo styles` for the live list of style names. | `docs/API.md` | Low | Documented `__init__` signature matches `inspect.signature`; `set_theme` present; all documented method names resolve on `Vistab`. |
 | 10 | D9 | Tighten the README Key Features and the two cookbook intros for clarity (concise, active). No new claims. | `README.md` | Low | Reviewer confirms no new/aspirational claims; length reduced, meaning preserved. |
+| 11 | D10 | Update the **Cell** definition in `FUNCTIONAL_SPEC.md:13` and §8 (Data Models) to state that internal grid entries are `VistabCell`/`VistabPlaceholderCell` objects with a string-transparent `__str__` (so rendering treats them as their value), and that `_rows`/`_header` are private (not a stable API for direct inspection). Add a `CHANGELOG.md` `[Unreleased]` compatibility note: "Internal cell representation changed from raw strings to `VistabCell` objects; public API unaffected, but code touching the private `_rows`/`_header` lists directly should use `str(cell)`." Do **not** promote the internals to public API (KISS). | `FUNCTIONAL_SPEC.md`, `CHANGELOG.md` | Low | SPEC no longer calls a cell only a "string"; CHANGELOG note present; reviewer confirms no claim that private structures are a supported API. |
 
 ## Deferred / out of scope (with reason)
 
@@ -100,6 +102,20 @@ same pass) so `tests/test_regression.py` never goes red mid-sweep.
 
 ## Required tests / validation
 
+- **Concrete acceptance gate — 6 pre-existing failures must go green.** As of this writing
+  (verified against HEAD and confirmed pre-existing at the v1.1.3 baseline), these six
+  regression tests fail **solely** because the deprecated `apply_theme` call at
+  `src/vistab.py:3643` leaks a `DeprecationWarning` line into captured CLI output that no
+  longer matches the gold-masters — the table output itself is correct:
+  `test_regression_cli_save_theme`, `test_regression_cli_show_code`,
+  `test_regression_edge_1xn_no_header`, `test_regression_edge_1xn_with_header`,
+  `test_regression_pipeline_stdin`, `test_regression_theme_override`.
+  After Steps 3-5, **all six must pass** and the full suite must be green.
+- **Test-internal deprecated calls must also be cleared (part of Step 5).** Fixing only the
+  source call at 3643 is **not** sufficient: the tests themselves call `apply_theme`
+  directly at `tests/test_regression.py:162`, `:345`, `:387` (and `tests/test_config.py`),
+  which emit their own warnings. Convert those to `set_theme` (or explicitly assert the
+  deprecation for the one test whose purpose is to verify the alias, if any).
 - **Warnings-as-signal:** `PYTHONPATH=. python -m pytest` **without** `-W ignore` — no
   `DeprecationWarning` from normal execution after Steps 3-5.
 - **CLI smoke:** run every command shown in `docs/CLI.md` and `README.md`
@@ -108,7 +124,8 @@ same pass) so `tests/test_regression.py` never goes red mid-sweep.
 - **Regression:** the `regression_cli_show_code` gold-master is regenerated in lockstep with
   Steps 3-4 so `tests/test_regression.py` stays green throughout.
 - **Doc/code parity:** documented `__init__` signature matches `inspect.signature`; all
-  method names in `docs/API.md` resolve on `Vistab`.
+  method names in `docs/API.md` resolve on `Vistab`; the SPEC's Cell/Data-Model text
+  matches the actual `VistabCell` representation (D10/Step 11).
 - **Visual check:** run `examples/styled_matrix.py` after the theme swap.
 
 ## Spec / documentation sync
@@ -116,7 +133,9 @@ same pass) so `tests/test_regression.py` never goes red mid-sweep.
 This plan **is** the doc sync. `FUNCTIONAL_SPEC.md:29` currently names `apply_theme`; Step 5
 updates it. If `apply_theme` disappears from all shipped code paths (only the deprecated
 public method remains), add a one-line CHANGELOG `[Unreleased]` note (behavior-neutral but
-user-visible in `--show-code`).
+user-visible in `--show-code`). Step 11 additionally syncs the SPEC's Cell/Data-Model
+description and adds a CHANGELOG compatibility note for the `VistabCell` internal
+representation change (D10).
 
 ## Open questions
 
