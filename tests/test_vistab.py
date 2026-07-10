@@ -172,5 +172,97 @@ class TestVistab(unittest.TestCase):
         self.assertIn("ABC", out)
         self.assertIn("[[-3.1]]", out)
 
+class TestVistabColspan(unittest.TestCase):
+
+    def test_colspan_ingestion_api(self):
+        """Test ColSpan instantiation and data model ingestion in headers and rows."""
+        from vistab import ColSpan
+        table = Vistab()
+        table.set_header(["Name", ColSpan("Details", 2)])
+        table.add_row(["Alice", ColSpan("Age: 25, City: Paris", 2)])
+        
+        # Verify sizes and objects
+        self.assertEqual(len(table._header), 3)
+        self.assertEqual(table._header[1].value, "Details")
+        self.assertEqual(table._header[1].colspan, 2)
+        self.assertTrue(table._header[2].is_placeholder)
+        self.assertEqual(table._header[2].source_cell, table._header[1])
+
+        self.assertEqual(len(table._rows[0]), 3)
+        self.assertEqual(table._rows[0][1].value, "Age: 25, City: Paris")
+        self.assertEqual(table._rows[0][1].colspan, 2)
+        self.assertTrue(table._rows[0][2].is_placeholder)
+        self.assertEqual(table._rows[0][2].source_cell, table._rows[0][1])
+
+    def test_set_span_api(self):
+        """Test set_header_span and set_cell_span post-ingestion mutators."""
+        table = Vistab()
+        table.set_header(["Col1", "Col2", "Col3"])
+        table.add_row(["Data1", "Data2", "Data3"])
+
+        table.set_header_span(0, 3)
+        table.set_cell_span(0, 1, 2)
+
+        self.assertEqual(table._header[0].colspan, 3)
+        self.assertTrue(table._header[1].is_placeholder)
+        self.assertTrue(table._header[2].is_placeholder)
+
+        self.assertEqual(table._rows[0][1].colspan, 2)
+        self.assertTrue(table._rows[0][2].is_placeholder)
+        self.assertFalse(table._rows[0][0].is_placeholder)
+
+    def test_colspan_rendering_and_wrapping(self):
+        """Verify rendering and wrapping logic formats spanned blocks correctly."""
+        from vistab import ColSpan
+        table = Vistab(style="light")
+        table.set_header(["Col1", ColSpan("Long Header Spanning Two Columns", 2)])
+        table.add_row(["Short", ColSpan("This text is long enough to wrap across columns", 2)])
+        
+        out = table.draw()
+        
+        # Long header should wrap and layout without crashing
+        self.assertIn("Long Header Spanning Two Columns", out)
+        self.assertIn("This text is long enough to wrap across columns", out)
+
+    def test_colspan_junction_suppression(self):
+        """Verify horizontal line junctions are suppressed under spanned cells."""
+        from vistab import ColSpan
+        table = Vistab(style="light")
+        table.set_header(["Col1", ColSpan("Spanned Header", 2)])
+        table.add_row(["A", "B", "C"])
+        out = table.draw()
+        
+        # Verify that mid-line under "Spanned Header" (boundary index 2) has no junction
+        # Let's inspect the hline separating the header from the first row.
+        # Spanned Header covers columns 1 and 2, which means the boundary between col 1 and 2
+        # is suppressed and replaced by horizontal lines instead of intersection junctions.
+        lines = out.splitlines()
+        # header-separator line (index 2 for light style with header and TOP border)
+        # 0: TOP border: ┌──────┬──────┬──────┐
+        # 1: Header:     │ Col1 │ Spanned Hea  │
+        # 2: Hline:      ├──────┼─────────────┤ (mid junction suppressed between col 1 & 2!)
+        self.assertIn("┼", lines[2]) # Still has first mid junction between col 0 and 1
+        # But should NOT have a junction at the next separator: it should be continuous: "────────"
+        # Let's check the number of "┼" or junction characters in lines[2]
+        self.assertEqual(lines[2].count("┼"), 1)
+
+    def test_colspan_sorting(self):
+        """Verify sorting table rows with spans preserves span adjacency."""
+        from vistab import ColSpan
+        table = Vistab(style="none")
+        table.set_header(["SortKey", ColSpan("Spanned", 2)])
+        table.add_row(["Beta", ColSpan("V1", 2)])
+        table.add_row(["Alpha", ColSpan("V2", 2)])
+        
+        table.sort_by(0)
+        out = table.draw()
+        
+        # Alpha row should sort before Beta
+        alpha_idx = out.find("Alpha")
+        beta_idx = out.find("Beta")
+        self.assertTrue(alpha_idx < beta_idx)
+        self.assertTrue(out.find("V2") < out.find("V1"))
+
+
 if __name__ == '__main__':
     unittest.main()

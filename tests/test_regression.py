@@ -406,32 +406,18 @@ class TestVistabRegression(unittest.TestCase):
         self._assert_against_fixture("regression_ansi_context_leak_prevention", out)
 
 
-    def test_regression_ansi_context_leak_prevention(self):
-        """Validates that inner cell resets do not destroy active cell styling bounding padding structure."""
-        from src.vistab import Vistab
+    def test_regression_colspan_support(self):
+        """Validates that colspans render correctly and maintain structural line suppression."""
+        from src.vistab import Vistab, ColSpan
         
-        table = Vistab()
-        # Create a layout where cell 2 has a forest theme blue background.
-        table.apply_theme("forest")
-        table.set_cols_width([15, 20])
-        
-        # Test 1: Inject a stray reset code \033[0m right into the middle of the cell.
-        # Test 2: Inject a cursor movement \033[A to verify it gets completely stripped.
-        table.add_row([
-            "Normal cell",
-            "Starts bright \033[0mTries resetting \x1b[Aand moving"
-        ])
+        table = Vistab(style="light")
+        table.set_header(["Name", ColSpan("Details Block", 2), "Status"])
+        table.add_row(["Alice", ColSpan("Age: 25, Paris", 2), "Active"])
+        table.add_row(["Bob", "Age: 30", "Berlin", "Inactive"])
         
         out = table.draw()
         
-        # Verify cursor A got wiped:
-        self.assertNotIn("\x1b[A", out)
-        self.assertNotIn("\033[A", out)
-        
-        # The padding spaces at the end of cell 2 MUST be themed. 
-        # Inside the generated string, the padding will have the active ANSI block re-appended.
-        
-        self._assert_against_fixture("regression_ansi_context_leak_prevention", out)
+        self._assert_against_fixture("regression_colspan_support", out)
 
 if __name__ == '__main__':
 

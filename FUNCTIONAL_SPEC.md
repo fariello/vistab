@@ -61,6 +61,10 @@ Data processing handles standard structured grids:
     *   `"f"` (Float) / `"f2"`: Forces round logic using core Python decimals.
     *   `"t"` (Text): Restricts numerical modifications passing strings unmodified.
     *   `Callable`: Safely evaluates explicit Python functions via `lambda` variables.
+*   **Column Spanning (Colspan)**: Represents cells that span multiple horizontal columns.
+    *   `ColSpan(value, colspan)`: Allows inline spans via direct cell objects.
+    *   `set_header_span(col_idx, colspan)` / `set_cell_span(row_idx, col_idx, colspan)`: Post-ingestion API coordinates defining merged blocks.
+    *   **Geometry Layout & Text Wrapping**: Column widths are computed by ignoring spans initially to find natural widths, then distributing deficits across spanned cells. Text wrapping wraps to the spanned block width, and intermediate horizontal border junctions under spanned cells are suppressed.
 
 ## 9. Validation and Error Handling Behavior
 *   **Ragged and Jagged Matrices**: Asymmetric matrices throw a structured `ArraySizeError` when evaluated. However, the system allows resolution routing: `--on-short=pad` automatically fills the bounds, and `--on-long=truncate` clips them to map the grids predictably.

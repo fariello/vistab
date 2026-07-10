@@ -117,6 +117,24 @@ for i, condition in enumerate(my_events):
 table.bold_header()
 ```
 
+### 5. Column Spanning (Colspan)
+
+You can easily define cells that span multiple horizontal columns inline using `ColSpan` or programmatically:
+```python
+from vistab import Vistab, ColSpan
+
+table = Vistab(style="light")
+# Inline colspan in headers and rows:
+table.set_header(["Name", ColSpan("Details Block", 2), "Status"])
+table.add_row(["Alice", ColSpan("Age: 25, Paris", 2), "Active"])
+
+# Or programmatic post-ingestion spanning:
+# table.set_cell_span(row_idx, col_idx, colspan)
+# table.set_header_span(col_idx, colspan)
+
+print(table.draw())
+```
+
 ## Coordinate-Based Cell Styling
 
 `vistab` supports a fluent, declarative API to inject background colors, foreground colors, and text styles (like bolding and underlining) targeting specific grids—ranging from individual cells, whole rows, columns, headers, or borders.

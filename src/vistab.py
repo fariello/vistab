@@ -86,7 +86,7 @@ import sys  # System-specific parameters and functions
 from typing import List, Optional, Iterable, Any, Iterator  # Type hints for better code clarity
 from functools import reduce, lru_cache  # Higher-order function for performing cumulative operations
 
-__all__ = ["Vistab", "ArraySizeError", "StringLengthCalculator"]
+__all__ = ["Vistab", "ArraySizeError", "StringLengthCalculator", "ColSpan"]
 
 __author__ = 'Gabriele Fariello <gfariello@fariel.com>'
 __license__ = 'BSD 3-Clause 2026'
@@ -179,6 +179,38 @@ class ArraySizeError(Exception):
 class VistabOverflowError(ValueError):
     """Exception raised when an explicit `wrap=False` literal violates `max_width` dimensions under strict `on_wrap_conflict`."""
     pass
+
+
+class ColSpan:
+    """Public wrapper to define column spanning inline during data initialization."""
+    def __init__(self, value: Any, span: int = 2):
+        if not isinstance(span, int) or span < 2:
+            raise ValueError("Span must be an integer >= 2")
+        self.value = value
+        self.span = span
+
+
+class VistabCell:
+    """Internal cell representation holding span metadata."""
+    def __init__(self, value: Any, colspan: int = 1, rowspan: int = 1):
+        self.value = value
+        self.colspan = colspan
+        self.rowspan = rowspan
+        self.is_placeholder = False
+        self.source_cell = None
+
+    def __str__(self):
+        return "" if self.value is None else str(self.value)
+
+
+class VistabPlaceholderCell(VistabCell):
+    """Sentinel placeholder occupying coordinates covered by a spanned cell."""
+    def __init__(self, source_cell: VistabCell):
+        super().__init__(value="")
+        self.is_placeholder = True
+        self.source_cell = source_cell
+        self.colspan = source_cell.colspan
+        self.rowspan = source_cell.rowspan
 
 
 class StringLengthCalculator:
@@ -845,6 +877,36 @@ class Vistab:
             self.set_theme(theme)  # Apply high-level color/style theme last so it can override other settings
 
         pass  # for auto-indentation
+
+    def _sep_width(self) -> int:
+        """Width, in characters, of one inter-column gap that a span absorbs."""
+        return 2 * self._pad + (1 if self.has_vlines() else 0)
+
+    def _span_block_width(self, start_col: int, colspan: int) -> int:
+        """Total interior render width of a spanned block covering [start_col, start_col + colspan) physical columns."""
+        interior = sum(self._width[start_col:start_col + colspan])
+        interior += (colspan - 1) * self._sep_width()
+        return interior
+
+    def _expand_spans_in_row(self, row: List[Any]) -> List[VistabCell]:
+        expanded = []
+        i = 0
+        while i < len(row):
+            item = row[i]
+            if isinstance(item, ColSpan):
+                cell = VistabCell(item.value, colspan=item.span)
+                expanded.append(cell)
+                for _ in range(item.span - 1):
+                    expanded.append(VistabPlaceholderCell(cell))
+            elif isinstance(item, VistabCell):
+                expanded.append(item)
+                if item.colspan > 1:
+                    for _ in range(item.colspan - 1):
+                        expanded.append(VistabPlaceholderCell(item))
+            else:
+                expanded.append(VistabCell(item))
+            i += 1
+        return expanded
 
     def _load_config(self):
         """Internal routine loading default attributes from vistab.toml settings"""
@@ -1767,12 +1829,41 @@ class Vistab:
         Example:
             table.header(["Name", "Age"])
         """
-        processed_array = self._check_row_size(array, is_data_row=True)
+        expanded = self._expand_spans_in_row(array)
+        processed_array = self._check_row_size(expanded, is_data_row=True)
         if processed_array is not None:
-            self._header = list(map(obj2unicode, processed_array))
+            for cell in processed_array:
+                if isinstance(cell, VistabCell):
+                    cell.value = obj2unicode(cell.value)
+            self._header = processed_array
         return self
 
-    def add_row(self, array: List[str]) -> 'Vistab':
+    def set_header_span(self, col_idx: int, colspan: int) -> 'Vistab':
+        """Set the column span of a specific header cell."""
+        if not self._header:
+            raise ValueError("Header must be set before applying spans.")
+        self._apply_span_to_list(self._header, col_idx, colspan)
+        return self
+
+    def set_cell_span(self, row_idx: int, col_idx: int, colspan: int) -> 'Vistab':
+        """Set the column span of a specific data cell."""
+        if row_idx >= len(self._rows):
+            raise IndexError("Row index out of range.")
+        self._apply_span_to_list(self._rows[row_idx], col_idx, colspan)
+        return self
+
+    def _apply_span_to_list(self, row_list: List[VistabCell], col_idx: int, colspan: int):
+        if col_idx + colspan > len(row_list):
+            raise ValueError(f"Span of {colspan} exceeds column count limit of {len(row_list)}.")
+        
+        source_val = row_list[col_idx].value if isinstance(row_list[col_idx], VistabCell) else row_list[col_idx]
+        source_cell = VistabCell(source_val, colspan=colspan)
+        row_list[col_idx] = source_cell
+        
+        for offset in range(1, colspan):
+            row_list[col_idx + offset] = VistabPlaceholderCell(source_cell)
+
+    def add_row(self, array: List[Any]) -> 'Vistab':
         """Add a row to the table.
 
         Args:
@@ -1785,17 +1876,15 @@ class Vistab:
         Example:
             table.add_row(["Arnold", "Fitzpatrick"])
         """
-        processed_array = self._check_row_size(array, is_data_row=True)
+        expanded = self._expand_spans_in_row(array)
+        processed_array = self._check_row_size(expanded, is_data_row=True)
         if processed_array is None:
             return self
 
-        array = processed_array
         if not hasattr(self, "_dtype"):
             self._dtype = ["a"] * self._row_size
-        cells = list(array)
-        self._rows.append(cells)
+        self._rows.append(processed_array)
         return self
-
     def add_rows(self, rows: Iterable[Iterable[Any]], header: bool = True) -> 'Vistab':
         """Add several rows in the rows stack.
 
@@ -1861,10 +1950,22 @@ class Vistab:
         # Apply limits for rendering
         if self._max_rows:
             self._rows = self._rows[:self._max_rows]
-
         if self._max_cols:
             self._header = self._header[:self._max_cols]
-            self._rows = [row[:self._max_cols] for row in self._rows]
+            for i, cell in enumerate(self._header):
+                if isinstance(cell, VistabCell) and not cell.is_placeholder:
+                    if i + cell.colspan > len(self._header):
+                        cell.colspan = len(self._header) - i
+
+            new_rows = []
+            for row in self._rows:
+                sliced = row[:self._max_cols]
+                for i, cell in enumerate(sliced):
+                    if isinstance(cell, VistabCell) and not cell.is_placeholder:
+                        if i + cell.colspan > len(sliced):
+                            cell.colspan = len(sliced) - i
+                new_rows.append(sliced)
+            self._rows = new_rows
             self._row_size = self._max_cols
 
             # Force cache refresh so dynamic widths don't mismatch
@@ -1879,8 +1980,19 @@ class Vistab:
             processed_rows = []
             for row in self._rows:
                 cells = []
+                old_to_new = {}
                 for i, x in enumerate(row):
-                    cells.append(self._str(i, x))
+                    formatted_val = self._str(i, x)
+                    if isinstance(x, VistabCell):
+                        if x.is_placeholder:
+                            new_cell = VistabPlaceholderCell(old_to_new[x.source_cell])
+                        else:
+                            new_cell = VistabCell(formatted_val, colspan=x.colspan, rowspan=x.rowspan)
+                            old_to_new[x] = new_cell
+                        cells.append(new_cell)
+                    else:
+                        new_cell = VistabCell(formatted_val)
+                        cells.append(new_cell)
                 processed_rows.append(cells)
             self._rows = processed_rows
 
@@ -1907,7 +2019,8 @@ class Vistab:
             for idx, row in enumerate(self._rows):
                 out += self._draw_line(row, row_idx=idx)
                 if self.has_hlines() and (idx + 1) < length:
-                    out += self._hline(location=Vistab.MIDDLE)
+                    out += self._hline(location=Vistab.MIDDLE, row_idx=idx)
+
             if self.has_border:
                 out += self._hline(location=Vistab.BOTTOM)
             return out[:-1]
@@ -1962,7 +2075,20 @@ class Vistab:
         # Limits mappings safely on sample sizes
         if self._max_cols:
             self._header = self._header[:self._max_cols]
-            self._rows = [row[:self._max_cols] for row in self._rows]
+            for i, cell in enumerate(self._header):
+                if isinstance(cell, VistabCell) and not cell.is_placeholder:
+                    if i + cell.colspan > len(self._header):
+                        cell.colspan = len(self._header) - i
+
+            new_rows = []
+            for row in self._rows:
+                sliced = row[:self._max_cols]
+                for i, cell in enumerate(sliced):
+                    if isinstance(cell, VistabCell) and not cell.is_placeholder:
+                        if i + cell.colspan > len(sliced):
+                            cell.colspan = len(sliced) - i
+                new_rows.append(sliced)
+            self._rows = new_rows
             self._row_size = self._max_cols
 
             # Force cache refresh so dynamic widths don't mismatch
@@ -1974,8 +2100,19 @@ class Vistab:
         processed_rows = []
         for row in self._rows:
             cells = []
+            old_to_new = {}
             for i, x in enumerate(row):
-                cells.append(self._str(i, x))
+                formatted_val = self._str(i, x)
+                if isinstance(x, VistabCell):
+                    if x.is_placeholder:
+                        new_cell = VistabPlaceholderCell(old_to_new[x.source_cell])
+                    else:
+                        new_cell = VistabCell(formatted_val, colspan=x.colspan, rowspan=x.rowspan)
+                        old_to_new[x] = new_cell
+                    cells.append(new_cell)
+                else:
+                    new_cell = VistabCell(formatted_val)
+                    cells.append(new_cell)
             processed_rows.append(cells)
         self._rows = processed_rows
 
@@ -2006,13 +2143,13 @@ class Vistab:
             # Yield pre-buffered rows parsed already mechanically
             for parsed_row in self._rows:
                 yield parsed_row, False  # Already parsed, not abnormal
-
             # Yield remainder rows
             for raw_row in stream_iterator:
                 old_pad = self._metrics.get("padded", 0)
                 old_trunc = self._metrics.get("truncated", 0)
 
-                processed_row = self._check_row_size(raw_row, is_data_row=True)
+                expanded = self._expand_spans_in_row(raw_row)
+                processed_row = self._check_row_size(expanded, is_data_row=True)
                 if processed_row is None:
                     continue  # Skipped
 
@@ -2020,14 +2157,28 @@ class Vistab:
 
                 if self._max_cols:
                     processed_row = processed_row[:self._max_cols]
+                    for i, cell in enumerate(processed_row):
+                        if isinstance(cell, VistabCell) and not cell.is_placeholder:
+                            if i + cell.colspan > len(processed_row):
+                                cell.colspan = len(processed_row) - i
 
-                # Format cells
+                # Format cells preserving wrappers
                 cells = []
+                old_to_new = {}
                 for i, x in enumerate(processed_row):
-                    cells.append(self._str(i, x))
+                    formatted_val = self._str(i, x)
+                    if isinstance(x, VistabCell):
+                        if x.is_placeholder:
+                            new_cell = VistabPlaceholderCell(old_to_new[x.source_cell])
+                        else:
+                            new_cell = VistabCell(formatted_val, colspan=x.colspan, rowspan=x.rowspan)
+                            old_to_new[x] = new_cell
+                        cells.append(new_cell)
+                    else:
+                        new_cell = VistabCell(formatted_val)
+                        cells.append(new_cell)
 
                 yield cells, is_abnormal
-
         # Final yielding phase
         drawn_rows = 0
         gen = stream_exhaust()
@@ -2044,7 +2195,7 @@ class Vistab:
                     # We have a next row, so yield current and hline
                     yield self._draw_line(prev_row, row_idx=drawn_rows-1, is_abnormal=is_abn)
                     if self.has_hlines():
-                        yield self._hline(location=Vistab.MIDDLE)
+                        yield self._hline(location=Vistab.MIDDLE, row_idx=drawn_rows-1)
                     prev_row, is_abn = next_row, next_abn
                 except StopIteration:
                     # We are at the final row
@@ -2138,6 +2289,8 @@ class Vistab:
             i(int): index of the cell datatype in self._dtype
             x(any): cell data to format
         """
+        raw_val = x.value if isinstance(x, VistabCell) else x
+
         format_map = {
             'a': self._fmt_auto,
             'i': self._fmt_int,
@@ -2156,11 +2309,11 @@ class Vistab:
             
         try:
             if callable(dtype):
-                return dtype(x)
+                return dtype(raw_val)
             else:
-                return format_map[dtype](x, n=n)
+                return format_map[dtype](raw_val, n=n)
         except FallbackToText:
-            return self._fmt_text(x)
+            return self._fmt_text(raw_val)
 
     def _check_row_size(self, array, is_data_row=False):
         """Check that the specified array fits the previous rows size and apply handlers if it is jagged."""
@@ -2180,8 +2333,9 @@ class Vistab:
                     self._metrics["skipped"] += 1
                     return None
                 elif action == "pad":
-                    # Pad out to the defined max lengths
-                    array = list(array) + [""] * (self._row_size - array_len)
+                    # Pad out to the defined max lengths using VistabCell objects if the row is object-wrapped
+                    padding_item = VistabCell("") if any(isinstance(x, VistabCell) for x in array) else ""
+                    array = list(array) + [padding_item] * (self._row_size - array_len)
                     self._metrics["padded"] += 1
             else:
                 action = self.on_long_row if is_data_row else "raise"
@@ -2193,6 +2347,12 @@ class Vistab:
                 elif action == "truncate":
                     # Slice truncating excess cells mapping.
                     array = list(array)[:self._row_size]
+                    # Adjust spans if sliced in the middle of placeholders
+                    for i in range(len(array)):
+                        cell = array[i]
+                        if isinstance(cell, VistabCell) and not cell.is_placeholder:
+                            if i + cell.colspan > len(array):
+                                cell.colspan = len(array) - i
                     self._metrics["truncated"] += 1
 
         return array
@@ -2204,19 +2364,29 @@ class Vistab:
     def has_hlines(self):
         """Return a boolean, if hlines are required or not."""
         return self._deco & Vistab.HLINES > 0
-
     def _hline_header(self, location=MIDDLE):
         """Print header's horizontal line."""
         return self._build_hline(is_header=True, location=location)
 
-    def _hline(self, location):
+    def _hline(self, location, row_idx=None):
         """Print an horizontal line."""
-        # if not self._hline_string:
-        #   self._hline_string = self._build_hline(location)
-        # return self._hline_string
-        return self._build_hline(is_header=False, location=location)
+        return self._build_hline(is_header=False, location=location, row_idx=row_idx)
 
-    def _build_hline(self, is_header=False, location=MIDDLE):
+    def _get_spanned_boundaries(self, row: List[Any]) -> Set[int]:
+        """Returns the set of column indices that are interior to a colspan block in the row."""
+        spanned = set()
+        if not row:
+            return spanned
+        i = 0
+        while i < len(row):
+            cell = row[i]
+            colspan = cell.colspan if isinstance(cell, VistabCell) else 1
+            for offset in range(1, colspan):
+                spanned.add(i + offset)
+            i += colspan
+        return spanned
+
+    def _build_hline(self, is_header=False, location=MIDDLE, row_idx=None):
         """Return a string used to separated rows or separate header from rows."""
         if self._style == "none":
             return ""
@@ -2230,15 +2400,38 @@ class Vistab:
                 left, mid, right = self._char_nse, self._char_nsew, self._char_nsw
                 pass
         elif Vistab.BOTTOM == location:
-            # NOTE: This will not work as expected if the table is only headers.
             left, mid, right = self._char_ne, self._char_new, self._char_nw
         else:
             raise ValueError("Unknown location '%s'. Should be one of Vistab.TOP, Vistab.MIDDLE, or Vistab.BOTTOM." % (location))
-        # compute cell separator
-        cell_sep = "%s%s%s" % (horiz_char * self._pad, [horiz_char, mid][self.has_vlines()], horiz_char * self._pad)
-        # build the line
-        hline = cell_sep.join([horiz_char * n for n in self._width])
-        # add border if needed
+
+        row_above = None
+        row_below = None
+
+        if Vistab.TOP == location:
+            row_below = self._header if self._header else (self._rows[0] if self._rows else None)
+        elif Vistab.BOTTOM == location:
+            row_above = self._rows[-1] if self._rows else None
+        elif Vistab.MIDDLE == location:
+            if is_header:
+                row_above = self._header
+                row_below = self._rows[0] if self._rows else None
+            else:
+                if row_idx is not None and row_idx < len(self._rows):
+                    row_above = self._rows[row_idx]
+                    if row_idx + 1 < len(self._rows):
+                        row_below = self._rows[row_idx + 1]
+
+        spanned_above = self._get_spanned_boundaries(row_above)
+        spanned_below = self._get_spanned_boundaries(row_below)
+        suppressed_boundaries = spanned_above.union(spanned_below)
+        segments = []
+        for col_idx, w in enumerate(self._width):
+            segments.append(horiz_char * w)
+            if col_idx < len(self._width) - 1:
+                boundary_idx = col_idx + 1
+                junction = horiz_char if (boundary_idx in suppressed_boundaries) else mid
+                segments.append("%s%s%s" % (horiz_char * self._pad, junction if self.has_vlines() else horiz_char, horiz_char * self._pad))
+        hline = "".join(segments)
         if self.has_border:
             hline = "%s%s%s%s%s\n" % (left, horiz_char * self._pad, hline, horiz_char * self._pad, right)
         else:
@@ -2246,14 +2439,13 @@ class Vistab:
 
         b_on, b_off = self._get_border_ansi()
         return b_on + hline[:-1] + b_off + "\n"
-
     def _len_cell(self, cell):
         """Return the width of the cell.
 
         Special characters are taken into account to return the width of the
         cell, such like newlines and tabs.
         """
-        cell_lines = cell.split('\n')
+        cell_lines = str(cell).split('\n')
         maxi = 0
         for line in cell_lines:
             length = 0
@@ -2288,59 +2480,75 @@ class Vistab:
         table._compute_cols_width()
         ```
         """
-        # Check if column widths have already been computed. If so, exit early.
+
         if hasattr(self, "_width"):
             return
 
-        # Initialize a list to store the maximum width of each column.
-        maxi = []
+        ncols = self._row_size
+        maxi = [0] * ncols
 
-        # If there is a header, calculate the maximum width for each column in the header.
+        # 1. Calculate standard maximum width using only non-spanned cells
         if self._header:
-            maxi = [self._len_cell(x) for x in self._header]
+            for i, cell in enumerate(self._header):
+                is_spanned = isinstance(cell, VistabCell) and (cell.colspan > 1 or cell.is_placeholder)
+                if not is_spanned:
+                    if i < len(maxi):
+                        maxi[i] = max(maxi[i], self._len_cell(cell))
+                    else:
+                        maxi.append(self._len_cell(cell))
 
-        # Calculate the maximum width for each column based on the content of each row.
         for row in self._rows:
-            for cell, i in zip(row, range(len(row))):
-                try:
-                    # Update the maximum width for the current column.
-                    maxi[i] = max(maxi[i], self._len_cell(cell))
-                except (TypeError, IndexError):
-                    # If the column index doesn't exist in maxi, append the new width.
-                    maxi.append(self._len_cell(cell))
+            for i, cell in enumerate(row):
+                is_spanned = isinstance(cell, VistabCell) and (cell.colspan > 1 or cell.is_placeholder)
+                if not is_spanned:
+                    if i < len(maxi):
+                        maxi[i] = max(maxi[i], self._len_cell(cell))
+                    else:
+                        maxi.append(self._len_cell(cell))
 
-        # Calculate the number of columns in the table.
         ncols = len(maxi)
-        # Calculate the total content width by summing the maximum widths of all columns.
         content_width = sum(maxi)
-        # Calculate the width required for decorations (borders and spaces).
         deco_width = 3 * (ncols - 1) + [0, 4][self.has_border]
 
-        # Check if the total width (content + decorations) exceeds the maximum allowed width.
         if self._max_width and (content_width + deco_width) > self._max_width:
-            # If the maximum width is too low to render the table, raise an error.
             if self._max_width < (ncols + deco_width):
                 raise ValueError(f"max_width ({self._max_width}) too low to render data. The minimum for this table would be {ncols + deco_width}.")
 
-            # Calculate the available width for content after accounting for decorations.
             available_width = self._max_width - deco_width
-            # Initialize a new list to store the adjusted maximum widths.
             newmaxi = [0] * ncols
             i = 0
 
-            # Distribute the available width among the columns.
             while available_width > 0:
                 if newmaxi[i] < maxi[i]:
                     newmaxi[i] += 1
                     available_width -= 1
-                # Cycle through columns to distribute width evenly.
                 i = (i + 1) % ncols
 
-            # Update the column widths with the adjusted values.
             maxi = newmaxi
 
-        # Set the computed column widths as the table's column widths.
         self._width = maxi
+
+        # 2. Distribute spanned widths using divmod over self._width
+        spanned_cells_to_process = []
+        if self._header:
+            for i, cell in enumerate(self._header):
+                if isinstance(cell, VistabCell) and cell.colspan > 1 and not cell.is_placeholder:
+                    spanned_cells_to_process.append((i, cell.colspan, self._len_cell(cell)))
+
+        for row in self._rows:
+            for i, cell in enumerate(row):
+                if isinstance(cell, VistabCell) and cell.colspan > 1 and not cell.is_placeholder:
+                    spanned_cells_to_process.append((i, cell.colspan, self._len_cell(cell)))
+
+        for c, k, req in spanned_cells_to_process:
+            curr = self._span_block_width(c, k)
+            if req > curr:
+                deficit = req - curr
+                base, extra = divmod(deficit, k)
+                for j in range(c, c+k):
+                    self._width[j] += base
+                for j in range(c, c+extra):
+                    self._width[j] += 1
 
     def _infer_auto_dtypes(self) -> None:
         """ upgrade 'a' (automatic) columns into strict numeric constraints.
@@ -2500,7 +2708,9 @@ class Vistab:
         print(table._draw_line(line, isheader=True, row_idx=0))
         ```
         """
+
         # Split the line into individual cells, handling headers if necessary.
+        original_line = list(line)
         line = self._splitit(line, isheader, row_idx=row_idx)
         space = " "
         out_parts = []
@@ -2520,44 +2730,43 @@ class Vistab:
                 out_parts.append(char_ns)
                 out_parts.append(b_off)
 
-            for col_idx, (cell, width, align) in enumerate(zip(line, self._width, self._align)):
-                # Get compiled active ANSI mapping
+            col_idx = 0
+            while col_idx < num_cols:
+                cell_obj = original_line[col_idx]
+                if isinstance(cell_obj, VistabPlaceholderCell) or (isinstance(cell_obj, VistabCell) and cell_obj.is_placeholder):
+                    col_idx += 1
+                    continue
+
+                colspan = cell_obj.colspan if isinstance(cell_obj, VistabCell) else 1
+                w = self._span_block_width(col_idx, colspan)
+                align = self._header_align[col_idx] if isheader else self._align[col_idx]
+
                 ansi_on, ansi_off = self._get_active_ansi_wrap(row_idx, col_idx, isheader, is_abnormal=is_abnormal)
                 if ansi_on: out_parts.append(ansi_on)
 
-                # Left padding block
                 if col_idx > 0 or has_border:
                     out_parts.append(pad_str)
 
-                cell_line = cell[i]
-                
-                # 1. Strip destructive sequences (e.g. Cursor Up)
+                cell_line = line[col_idx][i]
                 cell_line = self._sanitize_destructive_ansi(cell_line)
-                
-                # 2. Intercept inner resets bypassing context tracking
                 if ansi_on:
                     cell_line = self._reassert_ansi_context(cell_line, ansi_on)
                     
-                fill = width - self.vislen(cell_line)
+                fill = w - self.vislen(cell_line)
 
-                # Routing strict native layout bounding collisions
                 if fill < 0:
                     if self.on_wrap_conflict == "error":
-                        raise VistabOverflowError(f"Cell string mapped wrap=False exceeded layout width {width}.")
+                        raise VistabOverflowError(f"Cell string mapped wrap=False exceeded layout width {w}.")
                     elif self.on_wrap_conflict == "warn":
-                        sys.stderr.write(f"[\033[1;33mWARN\033[0m] Vistab geometry cell length ({self.vislen(cell_line)}) bypasses {width} max_width boundary. Deflecting to clipping fallback.\n")
-                        cell_line = self._ansi_safe_clip(cell_line, width)
+                        sys.stderr.write(f"[\033[1;33mWARN\033[0m] Vistab geometry cell length ({self.vislen(cell_line)}) bypasses {w} max_width boundary. Deflecting to clipping fallback.\n")
+                        cell_line = self._ansi_safe_clip(cell_line, w)
                         fill = 0
                     elif self.on_wrap_conflict == "clip":
-                        cell_line = self._ansi_safe_clip(cell_line, width)
+                        cell_line = self._ansi_safe_clip(cell_line, w)
                         fill = 0
                     elif self.on_wrap_conflict == "overflow":
-                        fill = 0  # Override space mapping forcefully bleeding into structural delimiters
+                        fill = 0
 
-                if isheader:
-                    align = self._header_align[col_idx]
-
-                # Alignment logic
                 if align == "r":
                     if fill > 0: out_parts.append(fill * space)
                     out_parts.append(cell_line)
@@ -2569,16 +2778,15 @@ class Vistab:
                     out_parts.append(cell_line)
                     if fill > 0: out_parts.append(fill * space)
 
-                # Right padding block
-                if col_idx < num_cols - 1 or has_border:
+                if col_idx + colspan < num_cols or has_border:
                     out_parts.append(pad_str)
 
-                # Terminate active ANSI block BEFORE structural decorators
                 if ansi_off: out_parts.append(ansi_off)
 
-                # Structural cell delimiter
-                if col_idx < num_cols - 1:
+                if col_idx + colspan < num_cols:
                     out_parts.append(v_delim)
+
+                col_idx += colspan
 
             if has_border:
                 out_parts.append(b_on)
@@ -2610,27 +2818,34 @@ class Vistab:
         Returns:
         --------
         List[List[str]]
-            The processed and wrapped lines.
         """
+
         line_wrapped = []
 
-        # Iterate over each cell and its corresponding column width
-        for col_idx, (cell, width) in enumerate(zip(line, self._width)):
+        col_idx = 0
+        while col_idx < len(line):
+            cell = line[col_idx]
+            
+            if isinstance(cell, VistabPlaceholderCell) or (isinstance(cell, VistabCell) and cell.is_placeholder):
+                line_wrapped.append([])
+                col_idx += 1
+                continue
+                
+            colspan = cell.colspan if isinstance(cell, VistabCell) else 1
+            w = self._span_block_width(col_idx, colspan)
+            
             array = []
-
-            # Fetch active boolean wrap logic executing precedence mapping
             do_wrap = self._get_active_wrap_control(row_idx, col_idx, isheader)
-
-            # Split cell content by new lines and wrap each part to fit the column width
-            for c in cell.split('\n'):
+            
+            for c in str(cell).split('\n'):
                 if c.strip() == "" and do_wrap:
-                    array.append("")  # Preserve empty lines safely if wrapping
+                    array.append("")
                 elif not do_wrap:
-                    array.append(c) # Actively bypass logic saving space literals verbatim
+                    array.append(c)
                 else:
-                    # utilize ColorAwareWrapper to segregate layout correctly without mutating ANSI sequences
-                    array.extend(self._cwrap.wrap_list(c, width))
+                    array.extend(self._cwrap.wrap_list(c, w))
             line_wrapped.append(array)
+            col_idx += 1
 
         # Find the maximum number of lines in any cell
         max_cell_lines = reduce(max, list(map(len, line_wrapped)))

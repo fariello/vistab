@@ -50,6 +50,15 @@ Consumes an infinite generator stream mapping and formatting rows sequentially w
 ### `sort_by(col_idx: int, reverse: bool = False, key: callable = None)`
 Rearranges row structures internally tracking a dedicated physical column logic.
 
+### `set_header_span(col_idx: int, colspan: int)`
+Sets the column span of a specific header cell at the given column index.
+
+### `set_cell_span(row_idx: int, col_idx: int, colspan: int)`
+Sets the column span of a specific data cell at the given row and column coordinate.
+
+### `ColSpan(value: Any, colspan: int)`
+Wrapper object passed inside headers or rows to declare inline column spans.
+
 ### `reset()`
 Obliterates rendering history, returning internal states functionally matching initial parameters.
 
