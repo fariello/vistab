@@ -18,8 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Column Spanning (Colspan) support**: Added first-class column spanning for both headers and rows, enabling cells to merge across multiple adjacent columns.
-- **`ColSpan` wrapping data model**: Introduced `ColSpan` wrapper to declare spans inline during ingestion.
-- **`set_header_span` and `set_cell_span` mutators**: Programmatic APIs to dynamically configure column spans post-ingestion.
+- **`ColSpan` wrapping data model**: Introduced `ColSpan` wrapper to declare spans inline during ingestion, supporting both `colspan` and `span` keyword arguments.
+- **`set_header_span` and `set_cell_span` mutators**: Programmatic APIs to dynamically configure column spans post-ingestion. Supports negative indices.
+- **Transactional Grid Validation**: Integrated comprehensive overlap, placeholder targeting, and non-empty overwrite checks to prevent silent grid corruption and KeyErrors during draws.
 - **Line suppression & layout routing**: Automatically calculates column widths across spans, wraps text to merged block boundaries, and suppresses interior horizontal intersections/junctions underneath spanned cells.
 - **`NOTICE`** file with the required Apache-2.0 attribution string; **`CITATION.cff`** added for
   citation; README gained a License/Attribution/Citation section.

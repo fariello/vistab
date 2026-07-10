@@ -183,11 +183,33 @@ class VistabOverflowError(ValueError):
 
 class ColSpan:
     """Public wrapper to define column spanning inline during data initialization."""
-    def __init__(self, value: Any, span: int = 2):
-        if not isinstance(span, int) or span < 2:
-            raise ValueError("Span must be an integer >= 2")
+    def __init__(self, value: Any, colspan: Optional[int] = None, span: Optional[int] = None):
+        if colspan is not None and span is not None:
+            if colspan != span:
+                raise ValueError("Conflicting values for colspan and span.")
+            resolved_colspan = colspan
+        elif colspan is not None:
+            resolved_colspan = colspan
+        elif span is not None:
+            resolved_colspan = span
+        else:
+            resolved_colspan = 2
+
+        if not isinstance(resolved_colspan, int) or resolved_colspan < 1:
+            raise ValueError("Colspan must be an integer >= 1")
         self.value = value
-        self.span = span
+        self.colspan = resolved_colspan
+
+    @property
+    def span(self) -> int:
+        """Alias for colspan for backward-compatibility."""
+        return self.colspan
+
+    @span.setter
+    def span(self, value: int):
+        if not isinstance(value, int) or value < 1:
+            raise ValueError("Colspan must be an integer >= 1")
+        self.colspan = value
 
 
 class VistabCell:
@@ -894,9 +916,9 @@ class Vistab:
         while i < len(row):
             item = row[i]
             if isinstance(item, ColSpan):
-                cell = VistabCell(item.value, colspan=item.span)
+                cell = VistabCell(item.value, colspan=item.colspan)
                 expanded.append(cell)
-                for _ in range(item.span - 1):
+                for _ in range(item.colspan - 1):
                     expanded.append(VistabPlaceholderCell(cell))
             elif isinstance(item, VistabCell):
                 expanded.append(item)
@@ -1842,21 +1864,78 @@ class Vistab:
         """Set the column span of a specific header cell."""
         if not self._header:
             raise ValueError("Header must be set before applying spans.")
+        
+        # Resolve negative col_idx
+        if col_idx < 0:
+            col_idx = len(self._header) + col_idx
+        if col_idx >= len(self._header) or col_idx < 0:
+            raise IndexError("Column index out of range.")
+            
         self._apply_span_to_list(self._header, col_idx, colspan)
         return self
 
     def set_cell_span(self, row_idx: int, col_idx: int, colspan: int) -> 'Vistab':
         """Set the column span of a specific data cell."""
-        if row_idx >= len(self._rows):
+        if row_idx < 0:
+            row_idx = len(self._rows) + row_idx
+        if row_idx >= len(self._rows) or row_idx < 0:
             raise IndexError("Row index out of range.")
-        self._apply_span_to_list(self._rows[row_idx], col_idx, colspan)
+            
+        row_list = self._rows[row_idx]
+        if col_idx < 0:
+            col_idx = len(row_list) + col_idx
+        if col_idx >= len(row_list) or col_idx < 0:
+            raise IndexError("Column index out of range.")
+            
+        self._apply_span_to_list(row_list, col_idx, colspan)
         return self
 
     def _apply_span_to_list(self, row_list: List[VistabCell], col_idx: int, colspan: int):
+        if not isinstance(colspan, int) or colspan < 1:
+            raise ValueError("Colspan must be an integer >= 1")
+        if colspan == 1:
+            return # No-op
+
         if col_idx + colspan > len(row_list):
-            raise ValueError(f"Span of {colspan} exceeds column count limit of {len(row_list)}.")
-        
-        source_val = row_list[col_idx].value if isinstance(row_list[col_idx], VistabCell) else row_list[col_idx]
+            raise ValueError(f"Span of {colspan} from column {col_idx} exceeds column count limit of {len(row_list)}.")
+
+        target_cell = row_list[col_idx]
+        if isinstance(target_cell, VistabPlaceholderCell) or (isinstance(target_cell, VistabCell) and target_cell.is_placeholder):
+            # Find the owner cell
+            owner_idx = "unknown"
+            for idx, cell in enumerate(row_list):
+                if cell is target_cell.source_cell:
+                    owner_idx = idx
+                    break
+            raise ValueError(f"Cannot span from column {col_idx} because it is a placeholder owned by column {owner_idx}.")
+
+        # Overlap checks & covered non-empty cell checks (validate first to prevent partial mutation)
+        for offset in range(colspan):
+            curr_idx = col_idx + offset
+            if curr_idx == col_idx:
+                continue
+            
+            cell = row_list[curr_idx]
+            
+            # 1. Overlap checks
+            if isinstance(cell, VistabCell) and cell.colspan > 1 and not cell.is_placeholder:
+                raise ValueError(f"Span of {colspan} from column {col_idx} would overlap with an existing span starting at column {curr_idx}.")
+            if isinstance(cell, VistabPlaceholderCell) or (isinstance(cell, VistabCell) and cell.is_placeholder):
+                if cell.source_cell is not target_cell:
+                    owner_idx = "unknown"
+                    for idx, o_cell in enumerate(row_list):
+                        if o_cell is cell.source_cell:
+                            owner_idx = idx
+                            break
+                    raise ValueError(f"Span of {colspan} from column {col_idx} would overlap with an existing span starting at column {owner_idx}.")
+            
+            # 2. Non-empty checks
+            val = cell.value if isinstance(cell, VistabCell) else cell
+            if val is not None and str(val).strip() != "":
+                raise ValueError(f"Span would overwrite non-empty cell at column {curr_idx}; clear it first.")
+
+        # Validated successfully. Apply mutations transactionally.
+        source_val = target_cell.value if isinstance(target_cell, VistabCell) else target_cell
         source_cell = VistabCell(source_val, colspan=colspan)
         row_list[col_idx] = source_cell
         

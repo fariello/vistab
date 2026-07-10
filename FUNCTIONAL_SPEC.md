@@ -68,7 +68,10 @@ Data processing handles standard structured grids:
 
 ## 9. Validation and Error Handling Behavior
 *   **Ragged and Jagged Matrices**: Asymmetric matrices throw a structured `ArraySizeError` when evaluated. However, the system allows resolution routing: `--on-short=pad` automatically fills the bounds, and `--on-long=truncate` clips them to map the grids predictably.
-*   **File Handling**: Attempting to decode unknown CSV dialects triggers the fallback Sniffer rules without throwing fatal errors. 
+*   **File Handling**: Attempting to decode unknown CSV dialects triggers the fallback Sniffer rules without throwing fatal errors.
+*   **Column Spanning Validation**:
+    *   **IndexError**: Raised when coordinate-based mutators (`set_cell_span`, `set_header_span`) receive out-of-range rows or columns.
+    *   **ValueError**: Raised when spans are `< 1` (where `colspan=1` is a no-op), conflict with existing spans (overlap), target placeholder coordinates, or overwrite cells containing non-empty data values. Inline `ColSpan` constructor enforces identical constraints. All validation runs transactional (validate-before-mutate) to prevent partial matrix corruption. 
 
 ## 10. Important Edge Cases and Boundary Conditions
 *   **Zero-Width Boundaries**: If `max_width` formatting restrictions establish geometries too small to physically render, the `_draw_horizontal` string execution loop intercepts the exception and throws a generic `ValueError`.

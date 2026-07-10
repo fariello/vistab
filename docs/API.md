@@ -51,13 +51,13 @@ Consumes an infinite generator stream mapping and formatting rows sequentially w
 Rearranges row structures internally tracking a dedicated physical column logic.
 
 ### `set_header_span(col_idx: int, colspan: int)`
-Sets the column span of a specific header cell at the given column index.
+Sets the column span of a specific header cell at the given physical column index (negative indexing supported). Raises `IndexError` for out-of-range columns, and `ValueError` for overlaps, placeholder targets, or spans `< 1` (where `colspan=1` is a no-op).
 
 ### `set_cell_span(row_idx: int, col_idx: int, colspan: int)`
-Sets the column span of a specific data cell at the given row and column coordinate.
+Sets the column span of a specific data cell at the given physical row and column coordinate (negative indexing supported). Raises `IndexError` for out-of-range rows/columns, and `ValueError` for overlaps, placeholder targets, overwriting non-empty cells, or spans `< 1` (where `colspan=1` is a no-op).
 
-### `ColSpan(value: Any, colspan: int)`
-Wrapper object passed inside headers or rows to declare inline column spans.
+### `ColSpan(value: Any, colspan: Optional[int] = None, span: Optional[int] = None)`
+Wrapper object passed inside headers or rows to declare inline column spans. Accept both `colspan` and `span` parameter keywords (with the second positional argument mapping to `colspan/span`). Spans `< 1` are rejected with `ValueError` (where `colspan=1` is a no-op).
 
 ### `reset()`
 Obliterates rendering history, returning internal states functionally matching initial parameters.

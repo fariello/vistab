@@ -197,8 +197,8 @@ class TestVistabColspan(unittest.TestCase):
     def test_set_span_api(self):
         """Test set_header_span and set_cell_span post-ingestion mutators."""
         table = Vistab()
-        table.set_header(["Col1", "Col2", "Col3"])
-        table.add_row(["Data1", "Data2", "Data3"])
+        table.set_header(["Col1", "", ""])
+        table.add_row(["Data1", "", ""])
 
         table.set_header_span(0, 3)
         table.set_cell_span(0, 1, 2)
@@ -262,6 +262,110 @@ class TestVistabColspan(unittest.TestCase):
         beta_idx = out.find("Beta")
         self.assertTrue(alpha_idx < beta_idx)
         self.assertTrue(out.find("V2") < out.find("V1"))
+
+    def test_colspan_usability_and_validation(self):
+        """Test comprehensive colspan validation and exception specifications."""
+        from vistab import ColSpan
+        
+        # 1. ColSpan instantiation and parameter aliases
+        c1 = ColSpan("x", 2)
+        self.assertEqual(c1.colspan, 2)
+        self.assertEqual(c1.span, 2)
+        
+        c2 = ColSpan("x", colspan=3)
+        self.assertEqual(c2.colspan, 3)
+        
+        c3 = ColSpan("x", span=4)
+        self.assertEqual(c3.colspan, 4)
+        
+        # Conflicting parameters
+        with self.assertRaises(ValueError):
+            ColSpan("x", colspan=2, span=3)
+            
+        # colspan < 1
+        with self.assertRaises(ValueError):
+            ColSpan("x", colspan=0)
+            
+        # colspan=1 is a no-op
+        c_one = ColSpan("x", colspan=1)
+        self.assertEqual(c_one.colspan, 1)
+
+        # 2. Mutator Index/Value Exception Matrix
+        table = Vistab()
+        table.set_header(["C1", "C2", "C3"])
+        table.add_row(["D1", "D2", "D3"])
+        
+        # IndexError for out-of-range row_idx
+        with self.assertRaises(IndexError):
+            table.set_cell_span(5, 0, 2)
+        with self.assertRaises(IndexError):
+            table.set_cell_span(-5, 0, 2)
+            
+        # IndexError for out-of-range col_idx
+        with self.assertRaises(IndexError):
+            table.set_cell_span(0, 5, 2)
+        with self.assertRaises(IndexError):
+            table.set_cell_span(0, -5, 2)
+        with self.assertRaises(IndexError):
+            table.set_header_span(5, 2)
+        with self.assertRaises(IndexError):
+            table.set_header_span(-5, 2)
+            
+        # Negative indexing support
+        table.set_header_span(-3, 1) # no-op span=1 at first column
+        table.set_cell_span(-1, -3, 1) # no-op span=1 at first column
+        
+        # ValueError for bad colspan (< 1)
+        with self.assertRaises(ValueError):
+            table.set_cell_span(0, 0, 0)
+        with self.assertRaises(ValueError):
+            table.set_header_span(0, -1)
+            
+        # 3. Transactional Integrity (Grid Unchanged on Failure)
+        table2 = Vistab()
+        table2.set_header(["Col1", "Col2", "Col3"])
+        table2.add_row(["Data1", "Data2", "Data3"])
+        
+        original_header_values = [c.value if hasattr(c, 'value') else c for c in table2._header]
+        
+        # Overwrite non-empty cell raises ValueError
+        with self.assertRaises(ValueError):
+            table2.set_header_span(0, 2)
+        # Verify header is completely unchanged (no partial mutation)
+        current_header_values = [c.value if hasattr(c, 'value') else c for c in table2._header]
+        self.assertEqual(original_header_values, current_header_values)
+        
+        # 4. Overlap & Placeholder target validation
+        table3 = Vistab()
+        table3.set_header(["Col1", "", "", "Col4"])
+        table3.add_row(["Data1", "", "", ""])
+        
+        # Set initial span on row 0, col 1 (span 2 -> covers indices 1, 2)
+        table3.set_cell_span(0, 1, 2)
+        
+        # Target index is placeholder target -> ValueError
+        with self.assertRaises(ValueError) as ctx:
+            table3.set_cell_span(0, 2, 2)
+        self.assertIn("placeholder owned by column 1", str(ctx.exception))
+        
+        # Overlap existing span -> ValueError
+        with self.assertRaises(ValueError) as ctx:
+            table3.set_cell_span(0, 0, 3)
+        self.assertIn("would overlap with", str(ctx.exception))
+
+        # 5. Adjacency ordering crash prevention
+        # set_cell_span(0, 1, 2) then set_cell_span(0, 0, 2)
+        table4 = Vistab()
+        table4.set_header(["Col1", "", "", ""])
+        table4.add_row(["Data1", "", "", ""])
+        
+        table4.set_cell_span(0, 1, 2)
+        with self.assertRaises(ValueError):
+            # Overlaps index 1 (which is owned by 1)
+            table4.set_cell_span(0, 0, 3)
+            
+        # Draw should render cleanly without KeyError crash
+        self.assertIsNotNone(table4.draw())
 
 
 if __name__ == '__main__':
