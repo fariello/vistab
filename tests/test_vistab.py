@@ -246,6 +246,99 @@ class TestVistabColspan(unittest.TestCase):
         # Let's check the number of "┼" or junction characters in lines[2]
         self.assertEqual(lines[2].count("┼"), 1)
 
+    def test_colspan_junction_header_sep_up_tee(self):
+        """Plain header over a spanned data row: the header divider terminates on the
+        header-separator line as an up-tee (┴), never a flat line or a full cross.
+        Regression for the 'dangling divider' bug."""
+        t = Vistab(style="light")
+        t.set_header(["N", "A", "B"])
+        t.add_row(["x", "one", "two"])
+        t.set_cell_span(0, 1, 2)
+        lines = t.draw().splitlines()
+        # 0 top, 1 header, 2 header-sep, 3 data...
+        self.assertEqual(lines[0], "┌───┬────┬────┐")   # top: A|B divider present (header divides)
+        self.assertEqual(lines[2], "├───┼────┴────┤")   # header-sep: ┼ at N|A, ┴ at A|B
+        self.assertEqual(lines[-1], "└───┴─────────┘")  # bottom: merged data -> flat under span
+
+    def test_colspan_junction_row_sep_down_tee(self):
+        """A merged row above a plain (divided) row must render a down-tee (┬) on the
+        separator between them, opening into the divided row."""
+        from vistab import ColSpan
+        t = Vistab(style="light")
+        t.set_header(["Name", ColSpan("Details", 2), "Status"])
+        t.add_row(["Alice", ColSpan("a@x", 2), "Active"])
+        t.add_row(["Bob", "b", "c", "Inactive"])
+        lines = t.draw().splitlines()
+        # 0 top,1 header,2 header-sep,3 row0(merged),4 row0/row1-sep,5 row1(plain),6 bottom
+        row_sep = lines[4]
+        self.assertIn("┬", row_sep)              # down-tee where the plain row divides below
+        self.assertNotIn("┴", row_sep)
+        # header-sep: header AND row0 both merge cols 1-2 -> that boundary is flat (no tee)
+        header_sep = lines[2]
+        self.assertNotIn("┬", header_sep)
+        self.assertNotIn("┴", header_sep)
+
+    def test_colspan_junction_fully_merged_column(self):
+        """When header and every row merge the same columns, the interior boundary has
+        no divider on any rule: no ┬, ┴, or ┼ at that boundary anywhere."""
+        from vistab import ColSpan
+        t = Vistab(style="light")
+        t.set_header(["N", ColSpan("AB", 2)])
+        t.add_row(["x", ColSpan("yz", 2)])
+        # Only one real interior boundary (N | block); the in-span boundary must stay clean.
+        self.assertEqual(t.draw().splitlines(), [
+            "┌───┬─────┐",
+            "│ N │ AB  │",
+            "├───┼─────┤",
+            "│ x │ yz  │",
+            "└───┴─────┘",
+        ])
+
+    def test_colspan_junction_top_and_bottom_borders(self):
+        """Top border above a spanned header, and bottom border below a spanned last
+        row, must suppress the interior junction (no ┬/┴ piercing the merged block)."""
+        from vistab import ColSpan
+        # Spanned header -> top border interior boundary suppressed.
+        t1 = Vistab(style="light")
+        t1.set_header(["N", ColSpan("AB", 2)])
+        t1.add_row(["x", "y", "z"])
+        self.assertEqual(t1.draw().splitlines()[0], "┌───┬───────┐")
+        # Spanned last data row -> bottom border interior boundary suppressed.
+        t2 = Vistab(style="light")
+        t2.set_header(["N", "A", "B"])
+        t2.add_row(["x", "y", "z"])
+        t2.set_cell_span(0, 1, 2)
+        self.assertEqual(t2.draw().splitlines()[-1], "└───┴───────┘")
+
+    def test_colspan_junction_header_only_table(self):
+        """A header-only table (no data rows) must keep full tees on top and bottom
+        borders (regression: the bottom border's 'row above' is the header)."""
+        t = Vistab(style="light")
+        t.set_header(["A", "B", "C"])
+        self.assertEqual(t.draw().splitlines(), [
+            "┌───┬───┬───┐",
+            "│ A │ B │ C │",
+            "└───┴───┴───┘",
+        ])
+
+    def test_colspan_junction_canonical_full_render(self):
+        """Byte-exact render of the canonical mixed span/plain table, pinning every
+        directional junction at once."""
+        from vistab import ColSpan
+        t = Vistab(style="light")
+        t.set_header(["Name", ColSpan("Details Block", 2), "Status"])
+        t.add_row(["Alice", ColSpan("Age: 25, Paris", 2), "Active"])
+        t.add_row(["Bob", "Age: 30", "Berlin", "Inactive"])
+        self.assertEqual(t.draw().splitlines(), [
+            "┌───────┬──────────────────┬──────────┐",
+            "│ Name  │  Details Block   │  Status  │",
+            "├───────┼──────────────────┼──────────┤",  # header & row0 both merge -> flat at bdry2
+            "│ Alice │ Age: 25, Paris   │ Active   │",
+            "├───────┼─────────┬────────┼──────────┤",  # row0 merged, row1 divides -> ┬ at bdry2
+            "│ Bob   │ Age: 30 │ Berlin │ Inactive │",
+            "└───────┴─────────┴────────┴──────────┘",
+        ])
+
     def test_colspan_sorting(self):
         """Verify sorting table rows with spans preserves span adjacency."""
         from vistab import ColSpan

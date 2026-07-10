@@ -2509,7 +2509,9 @@ class Vistab:
         if Vistab.TOP == location:
             row_below = self._header if self._header else (self._rows[0] if self._rows else None)
         elif Vistab.BOTTOM == location:
-            row_above = self._rows[-1] if self._rows else None
+            # The row above the bottom border is the last data row, or the header for a
+            # header-only table (no data rows).
+            row_above = self._rows[-1] if self._rows else (self._header if self._header else None)
         elif Vistab.MIDDLE == location:
             if is_header:
                 row_above = self._header
@@ -2520,15 +2522,41 @@ class Vistab:
                     if row_idx + 1 < len(self._rows):
                         row_below = self._rows[row_idx + 1]
 
+        # A divider touches this rule from a given side only if a row exists on that
+        # side AND the boundary is not interior to a spanned block in that row. A
+        # boundary interior to a span has no vertical divider on that side.
         spanned_above = self._get_spanned_boundaries(row_above)
         spanned_below = self._get_spanned_boundaries(row_below)
-        suppressed_boundaries = spanned_above.union(spanned_below)
+        has_above = row_above is not None
+        has_below = row_below is not None
+
+        # Directional junction glyphs. `mid` already carries the arms appropriate to the
+        # rule location (down-tee at TOP, up-tee at BOTTOM, full cross at MIDDLE). For a
+        # MIDDLE rule we additionally need the one-sided tees so a spanned block on one
+        # side is not pierced by a dangling junction (e.g. a header `|` above a merged
+        # data cell terminates as an up-tee, not a flat line). `_char_new` = up-tee
+        # (arms N-E-W); `_char_sew` = down-tee (arms S-E-W). Header double-line styles
+        # lack dedicated header tees, so MIDDLE falls back to these (see remediation).
+        if Vistab.MIDDLE == location:
+            up_tee, down_tee = self._char_new, self._char_sew
+        else:
+            up_tee = down_tee = mid
+
         segments = []
         for col_idx, w in enumerate(self._width):
             segments.append(horiz_char * w)
             if col_idx < len(self._width) - 1:
                 boundary_idx = col_idx + 1
-                junction = horiz_char if (boundary_idx in suppressed_boundaries) else mid
+                divider_above = has_above and (boundary_idx not in spanned_above)
+                divider_below = has_below and (boundary_idx not in spanned_below)
+                if divider_above and divider_below:
+                    junction = mid
+                elif divider_above:
+                    junction = up_tee
+                elif divider_below:
+                    junction = down_tee
+                else:
+                    junction = horiz_char
                 segments.append("%s%s%s" % (horiz_char * self._pad, junction if self.has_vlines() else horiz_char, horiz_char * self._pad))
         hline = "".join(segments)
         if self.has_border:
