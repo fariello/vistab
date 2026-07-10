@@ -11,3 +11,7 @@
 - Verdict: needs work for documentation.
 - Related IPD: `.agents/plans/pending/20260709-assess-documentation.md` (Gemini) — recommend
   reconciling/merging (execute this superset).
+- **UPDATE:** merged with the Gemini IPD into
+  `.agents/plans/pending/20260709-assess-documentation-merged.md` (superset findings +
+  Gemini's fixture-safe sequencing). Both source IPDs were removed. The merged file is the
+  live proposal.

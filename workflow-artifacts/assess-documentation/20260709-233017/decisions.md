@@ -37,6 +37,13 @@
 - README styles and themes all resolve; all API.md methods exist; all `examples/*.py` run
   clean; packaging supports the documented install commands.
 
+## Post-run corrections
+- **FUNCTIONAL_SPEC.md correction:** the report/evidence implied SPEC referenced themes
+  cleanly, but `FUNCTIONAL_SPEC.md:29` does contain `apply_theme` (the Gemini pass had this
+  right). The `apply_theme -> set_theme` sweep must include `FUNCTIONAL_SPEC.md`.
+- **Merged:** this run's IPD and the Gemini run's IPD were merged into
+  `.agents/plans/pending/20260709-assess-documentation-merged.md`; both source IPDs removed.
+
 ## Open questions for the user
 1. Reconcile with the earlier documentation IPD (recommend: execute this superset).
 2. Regenerate the `--show-code` gold-master fixture from the corrected generator vs hand-edit.
