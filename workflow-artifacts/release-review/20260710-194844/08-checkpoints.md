@@ -23,3 +23,8 @@
 - 8 personas exercised (persona-review). Principles: strong adherence, no GP violations (fallback). Cold-start: adequate, KD1 (Low) architecture-doc gap.
 - Full TODO triage: all 7 items out-of-scope-for-release; none block. Reinforces S1-BUG1 (version).
 - M1 (module split) DEFERRED (RR Medium-High complexity — broad refactor, no release need). U1/GP1 clean.
+
+## Section 6 (compatibility/packaging/release) — complete
+- CI already strong (test matrix + secret-scan); no additions. Finding CI1 (Low): requires-python 3.7 vs CI floor 3.9.
+- Packaging valid (P1). No schema files (implicit contracts fine, no drift). Backward-compatible release (additive features, apply_theme alias retained).
+- KEY release item: S1-BUG1 version bump to 1.2.0. Sections 1-6 complete -> ready for implementation-plan.

@@ -26,3 +26,7 @@
 - Power user (6): scriptable CLI, STDIN pipeline, themes savable/reusable, `--show-code` generates code, dtype/precision control, escape hatches (`wrap=False`, `on_wrap_conflict`). Well-served.
 - Novice (7): `pip install vistab`, `vistab show styles`, README Quick Start → first success without a manual. Strong.
 - Stakeholder (8): delivers its stated goal (lightweight, correct, self-documenting table rendering). Main stakeholder-facing gap: version not bumped for the shipped feature set (S1-BUG1).
+
+## Section 6 (compatibility/packaging/release)
+- Operator/stakeholder: install path clear (`pip install vistab`, `[cjk]` extra documented); CI proves cross-platform (Linux+Windows) × Python 3.9-3.13; secret-scan CI present. First-run: `vistab` + STDIN or `vistab file.csv` works. The one operator-facing gap: shipping as 1.1.3 despite a v1.2.0 feature set (S1-BUG1) — version pinning would mislead.
+- Software engineer: 3.7/3.8 claimed but untested (CI1); code is 3.7-syntax-safe. No breaking API change this cycle (colspan/verbs are additive; apply_theme retained as alias) — backward compatible.
