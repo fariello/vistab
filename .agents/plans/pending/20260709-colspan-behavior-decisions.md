@@ -3,8 +3,17 @@
 - Date: 2026-07-09
 - Concern: ui-ux (behavior/usability of a shipped feature)
 - Scope: Two behaviors of the shipped colspan feature in `src/vistab.py` — (B1) `set_cell_span`/`set_header_span` raising when covered cells are non-empty, and (B2) visual misalignment when a plain data row sits under a spanned header. Docs to sync if behavior is confirmed: `docs/API.md`, `README.md`, `FUNCTIONAL_SPEC.md`.
-- Status: PENDING (awaiting human approval; not executed)
+- Status: PENDING (decisions RESOLVED with maintainer 2026-07-09; awaiting execution approval; not executed)
 - Author: opencode (its_direct/pt3-claude-opus-4.8-1m-us)
+
+> **Decisions resolved (2026-07-09).** B1: adopt a **content-merging** model — a new
+> `combine` parameter on `set_cell_span`/`set_header_span`, default `" "`, that joins the
+> covered non-empty values (loss-less). `combine=""` joins with no separator; any string is
+> a custom separator; `combine=None` restores the strict "refuse to overwrite non-empty"
+> mode. The joined text is **stored** as the source cell's value. Headers behave
+> identically. B2: **document** as a known limitation (option a) and add a `TODO.md` entry
+> to reconsider the "try-harder" auto-alignment (option b) later. See the updated Proposed
+> Changes below.
 
 ## Goal
 
@@ -42,13 +51,12 @@ Severity = impact if left alone; Remediation Risk = Fix-Bar gate. Persona = surf
 ## Proposed changes (ordered, validatable)
 
 This IPD proposes a **decision framework**, not a forced code change. Each finding lists
-the recommended default plus alternatives; the human picks per finding (see Open
-Questions). All options are Low Remediation Risk.
+the resolved decision (recorded 2026-07-09). All are Low Remediation Risk.
 
 | Step | Source | Change | Files | Remediation Risk | Validation |
 |------|--------|--------|-------|------------------|------------|
-| 1 | B1 | **DECISION REQUIRED.** Pick one: **(a) Accept + document (recommended):** keep the raise; add a clear sentence to `docs/API.md` `set_cell_span`/`set_header_span` and README §5 that covered cells must be empty (blank them first) and that this prevents silent data loss; ensure the error message suggests the fix (it already says "clear it first"). **(b) Soften to opt-in overwrite:** add a keyword like `overwrite=False`; when `True`, covered non-empty cells are absorbed silently (documented). **(c) Soften to warn:** downgrade the raise to a `warnings.warn` + absorb. Recommended: (a) — least complexity, preserves the no-silent-loss invariant the hardening was written for. | `docs/API.md`, `README.md` (option a) or `src/vistab.py` (b/c) | Low | Option (a): a doc example spanning over pre-filled cells demonstrates the "clear first" pattern; error message verified. Option (b/c): unit test for the new path + adjacency invariant preserved + no render `KeyError`. |
-| 2 | B2 | **DECISION REQUIRED.** Pick one: **(a) Document as a known limitation (recommended):** state in `README.md` §5 / `FUNCTIONAL_SPEC.md` that spans are physical-column constructs and that rows meant to align under a spanned header should themselves declare matching spans/placeholders (or use `ColSpan`); show the aligned pattern in `examples/colspan_demo.py`. **(b) Auto-align heuristic:** attempt to coalesce a plain row's cells under an overhead span — **not recommended** (ambiguous which cells merge; risks the rectangular-grid invariant and the render path; Complexity + Functionality axes). | `README.md`, `FUNCTIONAL_SPEC.md`, `examples/colspan_demo.py` (option a) | Low | Option (a): the demo shows an aligned multi-row spanned table and a note on the plain-row caveat; reviewer confirms no invariant change. |
+| 1 | B1 | **RESOLVED: content-merging via a `combine` parameter.** Add `combine: Optional[str] = " "` to `set_cell_span` and `set_header_span` (identical on both). Behavior for the covered range `[col_idx, col_idx+colspan)`: (i) collect the non-empty values in left-to-right physical order, **including the source cell's own value first**; (ii) if `combine` is a string, set the source cell's `.value` to those values joined by `combine` (`" "` default; `""` = no separator; any string = custom); empty/`None` covered cells contribute nothing (no doubled/leading/trailing separators); (iii) if `combine is None`, keep the **strict** behavior — raise `ValueError` if any covered cell is non-empty. In all cases the covered columns become blank `VistabPlaceholderCell`s and the grid stays rectangular. Overlap and placeholder-target checks are **unchanged** (still always raise — those are structural, not data, conflicts). Reframe the strict-mode error message to mention the merge option, e.g. *"column N is non-empty and combine=None; pass combine=' ' (or another separator) to merge these values, or clear the cell first."* (Open Q3.) | `src/vistab.py`, `docs/API.md`, `README.md` | Low | Unit tests: default `combine=' '` merges `["Alice","25","Paris"]` span(1,2) -> source value `"25 Paris"`, cols 2 blank placeholder, adjacency invariant holds, `draw()` no `KeyError`; `combine=""` -> `"25Paris"`; `combine=", "` -> `"25, Paris"`; `combine=None` on non-empty -> `ValueError` with the new message; empty covered cells produce no stray separators; identical behavior verified on `set_header_span`. Existing colspan tests stay green. |
+| 2 | B2 | **RESOLVED: document as a known limitation now; TODO the auto-align option.** Add to `README.md` §5 / `FUNCTIONAL_SPEC.md` that spans are per-row physical constructs: to align a column group across the whole table, each row must declare the span (now easy and loss-less via `set_cell_span(..., combine=...)` or inline `ColSpan`). Add an aligned multi-row example to `examples/colspan_demo.py`, and a short note on the plain-row caveat. Add a `TODO.md` entry: *"Consider auto-aligning plain rows under spanned headers (option b) — deferred due to ambiguity + rectangular-grid/render-path risk; needs an unambiguous merge rule first."* | `README.md`, `FUNCTIONAL_SPEC.md`, `examples/colspan_demo.py`, `TODO.md` | Low | The demo shows an aligned multi-row spanned table + the caveat; `TODO.md` records the deferred option; reviewer confirms no engine/invariant change. |
 
 ## Deferred / out of scope (with reason)
 
@@ -56,8 +64,8 @@ Questions). All options are Low Remediation Risk.
 |------------|------------------|------|--------|------------------------|
 | B2 option (b) | Medium-High | complexity + functionality | An auto-alignment heuristic for plain rows under a span is ambiguous (no unique mapping of which plain cells merge) and would touch the rectangular-grid invariant and render path that the hardening stabilized. Defer unless a concrete, unambiguous rule is specified. | Separate design IPD if a real use case appears. |
 
-Note: the deferral applies **only** to B2's risky option (b). B2's safe option (a,
-document) and all of B1 are proposed for action now.
+Note: the deferral applies **only** to B2's risky auto-alignment option (now recorded as a
+`TODO.md` item). B2's documentation work and all of B1 are proposed for action now.
 
 ## Scope check
 
@@ -68,31 +76,38 @@ document) and all of B1 are proposed for action now.
 
 ## Required tests / validation
 
-- If B1 stays as-is (option a): no code change; add/verify the doc example and the
-  error-message wording; existing colspan tests remain green.
-- If B1 is softened (option b/c): new unit test for the overwrite/warn path; assert the
-  adjacency invariant holds and `draw()` does not raise `KeyError`.
-- B2 (option a): `python examples/colspan_demo.py` shows an aligned spanned table; docs
-  describe the plain-row caveat. No engine change, so `python -m pytest` unaffected.
-- Any code option must keep the existing colspan suite (`test_colspan_*`, `test_set_span_api`,
-  `test_regression_colspan_support`) green.
+- **B1 (`combine`):** new unit tests covering `combine=' '` (default merge), `combine=''`
+  (no separator), `combine=', '` (custom), and `combine=None` (strict raise with the new
+  message); empty covered cells produce no stray separators; the joined value is stored on
+  the source cell (so `str(cell)`/`sort_by` see it); the adjacency invariant holds and
+  `draw()` raises no `KeyError`; identical behavior on `set_header_span`.
+- **Overlap/placeholder structural checks unchanged:** still raise regardless of `combine`.
+- **B2:** `python examples/colspan_demo.py` shows an aligned multi-row spanned table and the
+  plain-row caveat; no engine change, so no regression risk there.
+- **Regression:** the existing colspan suite (`test_colspan_*`, `test_set_span_api`,
+  `test_regression_colspan_support`) stays green; full `python -m pytest` green.
 
 ## Spec / documentation sync
 
-- `docs/API.md`: `set_cell_span`/`set_header_span` — document the covered-non-empty rule
-  (B1) and, if adopted, the `overwrite`/warn option.
-- `README.md` §5 + `FUNCTIONAL_SPEC.md`: document the physical-column nature of spans and
-  the plain-row alignment caveat (B2).
+- `docs/API.md`: `set_cell_span`/`set_header_span` — document the `combine` parameter
+  (default `" "`, `""` no-sep, custom string, `None` = strict raise), the
+  source-value-first join order, and the unchanged overlap/placeholder errors.
+- `README.md` §5 + `FUNCTIONAL_SPEC.md`: document that spans are per-row physical constructs
+  and the plain-row alignment caveat (B2), pointing at `combine=` as the loss-less way to
+  align each row.
 - `examples/colspan_demo.py`: add an aligned multi-row example.
+- `TODO.md`: record the deferred B2 auto-alignment option.
+- `CHANGELOG.md` `[Unreleased]`: note the new `combine` parameter on the span mutators.
 
-## Open questions
+## Open questions (RESOLVED 2026-07-09)
 
-1. **B1 policy:** accept + document (recommended), add `overwrite=` opt-in, or downgrade to
-   a warning?
-2. **B2 policy:** document as a known limitation (recommended) or attempt auto-alignment
-   (deferred as Medium-High complexity)?
-3. Should B1's error, if kept, additionally point at `set_cell_span` requiring empty covered
-   cells in the message text (currently "clear it first")?
+1. **B1 policy:** RESOLVED — content-merging `combine` parameter (default `" "`), with
+   `combine=None` retaining strict no-overwrite. Stored (not draw-time) join; headers
+   identical.
+2. **B2 policy:** RESOLVED — document as a known limitation now; add a `TODO.md` entry to
+   reconsider the auto-alignment option later.
+3. **Error message:** RESOLVED — the strict-mode (`combine=None`) `ValueError` will mention
+   the `combine=` merge option, not just "clear it first."
 
 ## Appendix: reproduction (verified at HEAD)
 
