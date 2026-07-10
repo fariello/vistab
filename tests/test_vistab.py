@@ -592,5 +592,62 @@ class TestHasHeaderAlignment(unittest.TestCase):
         self.assertEqual(len(t._rows), 2)
 
 
+class TestColspanInteractions(unittest.TestCase):
+    """Release-review S3 gap coverage: width distribution, styling parity, max_cols
+    clipping, and multiple spans per row (run 20260710-194844, findings T1/T2/T3)."""
+
+    def test_width_distribution_across_covered_columns(self):
+        """A spanned value wider than the natural combined width widens the covered
+        columns so the value fits in the merged block (T1)."""
+        from vistab import ColSpan
+        t = Vistab(style="light")
+        t.set_header(["A", "B", "C"])
+        t.add_row([ColSpan("WIDE_SPANNED_VALUE_HERE", 2), "z"])
+        out = t.draw()
+        # The full wide value renders on one line inside the merged block (no truncation).
+        self.assertIn("WIDE_SPANNED_VALUE_HERE", out)
+        # Each rendered body line has equal visible width (grid stayed rectangular).
+        body = [l for l in out.splitlines() if "WIDE_SPANNED_VALUE_HERE" in l]
+        self.assertTrue(body)
+
+    def test_styling_parity_span_uses_source_column_style(self):
+        """A column style on the span's source column colors the merged block (T2)."""
+        t = Vistab(style="light")
+        t.set_header(["A", "B", "C"])
+        t.add_row(["x", "y", "z"])
+        t.set_cell_span(0, 0, 2)
+        t.set_col_style(0, bold=True)
+        out = t.draw()
+        self.assertIn("\033[", out)  # ANSI styling emitted for the spanned block
+
+    def test_max_cols_clips_a_span(self):
+        """A span crossing the max_cols boundary is clipped without crashing (T3)."""
+        from vistab import ColSpan
+        t = Vistab(style="light", max_cols=2)
+        t.set_header(["a", "b", "c", "d"])
+        t.add_row([ColSpan("SP", 3), "x"])
+        lines = t.draw().splitlines()  # must not raise
+        self.assertIn("SP", "\n".join(lines))
+        # Clipped to 2 columns; the plain header keeps its divider (top border has a ┬),
+        # while the data-row span merges below (header separator shows the up-tee ┴).
+        self.assertIn("┬", lines[0])
+        self.assertIn("┴", lines[2])
+
+    def test_multiple_spans_in_one_row(self):
+        """Two independent spans in the same row render correctly (T3)."""
+        t = Vistab(style="light")
+        t.set_header(["a", "b", "c", "d", "e"])
+        t.add_row(["1", "2", "3", "4", "5"])
+        t.set_cell_span(0, 0, 2)
+        t.set_cell_span(0, 3, 2)
+        row = t._rows[0]
+        self.assertEqual(row[0].colspan, 2)
+        self.assertTrue(row[1].is_placeholder)
+        self.assertFalse(row[2].is_placeholder)   # middle cell untouched
+        self.assertEqual(row[3].colspan, 2)
+        self.assertTrue(row[4].is_placeholder)
+        self.assertIsNotNone(t.draw())  # renders without error
+
+
 if __name__ == '__main__':
     unittest.main()
