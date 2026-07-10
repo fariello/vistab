@@ -16,3 +16,13 @@
 ## Section 4 (docs/specs/examples)
 - Complete novice: README opens with a clear one-line intent + Key Features + Quick Start; `pip install vistab` and `vistab[cjk]` documented; can reach first success from README alone. CLI diagnostics reachable via intuitive `vistab show styles`. No manual-required basic task found.
 - UI/UX: docs and CLI terminology consistent (show/help/demo verbs mirror flags); API.md version-agnostic (no drift). Minor: architecture/decision rationale not in an obvious project-owned doc (KD1, Low).
+
+## Section 5 (feature/usability/maintainability) — all eight personas
+- QA/QC (1): behavior consistent; 101 tests green; error paths handled. No new defect.
+- Testing (2): coverage strong; only Low colspan test gaps (T1-T3, from S3).
+- UI/UX (3): consistent terminology (verbs mirror flags); helpful errors; theme demo now borderless/unquoted. Good feedback on actions.
+- Architect (4): single 4059-line module is large but cohesive; general-case mechanisms (themes, styling coords, colspan, combine); pre-parse CLI dispatch avoided heavier subparsers (KISS). Optional future: module split (M, Low, not required).
+- Software engineer (5): clean resource handling; loose type hints (S1-Q1) the main maintainability smell.
+- Power user (6): scriptable CLI, STDIN pipeline, themes savable/reusable, `--show-code` generates code, dtype/precision control, escape hatches (`wrap=False`, `on_wrap_conflict`). Well-served.
+- Novice (7): `pip install vistab`, `vistab show styles`, README Quick Start → first success without a manual. Strong.
+- Stakeholder (8): delivers its stated goal (lightweight, correct, self-documenting table rendering). Main stakeholder-facing gap: version not bumped for the shipped feature set (S1-BUG1).

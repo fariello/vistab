@@ -18,3 +18,8 @@
 ## Section 4 (docs/specs/examples) — complete
 - Docs accurate post documentation-IPD (D1). Cold-start: adequate via README+FUNCTIONAL_SPEC+executed IPDs; KD1 (Low) suggests a short ARCHITECTURE.md.
 - No doc/backlog contradictions. Examples run.
+
+## Section 5 (feature/usability/maintainability) — complete
+- 8 personas exercised (persona-review). Principles: strong adherence, no GP violations (fallback). Cold-start: adequate, KD1 (Low) architecture-doc gap.
+- Full TODO triage: all 7 items out-of-scope-for-release; none block. Reinforces S1-BUG1 (version).
+- M1 (module split) DEFERRED (RR Medium-High complexity — broad refactor, no release need). U1/GP1 clean.
