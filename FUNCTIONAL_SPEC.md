@@ -63,7 +63,8 @@ Data processing handles standard structured grids:
     *   `Callable`: Safely evaluates explicit Python functions via `lambda` variables.
 *   **Column Spanning (Colspan)**: Represents cells that span multiple horizontal columns.
     *   `ColSpan(value, colspan)`: Allows inline spans via direct cell objects.
-    *   `set_header_span(col_idx, colspan)` / `set_cell_span(row_idx, col_idx, colspan)`: Post-ingestion API coordinates defining merged blocks.
+    *   `set_header_span(col_idx, colspan, combine)` / `set_cell_span(row_idx, col_idx, colspan, combine)`: Post-ingestion API coordinates defining merged blocks. Supports an optional `combine` string parameter (default `" "`) to merge existing cell values in the covered range.
+    *   **Per-Row Spanning & Alignment Caveat**: Spans are computed independently per-row. To align columns across headers and data rows, each row must specify the same span geometry; plain (un-spanned) rows under a spanned block will render their standard vertical column boundaries.
     *   **Geometry Layout & Text Wrapping**: Column widths are computed by ignoring spans initially to find natural widths, then distributing deficits across spanned cells. Text wrapping wraps to the spanned block width, and intermediate horizontal border junctions under spanned cells are suppressed.
 *   **Internal Representation**: Grid cells are wrapped in `VistabCell` and `VistabPlaceholderCell` objects. These structures are private; direct mutations or assumptions that `table._rows` contains raw strings are unsupported. The public API abstracts these details completely.
 

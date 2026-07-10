@@ -42,15 +42,28 @@ def run_demo():
     print(table2.draw())
     print()
 
-    # 3. Interactive Error/Validation Guardrails
-    print("--- 3. Validation Guardrails (Error Handling) ---")
-    table3 = Vistab(style="light")
-    table3.set_header(["A", "B", "C"])
-    table3.add_row(["1", "2", "3"])
+    # 3. Content Merging & Overwrite Guardrails
+    print("--- 3. Content Merging & Overwrite Guardrails ---")
+    table3 = Vistab(style="light", padding=1)
+    table3.set_header(["Name", "Age", "City"])
+    table3.add_row(["Alice", 25, "Paris"])
     
-    print("Trying to overwrite a non-empty cell:")
+    print("Pre-merged table:")
+    print(table3.draw())
+    
+    # Merge cells at 0, 0 spanning 3 columns.
+    # By default, combine=" " will merge "Alice", 25, and "Paris" into "Alice 25 Paris"
+    table3.set_cell_span(0, 0, 3, combine=", ")
+    print("Post-merged table (combine=', '):")
+    print(table3.draw())
+    
+    # Demonstrate combine=None strict mode error
+    print("Trying to overwrite a non-empty cell with combine=None:")
+    table4 = Vistab(style="light")
+    table4.set_header(["A", "B"])
+    table4.add_row(["1", "2"])
     try:
-        table3.set_cell_span(0, 0, 2) # trying to span column 0 over column 1 (which contains "2")
+        table4.set_cell_span(0, 0, 2, combine=None)
     except ValueError as e:
         print(f"  Caught expected error: {e}")
         

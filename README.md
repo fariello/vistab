@@ -130,11 +130,14 @@ table.set_header(["Name", ColSpan("Details Block", 2), "Status"])
 table.add_row(["Alice", ColSpan("Age: 25, Paris", 2), "Active"])
 
 # Or programmatic post-ingestion spanning:
-# table.set_cell_span(row_idx, col_idx, colspan)
-# table.set_header_span(col_idx, colspan)
+# table.set_cell_span(row_idx, col_idx, colspan, combine=" ")
+# table.set_header_span(col_idx, colspan, combine=" ")
 
 print(table.draw())
 ```
+
+> [!NOTE]
+> **Spanning Alignment Caveat**: Column spans are defined and calculated per-row. To align a spanned column group across the entire table, you must apply the span to each row (either inline via `ColSpan` or programmatically via `set_cell_span()`). Plain data rows that do not span will render their own interior vertical separators, resulting in visual column misalignment under merged cells. You can pass the `combine` parameter (e.g., `combine=", "`) to merge existing non-empty row values safely when spanning.
 
 ## Coordinate-Based Cell Styling
 

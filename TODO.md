@@ -30,6 +30,10 @@ Column spanning has been fully implemented, tested, and integrated. Inline spans
 *   **Architecture Requirements:** Fails instantly within current architecture. Terminal output executes top-down. Bridging cells vertically necessitates rewriting the engine into a heavy, globally stateful 2D dimensional canvas buffer to compute overlapping row heights simultaneously.
 *   **Feasibility:** Pushes boundary from lightweight parser engine to heavy document renderer. Unlikely in the short term.
 
+#### Auto-Aligning Plain Rows Under Spanned Blocks (Future Consideration)
+*   **Complexity:** Medium-High
+*   **Architecture Requirements:** Automatically merge/align plain row cells underneath spanned headers or rows above them. Deferred due to ambiguity in defining which adjacent cells merge, and the risk of destabilizing the rectangular-grid rendering invariants. Requires designing an unambiguous cell-merging layout rule first.
+
 ### 3. CLI Usability Improvements
 *   **Explicit Delimiter Override**: Add a `--delimiter` argument to the CLI. This provides an escape hatch to bypass `csv.Sniffer` errors when evaluating anomalous or raw-log data streams.
 *   **Dynamic Terminal Auto-width**: Add an `--auto-width` parameter that leverages `os.get_terminal_size().columns` to automatically constrain grid output widths on narrow terminal sessions.

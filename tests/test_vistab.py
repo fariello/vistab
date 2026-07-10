@@ -328,9 +328,10 @@ class TestVistabColspan(unittest.TestCase):
         
         original_header_values = [c.value if hasattr(c, 'value') else c for c in table2._header]
         
-        # Overwrite non-empty cell raises ValueError
-        with self.assertRaises(ValueError):
-            table2.set_header_span(0, 2)
+        # Overwrite non-empty cell raises ValueError when combine=None
+        with self.assertRaises(ValueError) as ctx:
+            table2.set_header_span(0, 2, combine=None)
+        self.assertIn("combine=None", str(ctx.exception))
         # Verify header is completely unchanged (no partial mutation)
         current_header_values = [c.value if hasattr(c, 'value') else c for c in table2._header]
         self.assertEqual(original_header_values, current_header_values)
@@ -366,6 +367,64 @@ class TestVistabColspan(unittest.TestCase):
             
         # Draw should render cleanly without KeyError crash
         self.assertIsNotNone(table4.draw())
+
+    def test_colspan_combine_options_and_wrapping(self):
+        """Test B1 (combine options: default merge, custom, strict, wrapping of merged values)."""
+        from vistab import Vistab
+        
+        # 1. Default merge combine=" "
+        t1 = Vistab()
+        t1.set_header(["A", "B", "C"])
+        t1.add_row(["Alice", 25, "Paris"])
+        
+        t1.set_cell_span(0, 0, 3) # default: merges "Alice", "25", "Paris" -> "Alice 25 Paris"
+        self.assertEqual(t1._rows[0][0].value, "Alice 25 Paris")
+        self.assertTrue(t1._rows[0][1].is_placeholder)
+        self.assertTrue(t1._rows[0][2].is_placeholder)
+        
+        # 2. combine="" (no separator)
+        t2 = Vistab()
+        t2.set_header(["A", "B"])
+        t2.add_row(["Alice", "25"])
+        t2.set_cell_span(0, 0, 2, combine="")
+        self.assertEqual(t2._rows[0][0].value, "Alice25")
+        
+        # 3. combine=", " (custom separator)
+        t3 = Vistab()
+        t3.set_header(["A", "B"])
+        t3.add_row(["Alice", "25"])
+        t3.set_cell_span(0, 0, 2, combine=", ")
+        self.assertEqual(t3._rows[0][0].value, "Alice, 25")
+        
+        # 4. TypeError for invalid combine type (e.g. integer)
+        t4 = Vistab()
+        t4.set_header(["A", "B"])
+        t4.add_row(["Alice", "25"])
+        with self.assertRaises(TypeError):
+            t4.set_cell_span(0, 0, 2, combine=123)
+            
+        # 5. Empty covered cells do not leave trailing separators
+        t5 = Vistab()
+        t5.set_header(["A", "B", "C"])
+        t5.add_row(["Alice", "", ""])
+        t5.set_cell_span(0, 0, 3, combine=", ")
+        self.assertEqual(t5._rows[0][0].value, "Alice")
+        
+        # 6. Merged value wrapping (R1)
+        t6 = Vistab(style="light", padding=0)
+        t6.set_cols_width([5, 5])
+        t6.set_header(["Col1", "Col2"])
+        t6.add_row(["ExtremelyLongWord", "AnotherOne"])
+        
+        # Merge them (total width = 5 + 5 + separator width of 1 = 11)
+        t6.set_cell_span(0, 0, 2, combine=" ")
+        self.assertEqual(t6._rows[0][0].value, "ExtremelyLongWord AnotherOne")
+        
+        out = t6.draw()
+        # Verify it wrapped inside the combined block and does not crash or bleed
+        self.assertIn("ExtremelyLo", out)
+        self.assertIn("ngWord", out)
+        self.assertIn("AnotherOne", out)
 
 
 if __name__ == '__main__':

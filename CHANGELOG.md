@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **Theme API Standardization**: Promoted `set_theme()` as the official API; `apply_theme()` is deprecated (emits `DeprecationWarning`).
 - **Internal Cell Representation**: Row/header entries are now wrapped in `VistabCell` objects internally. While public API usage is unaffected, code that accesses the private `_rows` or `_header` structures directly must now use `str(cell)` to extract string values.
+- **`set_header_span` and `set_cell_span` mutators**: Added a `combine` string parameter (default `" "`) to merge existing covered cell values together, with `combine=None` triggering strict overwrite-prevention validation.
+
 
 
 ## [1.1.3] - 2026-05-03

@@ -1860,7 +1860,7 @@ class Vistab:
             self._header = processed_array
         return self
 
-    def set_header_span(self, col_idx: int, colspan: int) -> 'Vistab':
+    def set_header_span(self, col_idx: int, colspan: int, combine: Optional[str] = " ") -> 'Vistab':
         """Set the column span of a specific header cell."""
         if not self._header:
             raise ValueError("Header must be set before applying spans.")
@@ -1871,10 +1871,10 @@ class Vistab:
         if col_idx >= len(self._header) or col_idx < 0:
             raise IndexError("Column index out of range.")
             
-        self._apply_span_to_list(self._header, col_idx, colspan)
+        self._apply_span_to_list(self._header, col_idx, colspan, combine)
         return self
 
-    def set_cell_span(self, row_idx: int, col_idx: int, colspan: int) -> 'Vistab':
+    def set_cell_span(self, row_idx: int, col_idx: int, colspan: int, combine: Optional[str] = " ") -> 'Vistab':
         """Set the column span of a specific data cell."""
         if row_idx < 0:
             row_idx = len(self._rows) + row_idx
@@ -1887,10 +1887,13 @@ class Vistab:
         if col_idx >= len(row_list) or col_idx < 0:
             raise IndexError("Column index out of range.")
             
-        self._apply_span_to_list(row_list, col_idx, colspan)
+        self._apply_span_to_list(row_list, col_idx, colspan, combine)
         return self
 
-    def _apply_span_to_list(self, row_list: List[VistabCell], col_idx: int, colspan: int):
+    def _apply_span_to_list(self, row_list: List[VistabCell], col_idx: int, colspan: int, combine: Optional[str] = " "):
+        if combine is not None and not isinstance(combine, str):
+            raise TypeError("combine must be a string or None")
+
         if not isinstance(colspan, int) or colspan < 1:
             raise ValueError("Colspan must be an integer >= 1")
         if colspan == 1:
@@ -1929,13 +1932,30 @@ class Vistab:
                             break
                     raise ValueError(f"Span of {colspan} from column {col_idx} would overlap with an existing span starting at column {owner_idx}.")
             
-            # 2. Non-empty checks
-            val = cell.value if isinstance(cell, VistabCell) else cell
-            if val is not None and str(val).strip() != "":
-                raise ValueError(f"Span would overwrite non-empty cell at column {curr_idx}; clear it first.")
+            # 2. Non-empty checks (only raise in strict mode combine=None)
+            if combine is None:
+                val = cell.value if isinstance(cell, VistabCell) else cell
+                if val is not None and str(val).strip() != "":
+                    raise ValueError(f"column {curr_idx} is non-empty and combine=None; pass combine=' ' (or another separator) to merge these values, or clear the cell first.")
 
         # Validated successfully. Apply mutations transactionally.
-        source_val = target_cell.value if isinstance(target_cell, VistabCell) else target_cell
+        if isinstance(combine, str):
+            parts = []
+            t_val = target_cell.value if isinstance(target_cell, VistabCell) else target_cell
+            if t_val is not None and str(t_val).strip() != "":
+                parts.append(str(t_val))
+            
+            for offset in range(1, colspan):
+                curr_idx = col_idx + offset
+                cell = row_list[curr_idx]
+                val = cell.value if isinstance(cell, VistabCell) else cell
+                if val is not None and str(val).strip() != "":
+                    parts.append(str(val))
+            
+            source_val = combine.join(parts)
+        else:
+            source_val = target_cell.value if isinstance(target_cell, VistabCell) else target_cell
+
         source_cell = VistabCell(source_val, colspan=colspan)
         row_list[col_idx] = source_cell
         

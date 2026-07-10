@@ -54,11 +54,13 @@ Consumes an infinite generator stream mapping and formatting rows sequentially w
 ### `sort_by(col_idx: int, reverse: bool = False, key: callable = None)`
 Rearranges row structures internally tracking a dedicated physical column logic.
 
-### `set_header_span(col_idx: int, colspan: int)`
-Sets the column span of a specific header cell at the given physical column index (negative indexing supported). Raises `IndexError` for out-of-range columns, and `ValueError` for overlaps, placeholder targets, or spans `< 1` (where `colspan=1` is a no-op).
+### `set_header_span(col_idx: int, colspan: int, combine: Optional[str] = " ")`
+Sets the column span of a specific header cell at the given physical column index (negative indexing supported).
+- **`combine`** `(Optional[str])`: Separator used to merge non-empty covered cell values left-to-right (default is `" "`). If `""`, joins with no separator. If `None` (strict mode), raises `ValueError` if any covered cell is non-empty. Raises `TypeError` if `combine` is a non-string/non-None type. Raises `IndexError` for out-of-range columns, and `ValueError` for overlaps or placeholder targets. Merged cells are pre-formatted strings, so column-specific `set_cols_dtype` rules do not re-apply to them.
 
-### `set_cell_span(row_idx: int, col_idx: int, colspan: int)`
-Sets the column span of a specific data cell at the given physical row and column coordinate (negative indexing supported). Raises `IndexError` for out-of-range rows/columns, and `ValueError` for overlaps, placeholder targets, overwriting non-empty cells, or spans `< 1` (where `colspan=1` is a no-op).
+### `set_cell_span(row_idx: int, col_idx: int, colspan: int, combine: Optional[str] = " ")`
+Sets the column span of a specific data cell at the given physical row and column coordinate (negative indexing supported).
+- **`combine`** `(Optional[str])`: Separator used to merge non-empty covered cell values left-to-right (default is `" "`). If `""`, joins with no separator. If `None` (strict mode), raises `ValueError` if any covered cell is non-empty. Raises `TypeError` if `combine` is a non-string/non-None type. Raises `IndexError` for out-of-range rows/columns, and `ValueError` for overlaps or placeholder targets. Merged cells are pre-formatted strings, so column-specific `set_cols_dtype` rules do not re-apply to them.
 
 ### `ColSpan(value: Any, colspan: Optional[int] = None, span: Optional[int] = None)`
 Wrapper object passed inside headers or rows to declare inline column spans. Accept both `colspan` and `span` parameter keywords (with the second positional argument mapping to `colspan/span`). Spans `< 1` are rejected with `ValueError` (where `colspan=1` is a no-op).
