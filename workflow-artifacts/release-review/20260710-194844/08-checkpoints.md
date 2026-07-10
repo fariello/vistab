@@ -9,3 +9,8 @@
 - Secrets scan run (builtin + gitleaks): 290 low false positives (README asset URLs), no real secret/PII. Saved to secrets-scan.json.
 - MEM: clean (with-managed opens, bounded cache). LIVE: stream+sort guarded; no data-integrity defect.
 - No bugs/security/edge findings beyond S1-Q1 (type hints). No product changes (audit only).
+
+## Section 3 (tests/regression) — complete
+- 101 tests, 7 files, gold-master fixtures. All green. Recent changes well-covered.
+- Test-gap findings T1 (width-dist), T2 (styling parity), T3 (max_cols/stream/multi-span) — all Low, add in S7.
+- No High/LIVE/MEM findings from S2 needing new regression tests (S2 found none).
