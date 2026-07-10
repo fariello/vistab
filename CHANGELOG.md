@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-07-10
+
 ### Changed
 - **License changed from BSD-3-Clause to Apache-2.0.** Now licensed under the Apache License 2.0
   (see `LICENSE` and the new `NOTICE`). Apache-2.0 requires redistributions and derivative works to
