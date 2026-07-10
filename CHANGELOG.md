@@ -31,6 +31,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Internal Cell Representation**: Row/header entries are now wrapped in `VistabCell` objects internally. While public API usage is unaffected, code that accesses the private `_rows` or `_header` structures directly must now use `str(cell)` to extract string values.
 - **`set_header_span` and `set_cell_span` mutators**: Added a `combine` string parameter (default `" "`) to merge existing covered cell values together, with `combine=None` triggering strict overwrite-prevention validation.
 
+### Fixed
+- **`has_header = False` now un-headers row 0.** Previously, a table built via `Vistab(rows)` (no explicit `header=`) consumed row 0 as a header, and setting `has_header = False` afterward suppressed the divider but still rendered row 0 with centered header alignment. The setter now moves the consumed row back into the data rows (span-safe) and cell alignment is gated on `has_header`, so that row uses the body `alignment=`. Setting `has_header = True` re-consumes the current first row.
+
 
 
 ## [1.1.3] - 2026-05-03

@@ -520,5 +520,77 @@ class TestVistabColspan(unittest.TestCase):
         self.assertIn("AnotherOne", out)
 
 
+class TestHasHeaderAlignment(unittest.TestCase):
+    """Regression: has_header=False must turn a consumed row 0 into a normal data row
+    (body alignment, not centered header alignment). Bug prompt:
+    20260710-has-header-false-alignment-bug.md."""
+
+    ROWS = [
+        [".config", "10", ".opencode", "8", ".antigravity-server", "7"],
+        [".cargo", "6", ".mozilla", "5", ".expo", "4"],
+        [".cookiecutter_replay", "3", ".idlerc", "3", ".keras", "3"],
+    ]
+
+    def _first_body_line(self, table):
+        # Return the rendered line containing the first row's leading cell value.
+        for line in table.draw().splitlines():
+            if ".config" in line:
+                return line
+        self.fail("first row not found in output")
+
+    def test_has_header_false_after_rows_ctor_is_left_aligned(self):
+        """Repro A: Vistab(rows) then has_header=False -> row 0 left-aligned, not centered."""
+        t = Vistab(self.ROWS, alignment="lr" * 3)
+        t.has_header = False
+        t.set_decorations(Vistab.BORDER | Vistab.VLINES)
+        line = self._first_body_line(t)
+        # Left-aligned: ".config" sits immediately after the "│ " pad (no centering spaces).
+        self.assertIn("│ .config ", line)
+        # And it must NOT be centered (which would put spaces before ".config").
+        self.assertNotIn("   .config", line)
+        # Structurally row 0 is now a data row, header slot empty.
+        self.assertEqual(t._header, [])
+        self.assertEqual(len(t._rows), 3)
+
+    def test_header_false_at_construction_matches(self):
+        """Workaround B: header=False at construction yields the same left-aligned row 0."""
+        t = Vistab(self.ROWS, alignment="lr" * 3, header=False)
+        t.set_decorations(Vistab.BORDER | Vistab.VLINES)
+        self.assertIn("│ .config ", self._first_body_line(t))
+
+    def test_explicit_header_still_centered(self):
+        """Passing an explicit header iterable is unaffected: header renders centered + divider."""
+        t = Vistab([["a", "bb"], ["1", "2"]], header=["Head1", "Head2"], alignment="lr")
+        out = t.draw()
+        # Header divider line present (header retained structurally).
+        self.assertIn("├", out)
+        # Header cell centered (default header align 'c'): "Head1"/"Head2" render as header row.
+        self.assertIn("Head1", out)
+        self.assertTrue(t._header)  # header still consumed
+
+    def test_toggle_round_trip_stable(self):
+        """has_header False->True->False is stable and idempotent."""
+        t = Vistab([r[:] for r in self.ROWS], alignment="lr" * 3)
+        t.has_header = False
+        self.assertEqual(t._header, [])
+        self.assertEqual(len(t._rows), 3)
+        t.has_header = True
+        self.assertTrue(t._header)          # a header was re-consumed
+        self.assertEqual(len(t._rows), 2)
+        t.has_header = False
+        self.assertEqual(t._header, [])
+        self.assertEqual(len(t._rows), 3)
+
+    def test_colspan_in_row0_with_has_header_false_renders(self):
+        """Colspan-safe: a row-0 ColSpan survives demotion and draws without KeyError."""
+        from vistab import ColSpan
+        t = Vistab([[ColSpan("SPANNED", 2), "x"], ["a", "b", "c"]], alignment="llc")
+        t.has_header = False
+        out = t.draw()  # must not raise
+        self.assertIn("SPANNED", out)
+        self.assertEqual(t._header, [])
+        self.assertEqual(len(t._rows), 2)
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -1040,12 +1040,18 @@ class Vistab:
 
         Important Behavior:
         -------------------
-        By default, Vistab initializes with `has_header=True`. If you append raw datasets without wanting headers drawn, set this to False.
+        By default, Vistab initializes with `has_header=True`. Building a table via
+        `Vistab(rows)` (with no explicit `header=`) consumes the first row as the header.
+        Setting `has_header = False` afterward turns that consumed row back into an ordinary
+        data row: the row is moved from the header slot to the front of the data rows, so it
+        renders with the body column alignment (not centered header alignment) and no header
+        divider is drawn. Setting it back to `True` re-consumes the current first data row as
+        the header. The move preserves the row's cells verbatim (including any column spans).
 
         Args:
         -----
         value : bool
-            Boolean indicating if the top-most table string sequences are styled as center-aligned headers.
+            Boolean indicating whether the top-most row is treated as a table header.
 
         Example:
         --------
@@ -1053,6 +1059,21 @@ class Vistab:
         table.has_header = False
         ```
         """
+        value = bool(value)
+        if value == self._has_header:
+            self._has_header = value
+            return
+
+        if not value:
+            # Turning the header off: demote a consumed header row back into the data rows.
+            if self._header:
+                self._rows.insert(0, self._header)
+                self._header = []
+        else:
+            # Turning the header on: promote the current first data row into the header slot.
+            if not self._header and self._rows:
+                self._header = self._rows.pop(0)
+
         self._has_header = value
 
     def reset(self) -> 'Vistab':
@@ -2866,7 +2887,7 @@ class Vistab:
 
                 colspan = cell_obj.colspan if isinstance(cell_obj, VistabCell) else 1
                 w = self._span_block_width(col_idx, colspan)
-                align = self._header_align[col_idx] if isheader else self._align[col_idx]
+                align = self._header_align[col_idx] if (isheader and self._has_header) else self._align[col_idx]
 
                 ansi_on, ansi_off = self._get_active_ansi_wrap(row_idx, col_idx, isheader, is_abnormal=is_abnormal)
                 if ansi_on: out_parts.append(ansi_on)
