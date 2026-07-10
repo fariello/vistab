@@ -1,0 +1,2 @@
+- Path: [.agents/plans/pending/20260709-assess-documentation.md](file:///home/gfariello/VC/vistab/.agents/plans/pending/20260709-assess-documentation.md)
+- Summary: Proposes updating references from deprecated methods `apply_theme` and `header` to `set_theme` and `set_header`, resolving CLI warnings, aligning `TODO.md` roadmap items, and updating version strings.

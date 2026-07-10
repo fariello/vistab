@@ -1,0 +1,7 @@
+id,severity,remediation_risk_and_axis,persona,area,finding,evidence,proposed_action,disposition
+DOC-01,High,Low/Complexity,Software Engineer,Code/CLI,CLI internally invokes deprecated apply_theme causing warnings,src/vistab.py:3643,Replace with set_theme,Proposed
+DOC-02,Medium,Low/Complexity,Complete Novice,Docs/API,apply_theme documented instead of set_theme,docs/API.md:139;README.md:289,Replace docs with set_theme,Proposed
+DOC-03,Low,Low/Complexity,Complete Novice,Docs/API,Init docstring references deprecated header(),src/vistab.py:781,Replace with set_header(),Proposed
+DOC-04,Medium,Low/Complexity,Developer,Docs/Roadmap,TODO.md lists Colspan as future roadmap item when it is complete,TODO.md:25,Remove completed item,Proposed
+DOC-05,Low,Low/Complexity,Software Engineer,Code Gen,show-code prints deprecated apply_theme,src/vistab.py:3757,Replace with set_theme,Proposed
+DOC-06,Low,Low/Complexity,Complete Novice,Docs/Version,API docs reference outdated version 1.1.2,docs/API.md:3,Update header to 1.1.3,Proposed
