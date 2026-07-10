@@ -135,20 +135,14 @@ Fix-by-default; all are Low Remediation Risk (additive/validation, no engine cha
 - `FUNCTIONAL_SPEC.md` §9: add colspan validation/error behavior.
 - `CHANGELOG.md`: entry for the `colspan=` alias and the new validation.
 
-## Open questions
+## Open questions (Resolved)
 
-1. **`colspan=1` semantics (R6):** proposed to reject `< 2` everywhere (consistent with
-   `ColSpan`). This may surprise a caller passing a *computed* span that happens to be 1
-   (they might expect a no-op). Confirm: reject (current assumption), treat `1` as a no-op,
-   or make `1` mean "clear an existing span" (add an explicit `clear_span()` instead).
-2. **Alias direction:** proposed to keep `self.span` as the internal attribute and add
-   `self.colspan` as an alias (minimizes internal churn). Confirm acceptable, or prefer
-   renaming internal usage to `colspan`.
-3. **Covered non-empty cells (R3):** when `set_cell_span`/`set_header_span` spans over
-   columns that already hold non-empty values, should the mutator **raise** (default
-   proposed here — no silent data loss), **silently absorb** them (matching how inline
-   `ColSpan` discards unspecified slots), or **warn**? Confirm before execution; the Step 2
-   test enforces whichever is chosen.
+1. **`colspan=1` semantics (R6):**
+   - **Decision**: Treat `colspan=1` as a **no-op** (returns immediately without exception, does not mutate, and does not create placeholders). This ensures computed spans that resolve to 1 do not crash the caller. Spans `< 1` are still rejected.
+2. **Alias direction:**
+   - **Decision**: Standardize and rename internal attributes to `colspan` globally (e.g. on `ColSpan` and `VistabCell` objects) rather than just keeping a property alias.
+3. **Covered non-empty cells (R3):**
+   - **Decision**: **Raise `ValueError`** if a coordinate mutator would overwrite a non-empty cell (e.g., cell value is not `None`, `""`, or placeholder). This enforces the "no silent failure" guideline and prevents accidental data loss. Caller must explicitly clear columns to be covered.
 
 ## Approval and execution gate
 
