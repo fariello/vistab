@@ -12,3 +12,7 @@
 ## Section 3 (tests/regression)
 - Testing/regression expert: strong suite (101 tests, gold-master fixtures for demo/CLI/colspan/ANSI). Recent changes well-pinned (has_header 5 tests, junction glyphs 7 tests, combine options, CLI verbs 21 tests). Gaps: colspan width-distribution (T1), styling parity (T2), max_cols/stream/multi-span (T3) — Low severity, working-but-unpinned.
 - QA/QC: the 6 previously-failing deprecation-warning regression tests are now green (apply_theme leak fixed). No brittle/misleading tests observed; fixtures are byte-exact which is appropriately strict for a renderer.
+
+## Section 4 (docs/specs/examples)
+- Complete novice: README opens with a clear one-line intent + Key Features + Quick Start; `pip install vistab` and `vistab[cjk]` documented; can reach first success from README alone. CLI diagnostics reachable via intuitive `vistab show styles`. No manual-required basic task found.
+- UI/UX: docs and CLI terminology consistent (show/help/demo verbs mirror flags); API.md version-agnostic (no drift). Minor: architecture/decision rationale not in an obvious project-owned doc (KD1, Low).

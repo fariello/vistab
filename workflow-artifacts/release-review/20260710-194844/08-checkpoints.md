@@ -14,3 +14,7 @@
 - 101 tests, 7 files, gold-master fixtures. All green. Recent changes well-covered.
 - Test-gap findings T1 (width-dist), T2 (styling parity), T3 (max_cols/stream/multi-span) — all Low, add in S7.
 - No High/LIVE/MEM findings from S2 needing new regression tests (S2 found none).
+
+## Section 4 (docs/specs/examples) — complete
+- Docs accurate post documentation-IPD (D1). Cold-start: adequate via README+FUNCTIONAL_SPEC+executed IPDs; KD1 (Low) suggests a short ARCHITECTURE.md.
+- No doc/backlog contradictions. Examples run.

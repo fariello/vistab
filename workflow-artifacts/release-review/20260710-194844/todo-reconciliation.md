@@ -9,3 +9,7 @@ Source: `TODO.md` (only backlog source; no in-code markers).
 | CLI `--delimiter` | out-of-scope (future) |
 | CLI `--auto-width` | out-of-scope (future) |
 | CLI `--json-out` | out-of-scope (future) |
+
+## S4 doc-vs-backlog reconciliation
+- TODO.md CLI ideas (--delimiter/--auto-width/--json-out) are NOT documented as existing features (correctly absent from README/CLI docs) — no doc/backlog contradiction.
+- Colspan documented as shipped in README/API/SPEC and marked done in TODO — consistent.
