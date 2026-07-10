@@ -66,16 +66,36 @@ If predefined themes aren't enough, you can override coordinate elements using d
 - **`-x, --last-col-color` / `-y, --last-col-bg-color`**: Target the dynamic rightmost boundary.
 - **`-g, --table-bg-color`**: Apply a global background wash uniformly across the layout.
 
-## Diagnostic Endpoints & Theme Customization
+## Command-Based Subcommands & Diagnostic Demos
 
-The CLI provides visual evaluation matrices to verify layouts locally:
+Vistab supports a natural subject/verb/object CLI subcommand syntax:
+
+### 1. The `show` Command
+Visualize current capabilities and formatting styles. Flags remain supported as aliases (e.g. `vistab show themes` is identical to `vistab --demo themes`):
+- **`vistab show themes`** (alias: `--demo themes`): Render a color matrix showcasing every pre-built Theme algorithm.
+- **`vistab show styles`** (alias: `--demo styles`): Visualize structural framework limits parsing valid physical Table styles.
+- **`vistab show colors`** (alias: `--demo colors`): Print the terminal execution dictionary displaying CLI colors.
+- **`vistab show capabilities`** (alias: `show caps`, `--demo capabilities`): Run a comprehensive CJK and ANSI wrapping capabilities test.
+- **`vistab show anatomy`** (alias: `--demo anatomy`): Render a detailed guide displaying the components of a table layout.
+
+### 2. The `demo` Command
+Run interactive feature demonstrations:
+- **`vistab demo span`** (alias: `demo colspan`, `demo rowspan`, `--demo span`): Render a comprehensive column spanning (colspan) demo in action, with the corresponding Python code printed directly to stdout.
+
+### 3. The `help` Command
+Show contextual help screens:
+- **`vistab help colors`** (alias: `--help-colors`): Show advanced coordinate-based color parameters.
+- **`vistab help advanced`** (alias: `help adv`, `--help-advanced`): Show advanced streaming, sorting, and jagged matrix behaviors.
+
+### Unknown Subjects and Error Handling
+If an unknown subject is passed (e.g. `vistab show invalid`), the CLI writes a list of valid subjects to **stderr** and exits with code **2**. A bare verb command (e.g. `vistab show` or `vistab demo`) prints the same list of valid subjects to **stdout** and exits cleanly with code **0**.
+
+> [!IMPORTANT]
+> **Reserved File Name Collisions**: Because `show`, `demo`, and `help` are reserved subcommand words, if you attempt to render a local file literally named `show`, `demo`, or `help`, Vistab will try to run the subcommand instead. To bypass this collision, specify the relative path to the file (e.g., `vistab ./show`) or pass it via the input flag (e.g., `vistab -i show`).
+
+### 4. Configuration Diagnostics
 - **`-K, --create-config TARGET`**: Generate a standard configuration file globally by default, or mapped to a passed target path (e.g. `vistab --create-config` creates `~/.config/vistab/config.toml`).
 - **`-Q, --show-config`**: Print the paths mapping global dynamic configuration directories and exit.
-- **`vistab --demo themes`**: Render a color matrix showcasing every pre-built Theme algorithm.
-- **`vistab --demo styles`**: Visualize structural framework limits parsing valid physical Table styles.
-- **`vistab --demo colors`**: Print the terminal execution dictionary displaying CLI colors.
-- **`vistab --demo capabilities`**: Run a comprehensive CJK and ANSI wrapping capabilities test.
-- **`vistab --demo anatomy`**: Render a detailed guide displaying the components of a table layout.
 
 
 ### The Configuration Workflow (`--save-theme` & `--show-code`)

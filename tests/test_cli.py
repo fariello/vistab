@@ -158,5 +158,99 @@ class TestCLI(unittest.TestCase):
             self.assertIn("testing_theme_temp", data)
             self.assertEqual(data["testing_theme_temp"]["style"], "round-header") # Default style
 
+class TestCLIVerbs(unittest.TestCase):
+    """Validation framework for the natural-language subject/verb/object subcommands."""
+
+    @patch('sys.stdout', new_callable=io.StringIO)
+    @patch('sys.argv', ['vistab', 'show', 'styles'])
+    def test_show_styles(self, mock_stdout):
+        import vistab
+        with self.assertRaises(SystemExit) as e:
+            vistab.main()
+        self.assertEqual(e.exception.code, 0)
+        self.assertIn("Available Styles", mock_stdout.getvalue())
+
+    @patch('sys.stdout', new_callable=io.StringIO)
+    @patch('sys.argv', ['vistab', 'show', 'colors'])
+    def test_show_colors(self, mock_stdout):
+        import vistab
+        with self.assertRaises(SystemExit) as e:
+            vistab.main()
+        self.assertEqual(e.exception.code, 0)
+        self.assertIn("Foreground Colors", mock_stdout.getvalue())
+
+    @patch('sys.stdout', new_callable=io.StringIO)
+    @patch('sys.argv', ['vistab', 'show', 'caps'])
+    def test_show_caps_alias(self, mock_stdout):
+        import vistab
+        with self.assertRaises(SystemExit) as e:
+            vistab.main()
+        self.assertEqual(e.exception.code, 0)
+        self.assertIn("ansi color", mock_stdout.getvalue().lower())
+
+    @patch('sys.stdout', new_callable=io.StringIO)
+    @patch('sys.argv', ['vistab', 'show'])
+    def test_bare_show_verb(self, mock_stdout):
+        import vistab
+        with self.assertRaises(SystemExit) as e:
+            vistab.main()
+        self.assertEqual(e.exception.code, 0)
+        self.assertIn("Usage: vistab show", mock_stdout.getvalue())
+
+    @patch('sys.stderr', new_callable=io.StringIO)
+    @patch('sys.argv', ['vistab', 'show', 'bogus'])
+    def test_invalid_show_subject(self, mock_stderr):
+        import vistab
+        with self.assertRaises(SystemExit) as e:
+            vistab.main()
+        self.assertEqual(e.exception.code, 2)
+        self.assertIn("Unknown show subject 'bogus'", mock_stderr.getvalue())
+
+    @patch('sys.stdout', new_callable=io.StringIO)
+    @patch('sys.argv', ['vistab', 'help', 'colors'])
+    def test_help_colors(self, mock_stdout):
+        import vistab
+        with self.assertRaises(SystemExit) as e:
+            vistab.main()
+        self.assertEqual(e.exception.code, 0)
+        self.assertIn("--border-color COLOR", mock_stdout.getvalue())
+
+    @patch('sys.stderr', new_callable=io.StringIO)
+    @patch('sys.argv', ['vistab', 'help', 'bogus'])
+    def test_invalid_help_subject(self, mock_stderr):
+        import vistab
+        with self.assertRaises(SystemExit) as e:
+            vistab.main()
+        self.assertEqual(e.exception.code, 2)
+        self.assertIn("Unknown help subject 'bogus'", mock_stderr.getvalue())
+
+    @patch('sys.stdout', new_callable=io.StringIO)
+    @patch('sys.argv', ['vistab', 'demo', 'span'])
+    def test_demo_span(self, mock_stdout):
+        import vistab
+        with self.assertRaises(SystemExit) as e:
+            vistab.main()
+        self.assertEqual(e.exception.code, 0)
+        self.assertIn("Column Spanning (Colspan) Demonstration", mock_stdout.getvalue())
+        self.assertIn("Example code:", mock_stdout.getvalue())
+
+    @patch('sys.stdout', new_callable=io.StringIO)
+    @patch('sys.argv', ['vistab', 'demo', 'rowspan'])
+    def test_demo_rowspan_alias(self, mock_stdout):
+        import vistab
+        with self.assertRaises(SystemExit) as e:
+            vistab.main()
+        self.assertEqual(e.exception.code, 0)
+        self.assertIn("Column Spanning (Colspan) Demonstration", mock_stdout.getvalue())
+
+    @patch('sys.stdout', new_callable=io.StringIO)
+    @patch('sys.argv', ['vistab', '--demo', 'colspan'])
+    def test_demo_flag_alias(self, mock_stdout):
+        import vistab
+        with self.assertRaises(SystemExit) as e:
+            vistab.main()
+        self.assertEqual(e.exception.code, 0)
+        self.assertIn("Column Spanning (Colspan) Demonstration", mock_stdout.getvalue())
+
 if __name__ == '__main__':
     unittest.main()

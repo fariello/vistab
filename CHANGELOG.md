@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Line suppression & layout routing**: Automatically calculates column widths across spans, wraps text to merged block boundaries, and suppresses interior horizontal intersections/junctions underneath spanned cells.
 - **`NOTICE`** file with the required Apache-2.0 attribution string; **`CITATION.cff`** added for
   citation; README gained a License/Attribution/Citation section.
+- **Subject/Verb/Object CLI Subcommands**: Added natural-language subcommand structure (`show`, `help`, `demo`) as the primary CLI entry points, supporting aliases like `show caps`, `help adv`, and `demo span` (prints colspan demo alongside its Python code). Existing flags remain supported as aliases.
 
 ### Changed
 - **Theme API Standardization**: Promoted `set_theme()` as the official API; `apply_theme()` is deprecated (emits `DeprecationWarning`).

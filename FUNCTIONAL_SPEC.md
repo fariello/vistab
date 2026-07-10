@@ -35,10 +35,15 @@ The architecture is separated into the execution loop logic and the physical pro
 *   `_splitit()`: The string manipulator breaking multi-line sentences to respect `max_width` limits while masking ANSI character lengths successfully.
 
 ## 5. CLI Behavior and Supported Command Patterns
-The CLI utilizes `argparse` to decode operations.
+The CLI parses operations via both natural subcommands and standard flags.
+*   **Verb-based Subcommands**:
+    *   `show <subject>`: Renders diagnostic information (`styles`, `colors`, `capabilities`/`caps`, `anatomy`, `themes`).
+    *   `demo <subject>`: Runs interactive demonstrations (e.g. `demo span` displaying colspan features and printing the matching Python code).
+    *   `help [subject]`: Displays basic help or contextual help grids (`colors`, `advanced`/`adv`).
+*   **Flag-based Equivalents**: Diagnostic flags (like `--demo <subject>`, `--help-colors`, `--help-advanced`) remain fully supported as backward-compatible aliases.
 *   **Styles and Borders**: Controlled by `--style`, `--style-def`.
 *   **Global Execution Flags**: Handled via `--create-config`, `--show-config`, `--save-theme`, and `--show-code`.
-*   **Exit Semantics**: When executing successfully, the tool exits with `0`. If an empty data pipe is transmitted or fatal formatting violations occur, the program exits with code `1` and prints the error matrix to standard error (`sys.stderr`).
+*   **Exit Semantics**: When executing successfully, the tool exits with `0`. If an empty data pipe is transmitted or fatal formatting violations occur, the program exits with code `1`. For command-line subcommand syntax errors (e.g., unknown subjects), the CLI prints verb usage to standard error (`sys.stderr`) and exits with code `2`.
 
 ## 6. Inputs, Outputs, Side Effects, and Persistence Behavior
 *   **Inputs**: Iterables of iterables (`Iterable[Iterable[Any]]`) strings, floats, ints, or valid file paths.

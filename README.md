@@ -62,7 +62,7 @@ print(table.draw())
 
 To view available styles, run:
 ```bash
-vistab --demo styles
+vistab show styles
 ```
 ![Available Styles](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-demo-styles.png)
 
