@@ -41,7 +41,7 @@ The CLI lets you manage data layout, spacing, and wrapper constraints via standa
 ### 3. Data Pipelines & Streaming
 - **`--stream`**: Bypasses full array buffering, printing mapped iterations continuously.
 - **`--stream-probe`**: Scans the first N rows computationally to align continuous widths upfront (default: 50).
-- **`--sort-by INDEX`**: Sort arrays structurally based on a specified row index.
+- **`--sort-by INDEX`**: Sort arrays structurally based on a specified column index (0-indexed).
 - **`--sort-reverse`**: Flip sorting logic mapped off `--sort-by`.
 - **`--csv-dialect NAME`**: Enforce native Python CSV sniffer logic for specific structure parsing.
 - **`--on-short ACTION`**: Set boundary routing for missing CSV columns (`pad`, `skip`, `raise`).
@@ -71,9 +71,12 @@ If predefined themes aren't enough, you can override coordinate elements using d
 The CLI provides visual evaluation matrices to verify layouts locally:
 - **`-K, --create-config TARGET`**: Generate a standard configuration file globally by default, or mapped to a passed target path (e.g. `vistab --create-config` creates `~/.config/vistab/config.toml`).
 - **`-Q, --show-config`**: Print the paths mapping global dynamic configuration directories and exit.
-- **`vistab -M`**: Render a color matrix showcasing every pre-built Theme algorithm.
-- **`vistab -L`**: Visualize structural framework limits parsing valid physical Table styles.
-- **`vistab -C`**: Print the terminal execution dictionary displaying CLI colors.
+- **`vistab --demo themes`**: Render a color matrix showcasing every pre-built Theme algorithm.
+- **`vistab --demo styles`**: Visualize structural framework limits parsing valid physical Table styles.
+- **`vistab --demo colors`**: Print the terminal execution dictionary displaying CLI colors.
+- **`vistab --demo capabilities`**: Run a comprehensive CJK and ANSI wrapping capabilities test.
+- **`vistab --demo anatomy`**: Render a detailed guide displaying the components of a table layout.
+
 
 ### The Configuration Workflow (`--save-theme` & `--show-code`)
 You can lock in CLI outputs saving configurations mapped to `~/.config/vistab/themes.json` using `--save-theme`:

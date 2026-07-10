@@ -25,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`NOTICE`** file with the required Apache-2.0 attribution string; **`CITATION.cff`** added for
   citation; README gained a License/Attribution/Citation section.
 
+### Changed
+- **Theme API Standardization**: Promoted `set_theme()` as the official API; `apply_theme()` is deprecated (emits `DeprecationWarning`).
+- **Internal Cell Representation**: Row/header entries are now wrapped in `VistabCell` objects internally. While public API usage is unaffected, code that accesses the private `_rows` or `_header` structures directly must now use `str(cell)` to extract string values.
+
+
 ## [1.1.3] - 2026-05-03
 
 ### Added

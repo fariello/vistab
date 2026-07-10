@@ -778,7 +778,7 @@ class Vistab:
         header : Union[bool, Iterable[Any], str, None]
             If True (default), extracts the first row as the top-most table header.
             If False, "" or None, bypasses extraction mapping structurally rows naturally.
-            If an Iterable is passed, maps directly into `self.header()`.
+            If an Iterable is passed, maps directly into `self.set_header()`.
         max_width : int
             The hard terminal rendering width limit enforced via color-aware wrapping. Default is 0.
         alignment : Optional[str]
@@ -3640,7 +3640,7 @@ def main():
                 table.set_precision(args.precision)
 
             if args.theme:
-                table.apply_theme(args.theme)
+                table.set_theme(args.theme)
 
                 # Ensure explicit command-line style or padding overrides theme defaults
                 if "-s" in sys.argv or "--style" in sys.argv:
@@ -3754,7 +3754,7 @@ def main():
                 if getattr(args, 'show_code', False):
                     print("import vistab\n")
                     print("custom_theme = " + json.dumps(compiled_theme, indent=4) + "\n")
-                    print("table = vistab.Vistab().apply_theme(custom_theme)")
+                    print("table = vistab.Vistab().set_theme(custom_theme)")
 
                     has_geometry = any([
                         getattr(args, 'col_widths', None), getattr(args, 'align', None),

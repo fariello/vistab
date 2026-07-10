@@ -56,14 +56,14 @@ class TestConfig(unittest.TestCase):
             self.assertEqual(table._style, "double")
             self.assertEqual(table._pad, 3)
 
-    def test_theme_apply(self):
+    def test_theme_set(self):
         # We loaded json in setUp, let's inject it into THEMES
         import vistab
         with open(self.dummy_json, "r") as f:
             vistab.Vistab.THEMES.update(json.load(f))
         
         table = Vistab()
-        table.apply_theme("my_custom_theme")
+        table.set_theme("my_custom_theme")
         self.assertEqual(table._style, "ascii")
         self.assertEqual(table._pad, 5)
         self.assertIn("41", table._table_style.get("bg", "")) # red bg

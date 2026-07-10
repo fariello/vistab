@@ -6,11 +6,12 @@
 
 ## Key Features
 
-- **Lightweight Native Core**: Operates primarily off the Python standard library with `wcwidth` enabling accurate string geometry calculations.
-- **Color-Aware Word Wrapping**: measures and wraps table widths over embedded, invisible ANSI formatting sequences without breaking table geometry.
-- **Coordinate-Based Styling API**: Colorize rows, columns, headers, or specific cells declaratively (e.g. `set_header_style(bg="red", bold=True)`).
-- **Hierarchical TOML Configurations**: Persist your favorite table paddings and layout themes cross-project using a localized `.vistab.toml`.
-- **Advanced Data Parsing**: Injects automatic text wrapping, infers scientific datatypes, and parses CSV files.
+- **Lightweight Native Core**: Built on the Python standard library with `wcwidth` for accurate string widths.
+- **Color-Aware Word Wrapping**: Wraps table content over embedded ANSI format sequences without corrupting geometries.
+- **Coordinate Styling API**: Style rows, columns, headers, or specific cells via clean method chaining.
+- **Hierarchical Configuration**: Load table paddings and themes from localized configurations (`vistab.toml`).
+- **Data-Aware Engine**: Auto-wraps text, infers data types, and parses CSV formats natively.
+
 
 ## Detailed Documentation
 Looking for an exhaustive configuration breakdown or command-line parser bindings?
@@ -67,11 +68,11 @@ vistab --demo styles
 
 ## Cookbook Examples
 
-While `Vistab` excels at rendering arrays, it's also a data-aware formatting engine. Because the API uses a **fluent** architecture, you can chain multiple logic mutations without intermediate variables.
+Vistab's fluent API lets you chain layout and formatting mutations cleanly without intermediate variables.
 
 ### 1. Data Modification & Sorting
 
-You can completely replace data sets or sequentially sort physical rows tracking exact coordinate values without needing `pandas` overhead: 
+Replace datasets or sort rows by column index without Pandas overhead:
 ```python
 table = Vistab(style="round", padding=1)
 
@@ -81,7 +82,7 @@ table.set_rows(my_messy_csv_data, header=True).sort_by(1, reverse=True)
 
 ### 2. Output Formatting & Safe Dimensional Windows
 
-Sometimes querying SQL leaves us with extensive data dimensions. We can protect logging interfaces elegantly:
+Constrain table outputs to fit terminal dimensions when logging large datasets:
 ```python
 # Force-limit outputs protecting CLI limits! 
 table.set_max_rows(10).set_max_cols(5)
@@ -286,7 +287,7 @@ custom_theme = {
     ]
 }
 
-table = vistab.Vistab().apply_theme(custom_theme)
+table = vistab.Vistab().set_theme(custom_theme)
 
 # ... map inputs and execute drawing
 print(table.draw())
@@ -310,7 +311,7 @@ Or in code like this:
 ```python
 import vistab
 
-table = vistab.Vistab().apply_theme("my_custom_theme")
+table = vistab.Vistab().set_theme("my_custom_theme")
 
 # ... map inputs and execute drawing
 print(table.draw())

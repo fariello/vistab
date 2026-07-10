@@ -22,10 +22,8 @@ Currently, `Vistab` raises an `ArraySizeError` when users input dataset rows tha
 ### 2. Cell Spanning (Colspan & Rowspan)
 Grid geometries currently calculate bounds on a strict row-by-row isolation loop. Spanning cells across boundaries breaks standard parsing logic.
 
-#### Colspan (Target: v1.2.0)
-*   **Complexity:** Medium
-*   **Architecture Requirements:** Will require introducing a structured data wrapper (e.g., `Vistab.ColSpan("Title", 3)`) that `_check_row_size()` identifies. During computation, `_compute_cols_width()` must safely coalesce adjacent mapped widths, and `_draw_line()` must bypass interior vertical separators `|` across the span block locally. 
-*   **Feasibility:** Aligns with the current left-to-right sequential rasterization logic. 
+#### Colspan (Completed in v1.2.0)
+Column spanning has been fully implemented, tested, and integrated. Inline spans are defined via `ColSpan(value, colspan)`, and dynamically via `set_header_span` and `set_cell_span`. Spans support text wrapping across columns and suppress vertical intersection line junctions.
 
 #### Rowspan (Future Consideration)
 *   **Complexity:** Extreme / Very High

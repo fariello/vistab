@@ -1,6 +1,6 @@
 [README](../README.md) | [API](API.md) | [CLI](CLI.md) | [SPEC](../FUNCTIONAL_SPEC.md) | [CHANGELOG](../CHANGELOG.md)
 
-# Vistab API Reference (v1.1.2)
+# Vistab API Reference
 
 `Vistab` uses a **fluent API**. Almost all manipulation and styling methods return the instance itself (`self`), allowing developers to chain operations:
 
@@ -19,14 +19,18 @@ Negative indexing is universally supported for targeting structural coordinates.
 
 ## 1. Instantiation
 
-### `__init__(rows: list = None, header: bool = True, max_width: int = 0, alignment: str = None, style: str = None, padding: int = None)`
+### `__init__(rows: list = None, header: bool = True, max_width: int = 0, alignment: str = None, style: str = None, padding: int = None, title: str = None, max_rows: int = 0, max_cols: int = 0, theme: Union[str, dict] = None)`
 Initializes the Vistab framework.
 - **`rows`** `(List[List[Any]])`: 2D array of initial grid cell contents. 
 - **`header`** `(Union[bool, List[str]])`: Set to `False` to treat index `0` as standard data. Pass a textual list to force custom headers.
 - **`max_width`** `(int)`: Global terminal boundary threshold (0 = infinite).
 - **`alignment`** `(str)`: Ordered characters (`'l'`, `'c'`, `'r'`) assigning left/center/right formatting.
-- **`style`** `(str)`: Named ASCII/Unicode layout string (e.g., `'round'`, `'light'`, `'markdown'`).
+- **`style`** `(str)`: Named ASCII/Unicode layout string (e.g., `'round'`, `'light'`, `'markdown'`). Run `vistab --demo styles` to view all available styles.
 - **`padding`** `(int)`: Base whitespace injected logically around strings.
+- **`title`** `(str)`: Optional centered title printed above the table.
+- **`max_rows`** `(int)`: Truncates bottom rows bounding vertical limits (0 = infinite).
+- **`max_cols`** `(int)`: Truncates right-most columns to restrict horizontal bounds (0 = infinite).
+- **`theme`** `(Union[str, dict])`: A named theme (e.g., `'ocean'`) or a custom style dictionary to apply post-construction.
 
 ---
 
@@ -136,11 +140,11 @@ Locks specific cell boundaries protecting manual geometries.
 Vistab provides discrete coordinate styling enabling robust parameter modifications elegantly targeting boundaries.
 All color keywords map to CLI counterparts (`red`, `green`, `black`, `bright_black`, `none`).
 
-### `apply_theme(theme: Union[str, dict])`
-Injects pre-configured algorithms logically matching Zebra-matrices.
+### `set_theme(theme: Union[str, dict])`
+Injects pre-configured algorithms logically matching Zebra-matrices. (Note: `apply_theme` is supported as a deprecated alias for backward compatibility).
 
 ```python
-table.apply_theme({
+table.set_theme({
     "table": {"bg": "bright_black"}, # Global Target
     "row_-1": {"bg": "magenta"}, # Base End Target
     "header": {"fg": "white"}

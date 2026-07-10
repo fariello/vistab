@@ -159,7 +159,7 @@ class TestVistabRegression(unittest.TestCase):
             "row_-1": {"fg": "black", "bg": "white"}
         }
         
-        table = Vistab().apply_theme(custom_theme)
+        table = Vistab().set_theme(custom_theme)
         table.add_rows([
             ["Index", "Metric", "Status"],
             ["1", "45ms", "OK"],
@@ -342,7 +342,7 @@ class TestVistabRegression(unittest.TestCase):
             if style:
                 table.set_style(style)
             if theme:
-                table.apply_theme(theme)
+                table.set_theme(theme)
             if widths:
                 table.set_cols_width(widths)
                 
@@ -384,7 +384,7 @@ class TestVistabRegression(unittest.TestCase):
         
         table = Vistab()
         # Create a layout where cell 2 has a forest theme blue background.
-        table.apply_theme("forest")
+        table.set_theme("forest")
         table.set_cols_width([15, 20])
         
         # Test 1: Inject a stray reset code \033[0m right into the middle of the cell.

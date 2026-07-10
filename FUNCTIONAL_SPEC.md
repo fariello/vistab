@@ -10,7 +10,7 @@ Vistab is a lightweight Python library and command-line interface (CLI) tool des
 ## 2. Core Concepts and Terminology
 *   **Vistab**: The core class object that tracks state, applying rendering decorators iteratively across a grid.
 *   **Grid**: The two-dimensional internal array of nested rows and columns representing the physical table structure.
-*   **Cell**: The specific string boundary intersecting a single row and column.
+*   **Cell**: The structural entry intersecting a single row and column, represented internally by a `VistabCell` object wrapping the value and its span configurations (transparence-wrapped so standard string operations succeed).
 *   **Theme**: A persistent configuration dictionary modifying border shapes and cell attributes uniformly across the Grid.
 *   **ANSI Sanitization**: The internal mechanism (`sanitize_ansi`) that isolates and strips destructive cursor-manipulating ANSI sequences to prevent terminal display hijacking.
 
@@ -26,7 +26,7 @@ The architecture is separated into the execution loop logic and the physical pro
 **Major Public APIs:**
 *   `Vistab(rows, header)`: The primary constructor routing standard lists into the mapping boundaries.
 *   `set_cols_dtype(arrays)`: Handles precise formatting modifications iteratively.
-*   `apply_theme(theme_dict)`: Resolves active dictionary style bindings across the target variables.
+*   `set_theme(theme)`: Resolves active dictionary style bindings across the target variables.
 *   `draw()`: The output loop returning the finalized Unicode strings.
 *   `stream()`: Generates lines individually, resolving unbounded data flows.
 
@@ -65,6 +65,7 @@ Data processing handles standard structured grids:
     *   `ColSpan(value, colspan)`: Allows inline spans via direct cell objects.
     *   `set_header_span(col_idx, colspan)` / `set_cell_span(row_idx, col_idx, colspan)`: Post-ingestion API coordinates defining merged blocks.
     *   **Geometry Layout & Text Wrapping**: Column widths are computed by ignoring spans initially to find natural widths, then distributing deficits across spanned cells. Text wrapping wraps to the spanned block width, and intermediate horizontal border junctions under spanned cells are suppressed.
+*   **Internal Representation**: Grid cells are wrapped in `VistabCell` and `VistabPlaceholderCell` objects. These structures are private; direct mutations or assumptions that `table._rows` contains raw strings are unsupported. The public API abstracts these details completely.
 
 ## 9. Validation and Error Handling Behavior
 *   **Ragged and Jagged Matrices**: Asymmetric matrices throw a structured `ArraySizeError` when evaluated. However, the system allows resolution routing: `--on-short=pad` automatically fills the bounds, and `--on-long=truncate` clips them to map the grids predictably.

@@ -33,7 +33,7 @@ def main():
     }
     
     # Pushing mappings
-    table.apply_theme(custom_theme)
+    table.set_theme(custom_theme)
     print(table.draw())
 
 if __name__ == "__main__":
