@@ -10,9 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Bidi-safe rendering of right-to-left text.** When a cell contains RTL script (Arabic,
+  Hebrew, etc.), vistab now wraps each cell's content in Unicode LTR isolates
+  (`U+2066`..`U+2069`) so the terminal no longer reorders the whole line and flips the
+  columns; the RTL text still reads correctly inside its cell. Isolates are zero-width, so
+  column geometry is unchanged and non-RTL tables are byte-identical. Toggle with the new
+  chainable `set_bidi()` API (default on) or the `--no-bidi` CLI flag for terminals that
+  ignore isolates.
 - **`vistab show showcase`** (also `demo showcase` / `--demo showcase`): a curated one-table
-  demonstration combining column spanning, a theme, CJK/ANSI content, and word-wrapping,
-  fitting within 80 columns. Honors `--no-color` and warns when color is suppressed.
+  demonstration combining column spanning, a theme, CJK/Thai/Arabic/Hebrew content, ANSI, and
+  color-aware word-wrapping, fitting within 80 columns. Honors `--no-color` and `--no-bidi`.
 
 ### Fixed
 - **Colspan now honors `max_width`.** A spanned (colspan) cell whose merged content exceeded

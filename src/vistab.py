@@ -108,6 +108,35 @@ __version__ = '1.2.0'
 _CLI_COLOR = True
 _CLI_COLOR_TRIGGER = None  # one of: None, "--no-color", "NO_COLOR"
 
+# CLI bidi state. Set by main() from --no-bidi. See Vistab.set_bidi.
+_CLI_BIDI = True
+
+# Unicode LTR isolate wrappers (UAX #9). Zero-width; wrapping a cell's content in these
+# makes the terminal treat the cell as a self-contained bidi island, so RTL (Arabic/Hebrew)
+# content no longer reorders the whole table line. See Vistab.set_bidi.
+_LRI = "\u2066"  # LEFT-TO-RIGHT ISOLATE
+_PDI = "\u2069"  # POP DIRECTIONAL ISOLATE
+
+# Strong right-to-left script blocks. If a cell contains any of these, the terminal will
+# flip the physical line unless we isolate cells. We detect the scripts, not the invisible
+# RTL control characters.
+_RTL_RE = re.compile(
+    "[\u0590-\u05FF"   # Hebrew
+    "\u0600-\u06FF"    # Arabic
+    "\u0700-\u074F"    # Syriac
+    "\u0750-\u077F"    # Arabic Supplement
+    "\u0780-\u07BF"    # Thaana
+    "\u08A0-\u08FF"    # Arabic Extended-A
+    "\uFB1D-\uFB4F"    # Hebrew presentation forms
+    "\uFB50-\uFDFF"    # Arabic Presentation Forms-A
+    "\uFE70-\uFEFF]"   # Arabic Presentation Forms-B
+)
+
+
+def _contains_rtl(text: str) -> bool:
+    """True if the string contains any strong right-to-left script character."""
+    return bool(_RTL_RE.search(text))
+
 
 def _demo_text(s: str) -> str:
     """Pass demo text through unchanged when CLI color is on; strip ANSI escapes when off.
@@ -1159,6 +1188,8 @@ class Vistab:
         self._header_style = {}
         self._border_style = {}
         self._color_enabled = True  # When False, no vistab styling ANSI is emitted (see set_color).
+        self._bidi = True  # When True, RTL cells are LTR-isolated so they don't flip the grid (see set_bidi).
+        self._bidi_active = False  # Recomputed per draw(): isolate cells only if the table has RTL content.
         self._title = None
         self.on_wrap_conflict = "warn"
         self.on_short_row = "pad"
@@ -1545,6 +1576,25 @@ class Vistab:
         yourself. Returns ``self`` for chaining.
         """
         self._color_enabled = bool(enabled)
+        return self
+
+    def set_bidi(self, enabled: bool = True) -> 'Vistab':
+        """Enable or disable bidi-safe rendering of right-to-left (RTL) content.
+
+        When enabled (the default), if any cell contains RTL script (Arabic,
+        Hebrew, etc.) vistab wraps each cell's content in Unicode LTR isolates
+        (U+2066..U+2069). This keeps the table grid stable: without it, a
+        terminal's bidirectional algorithm reorders the whole physical line and
+        the columns visibly flip and right-align. The RTL text still reads
+        correctly right-to-left inside its cell.
+
+        The isolate characters are zero-width, so they never affect column
+        widths or alignment, and tables with no RTL content are completely
+        unaffected (byte-identical output). A few terminals ignore isolates; use
+        ``set_bidi(False)`` (or the ``--no-bidi`` CLI flag) if yours does.
+        Returns ``self`` for chaining.
+        """
+        self._bidi = bool(enabled)
         return self
 
     @property
@@ -2172,6 +2222,15 @@ class Vistab:
 
             self._compute_cols_width()
             self._check_align()
+
+            # Bidi gate: isolate cells only when bidi is on AND the table actually
+            # contains RTL content. One pass here keeps non-RTL tables byte-identical
+            # (and zero-cost) while _draw_line stays a tight loop.
+            self._bidi_active = bool(self._bidi) and (
+                any(_contains_rtl(str(c)) for c in self._header)
+                or any(_contains_rtl(str(c)) for row in self._rows for c in row)
+            )
+
             out = ""
 
             # Draw Title horizontally centered over the resulting table width
@@ -2293,6 +2352,15 @@ class Vistab:
         # Compute exact geometries!
         self._compute_cols_width()
         self._check_align()
+
+        # Bidi gate (streaming): decide from the sampled rows + header. This is best-effort
+        # for an unbounded stream (RTL that first appears only after the sample window will
+        # not retroactively toggle it), which is acceptable and matches how geometry itself
+        # is sampled here.
+        self._bidi_active = bool(self._bidi) and (
+            any(_contains_rtl(str(c)) for c in self._header)
+            or any(_contains_rtl(str(c)) for row in self._rows for c in row)
+        )
 
         # Yield the top structural bounds
         if self._title:
@@ -3010,6 +3078,14 @@ class Vistab:
                     elif self.on_wrap_conflict == "overflow":
                         fill = 0
 
+                # Bidi isolation: wrap the finalized cell content in LTR isolates so RTL
+                # text does not reorder the whole line. Done after clipping (so a clip can
+                # never orphan an isolate) and after fill is computed (the isolates are
+                # zero-width, so alignment/padding math is unchanged). Padding stays OUTSIDE
+                # the isolate, which is correct: fill spaces must not join the RTL run.
+                if self._bidi_active:
+                    cell_line = _LRI + cell_line + _PDI
+
                 if align == "r":
                     if fill > 0: out_parts.append(fill * space)
                     out_parts.append(cell_line)
@@ -3492,9 +3568,11 @@ def print_showcase_demo():
     print(_demo_text("\033[1m\033[1;36mvistab showcase: colspan + theme + CJK/ANSI wrapping\033[0m"))
     print("One table exercising the headline capabilities at once.\n")
 
-    t = Vistab(style="round-header", max_width=72).set_color(_CLI_COLOR)
+    t = Vistab(style="round-header", max_width=72).set_color(_CLI_COLOR).set_bidi(_CLI_BIDI)
     t.set_theme("ocean-rows-index")
-    t.set_header(["ID", ColSpan("Contact", 2), "Notes"])
+    # "Notes" header in Thai ("put notes here"): Thai is LTR but has no inter-word
+    # spaces and uses zero-width combining marks, exercising width measurement.
+    t.set_header(["ID", ColSpan("Contact", 2), "ใส่บันทึกที่นี่"])
     t.set_cols_align(["r", "l", "l", "l"])
     t.add_row(["1", "Ada Lovelace", "ada@lovelace.io",
                "First programmer; notes wrap across lines cleanly."])
@@ -3502,6 +3580,34 @@ def print_showcase_demo():
                "CJK width handled beside ASCII."])
     t.add_row(["3", _demo_text("José \033[1;31mÑoño\033[0m"), "jose@ex.com",
                "Accents + inline ANSI coexist with the theme."])
+    # Row with interleaved partial-word coloring (only parts of words are colored).
+    t.add_row(["4",
+               _demo_text("Gr\033[1;32mace\033[0m Ho\033[1;35mpper\033[0m"),
+               _demo_text("grace@\033[1;33mnavy\033[0m.mil"),
+               _demo_text("Coined \033[1;36mde\033[0mbug\033[1;36mging\033[0m; color spans mid-word.")])
+    # Arabic (RTL) content beside ASCII.
+    t.add_row(["5", "الخوارزمي (al-Khwarizmi)", "al@bayt.hikma",
+               "Arabic script measured for width."])
+    # Hebrew (RTL) content beside ASCII.
+    t.add_row(["6", "אדה לאבלייס (Ada)", "ada@he.example",
+               "Hebrew script measured for width."])
+    # Row whose ID + name are merged into one cell (first two columns).
+    t.add_row(["Grace Hopper (merged ID + name)", "", "grace@navy.mil",
+               "First two columns merged."])
+    # Row merging every column into a single banner cell.
+    t.add_row([_demo_text("\033[1;36m--- section break: everything merged ---\033[0m"),
+               "", "", ""])
+    # Row merging the last three columns (name + email + Notes), ID kept separate.
+    t.add_row(["9", "Katherine Johnson orbital mechanics; last three columns merged.",
+               "", ""])
+
+    # Merge the email + Notes columns on the CJK row into one wide cell, so the
+    # showcase also demonstrates a colspan inside a data row (not just the header)
+    # and that the merged block still wraps to honor max_width.
+    t.set_cell_span(1, 2, 2)
+    t.set_cell_span(6, 0, 2)   # row "Grace Hopper ...": merge ID + name
+    t.set_cell_span(7, 0, 4)   # section-break row: merge all four columns
+    t.set_cell_span(8, 1, 3)   # row "9": merge the last three columns
     print(t.draw())
 
     print(_demo_text("\n\033[3mExample code:\033[0m") if _CLI_COLOR else "\nExample code:")
@@ -3512,6 +3618,7 @@ def print_showcase_demo():
         "t.set_header(['ID', ColSpan('Contact', 2), 'Notes'])\n"
         "t.set_cols_align(['r', 'l', 'l', 'l'])\n"
         "t.add_row(['1', 'Ada Lovelace', 'ada@lovelace.io', 'First programmer; ...'])\n"
+        "t.set_cell_span(1, 2, 2)  # merge email + Notes on the CJK row\n"
         "print(t.draw())"
     ))
     print()
@@ -3574,11 +3681,15 @@ def main():
     # Explicit --no-color and the NO_COLOR env var suppress vistab's own styling ANSI.
     # (Non-TTY output is intentionally left colored for now to avoid changing piped output;
     # see the IPD Open Question.)
-    global _CLI_COLOR, _CLI_COLOR_TRIGGER
+    global _CLI_COLOR, _CLI_COLOR_TRIGGER, _CLI_BIDI
     if "--no-color" in sys.argv:
         _CLI_COLOR, _CLI_COLOR_TRIGGER = False, "--no-color"
     elif os.environ.get("NO_COLOR"):
         _CLI_COLOR, _CLI_COLOR_TRIGGER = False, "NO_COLOR"
+
+    # --no-bidi disables the RTL LTR-isolate wrapping (for terminals that ignore isolates).
+    if "--no-bidi" in sys.argv:
+        _CLI_BIDI = False
 
     # Enable global theme resolution mapping native OS layers
     config_dir = os.path.join(os.path.expanduser("~"), ".config", "vistab")
@@ -3763,6 +3874,7 @@ def main():
     visual_grp.add_argument("-V", "--no-vlines", action="store_true", help=b_help("Disable vertical lines between columns"))
     visual_grp.add_argument("-U", "--no-header-line", action="store_true", help=b_help("Disable the horizontal divider below the header"))
     visual_grp.add_argument("--no-color", action="store_true", help=b_help("Disable all color/style output (also honors the NO_COLOR env var)"))
+    visual_grp.add_argument("--no-bidi", action="store_true", help=b_help("Disable RTL bidi isolation (use if your terminal ignores Unicode LTR isolates)"))
 
     color_grp = parser.add_argument_group("Coordinate-Based Targeting (Colors)")
     color_grp.add_argument("--mark-abnormal", type=str, metavar="COLOR", help=a_help("Highlight skipped strings mutated."))
@@ -3998,6 +4110,7 @@ def main():
             padding=args.padding
         )
         table.set_color(_CLI_COLOR)  # honor --no-color / NO_COLOR for the rendered table
+        table.set_bidi(_CLI_BIDI)    # honor --no-bidi for the rendered table
 
         # Apply jagged logic mapped constraints
         table.on_short_row = args.on_short

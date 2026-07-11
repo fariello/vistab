@@ -741,5 +741,160 @@ class TestColspanInteractions(unittest.TestCase):
         self.assertIsNotNone(t.draw())  # renders without error
 
 
+class TestBidiRTL(unittest.TestCase):
+    """Bidi-safe rendering: RTL (Arabic/Hebrew) cells are wrapped in Unicode LTR
+    isolates (U+2066..U+2069) so they do not flip the table grid. Isolates are
+    zero-width, so column geometry is unchanged, and non-RTL tables are untouched."""
+
+    LRI = "\u2066"
+    PDI = "\u2069"
+
+    def _strip_isolates(self, s):
+        return s.replace(self.LRI, "").replace(self.PDI, "")
+
+    def _visible_width(self, out):
+        import re
+        from vistab import StringLengthCalculator
+        plain = re.sub(r"\x1b\[[0-9;]*m", "", self._strip_isolates(out))
+        return [StringLengthCalculator.len(l) for l in plain.splitlines()]
+
+    def test_contains_rtl_detection(self):
+        from vistab import _contains_rtl
+        self.assertTrue(_contains_rtl("الخوارزمي"))       # Arabic
+        self.assertTrue(_contains_rtl("אדה לאבלייס"))     # Hebrew
+        self.assertTrue(_contains_rtl("mixed abc العربية"))
+        self.assertFalse(_contains_rtl("plain ascii"))
+        self.assertFalse(_contains_rtl("José Ñoño"))       # accented Latin, not RTL
+        self.assertFalse(_contains_rtl("关羽 (Guan Yu)"))  # CJK, not RTL
+
+    def test_rtl_table_wraps_cells_in_isolates(self):
+        t = Vistab(style="light")
+        t.set_header(["ID", "Name"])
+        t.add_row(["5", "الخوارزمي"])
+        t.add_row(["7", "plain"])
+        out = t.draw()
+        self.assertIn(self.LRI, out)
+        self.assertIn(self.PDI, out)
+        # Balanced: every isolate opened is closed.
+        self.assertEqual(out.count(self.LRI), out.count(self.PDI))
+
+    def test_non_rtl_table_has_no_isolates(self):
+        t = Vistab(style="light")
+        t.set_header(["A", "B"])
+        t.add_row(["1", "2"])
+        out = t.draw()
+        self.assertNotIn(self.LRI, out)
+        self.assertNotIn(self.PDI, out)
+
+    def test_non_rtl_output_byte_identical_with_feature_present(self):
+        """The bidi gate must be a true no-op for non-RTL tables: enabling the
+        feature (default) yields exactly the same bytes as disabling it."""
+        def build(bidi):
+            t = Vistab(style="round-header").set_bidi(bidi)
+            t.set_header(["Name", "Age", "City"])
+            t.add_row(["Alice", "30", "Paris"])
+            t.add_row(["Bob", "25", "Berlin"])
+            return t.draw()
+        self.assertEqual(build(True), build(False))
+
+    def test_isolates_are_width_neutral(self):
+        """An RTL table's visible per-line width must be identical with and
+        without bidi (isolates are zero-width)."""
+        def build(bidi):
+            t = Vistab(style="light").set_bidi(bidi)
+            t.set_header(["ID", "Name"])
+            t.add_row(["5", "الخوارزمي (al-Khwarizmi)"])
+            t.add_row(["7", "plain text here"])
+            return t.draw()
+        on, off = build(True), build(False)
+        self.assertNotIn(self.LRI, off)
+        # Stripping isolates from the bidi-on output reproduces the bidi-off output
+        # exactly: proves the isolates are the ONLY difference (purely additive).
+        self.assertEqual(self._strip_isolates(on), off)
+        self.assertEqual(self._visible_width(on), self._visible_width(off))
+
+    def test_set_bidi_false_disables_isolates(self):
+        t = Vistab(style="light").set_bidi(False)
+        t.set_header(["ID", "Name"])
+        t.add_row(["5", "الخوارزمي"])
+        out = t.draw()
+        self.assertNotIn(self.LRI, out)
+
+    def test_mixed_cell_isolated_once_and_balanced(self):
+        """A cell mixing Arabic + Latin + digits is wrapped exactly once (the
+        isolate gives it a self-contained bidi context; the terminal orders the
+        runs inside)."""
+        t = Vistab(style="light")
+        t.set_header(["Col"])
+        t.add_row(["الخوارزمي al-Khwarizmi 2024"])
+        out = t.draw()
+        # The content line contains exactly one LRI/PDI pair for that single cell.
+        content_lines = [l for l in out.splitlines() if "al-Khwarizmi" in l]
+        self.assertEqual(len(content_lines), 1)
+        self.assertEqual(content_lines[0].count(self.LRI), 1)
+        self.assertEqual(content_lines[0].count(self.PDI), 1)
+
+    def test_set_bidi_is_chainable(self):
+        t = Vistab(style="light")
+        self.assertIs(t.set_bidi(True), t)
+        self.assertIs(t.set_bidi(False), t)
+
+
+class TestWrappingBoundaries(unittest.TestCase):
+    """Word wrapping must break on WORD (whitespace) boundaries, fall back to
+    CHARACTER breaks only for over-long words, and treat ANSI color as zero-width
+    and boundary-neutral (never break a word just because its color changes)."""
+
+    def _visible_lines(self, out):
+        import re
+        return [re.sub(r"\x1b\[[0-9;]*m", "", l) for l in out.splitlines()]
+
+    def test_wrap_breaks_on_word_boundaries_not_color(self):
+        """A single word with mid-word color changes must not be split at the
+        color boundaries; it stays one token and only character-breaks if it is
+        longer than the column."""
+        # 'redgreen' is short enough to fit; the color change is mid-word. It must
+        # NOT be broken at the color boundary.
+        colored = "\033[1;31mred\033[1;32mgreen\033[0m"
+        t = Vistab(style="light", max_width=20)
+        t.set_header(["W"])
+        t.add_row([colored + " tail"])
+        out = t.draw()
+        vis = self._visible_lines(out)
+        # 'redgreen' appears intact on one visible line (color change did not split it).
+        self.assertTrue(any("redgreen" in l for l in vis),
+                        f"'redgreen' was split across a color boundary: {vis}")
+
+    def test_overlong_colored_word_char_breaks_like_plain(self):
+        """An over-long multi-color word character-breaks exactly like the same
+        plain word: color codes are zero-width and do not shift break points."""
+        from vistab import StringLengthCalculator
+        word = "supercalifragilisticexpialidocious"
+        colored = "super\033[1;31mcali\033[0mfragi\033[1;32mlistic\033[0mexpialidocious"
+
+        def render(cell):
+            t = Vistab(style="light", max_width=20)
+            t.set_header(["W"]); t.add_row([cell])
+            return t.draw()
+
+        plain_vis = self._visible_lines(render(word))
+        color_vis = self._visible_lines(render(colored))
+        # The visible (ANSI-stripped) wrapping is identical whether or not the word
+        # carries color: proves breaks are on character count, not color boundaries.
+        self.assertEqual(plain_vis, color_vis)
+        # And every rendered line has a uniform visible width (grid intact).
+        widths = {StringLengthCalculator.len(l) for l in render(colored).splitlines()}
+        self.assertEqual(len(widths), 1, f"non-uniform line widths: {widths}")
+
+    def test_color_codes_preserved_across_wrap(self):
+        """Wrapping an over-long colored word must not drop its ANSI codes."""
+        colored = "super\033[1;31mcali\033[0mfragi\033[1;32mlistic\033[0mexpialidocious"
+        t = Vistab(style="light", max_width=20)
+        t.set_header(["W"]); t.add_row([colored])
+        out = t.draw()
+        for code in ("\033[1;31m", "\033[1;32m"):
+            self.assertIn(code, out)
+
+
 if __name__ == '__main__':
     unittest.main()

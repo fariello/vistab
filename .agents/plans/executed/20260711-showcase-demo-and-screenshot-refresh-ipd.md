@@ -68,22 +68,18 @@ or parentheses.
 |---|---|---|
 | 1. `show showcase` demo | **DONE** (`23b2a02`) | `print_showcase_demo()` at `src/vistab.py:3485`; wired at `:3628`/`:3660`/`:3729`; tests `tests/test_cli.py:279,291,342`; suite 121 green |
 | 2a. Fix broken CLI.md image | **DONE** (`23b2a02`) | `docs/CLI.md:118` -> `vistab-demo-themes-01.png`; all referenced PNGs exist; all URLs absolute |
-| 2b. Capture showcase PNG | **BLOCKED (maintainer, deferred by decision)** | no `vistab-*showcase*.png` in `docs/assets/` yet |
-| 2c. Wire hero image into README | **BLOCKED on 2b** | no showcase image reference in `README.md` yet |
+| 2b. Capture showcase PNG | **DONE (maintainer)** | `docs/assets/vistab-show-showcase-01.png` added |
+| 2c. Wire hero image into README | **DONE** | hero image + caption added near the top of `README.md`, absolute URL |
 
-Only 2b and 2c remain, and both are intentionally deferred. Per maintainer decision
-(2026-07-11), the showcase demo is about to be **substantially expanded** (more spans /
-nesting / theme + CJK + wrapping coverage; tracked as separate follow-up work). The PNG will
-not be captured until that expanded showcase is finalized and approved, because capturing now
-would be thrown away. Therefore:
-- 2b waits on the finalized (expanded) showcase, then the maintainer captures
-  `vistab show showcase` to `docs/assets/vistab-demo-showcase.png`.
-- 2c waits on 2b (the F5 guardrail forbids referencing a not-yet-present asset).
+All parts complete. The showcase was substantially expanded first (colspan in header and data
+rows, all-columns and last-three-columns merges, CJK + Thai + Arabic + Hebrew, interleaved
+partial-word coloring), and bidi-safe RTL rendering was added so the RTL rows do not flip the
+grid. The maintainer then captured `vistab-show-showcase-01.png` and the hero image was wired
+into the README top with a descriptive caption and an absolute
+`raw.githubusercontent.com/.../main/docs/assets/...` URL (F5 guardrail satisfied: the file
+exists in `docs/assets/` and the referenced-PNG existence check passes). Suite 135 green.
 
-Agent-side state re-verified 2026-07-11: full suite 121 green; every PNG referenced by
-`README.md`/`docs/CLI.md` exists in `docs/assets/`; all image URLs are absolute
-(`raw.githubusercontent.com/.../main/docs/assets/...`). Nothing further is executable
-agent-side until the expanded showcase is approved and the PNG exists. The subsections below are retained for the historical record; the Part 1
+This IPD is now fully executed and can move to `.agents/plans/executed/`. The subsections below are retained for the historical record; the Part 1
 and Part 2a subsections describe work that has already shipped (kept for auditability).
 
 ---

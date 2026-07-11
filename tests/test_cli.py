@@ -288,6 +288,27 @@ class TestCLIVerbs(unittest.TestCase):
         self.assertIn("Contact", out)      # the colspan header group
         self.assertIn("关羽", out)          # CJK content rendered
 
+    @patch('sys.stdout', new_callable=io.StringIO)
+    @patch('sys.argv', ['vistab', 'show', 'showcase'])
+    def test_showcase_content_and_features(self, mock_stdout):
+        """Pin the curated showcase's headline content: colspan header group, CJK,
+        the Thai (LTR, spaceless) Notes header, RTL rows wrapped in bidi isolates,
+        and the section-break banner from the all-columns merge."""
+        import vistab
+        with self.assertRaises(SystemExit) as e:
+            vistab.main()
+        self.assertEqual(e.exception.code, 0)
+        out = mock_stdout.getvalue()
+        self.assertIn("Contact", out)                 # colspan header group
+        self.assertIn("关羽", out)                      # CJK
+        self.assertIn("ใส่บันทึกที่นี่", out)              # Thai "Notes" header
+        self.assertIn("الخوارزمي", out)                # Arabic row
+        self.assertIn("אדה", out)                      # Hebrew row
+        self.assertIn("section break: everything merged", out)  # all-cols merge banner
+        # RTL present => bidi isolates emitted (grid-stability guard).
+        self.assertIn("\u2066", out)
+        self.assertEqual(out.count("\u2066"), out.count("\u2069"))  # balanced
+
     def test_showcase_width_within_80(self):
         """The hero table must fit within 80 visible columns (screenshot legibility)."""
         import subprocess, os
@@ -374,6 +395,30 @@ class TestSetColorLibrary(unittest.TestCase):
         t.add_row(["\033[31mred\033[0m"])
         t.set_color(False)
         self.assertIn("\033[31m", t.draw())  # user content ANSI is not stripped
+
+
+class TestNoBidiCLI(unittest.TestCase):
+    """--no-bidi disables RTL isolate wrapping in the rendered CLI table."""
+
+    LRI = "\u2066"
+
+    def _run(self, argv):
+        import subprocess, os
+        e = dict(os.environ); e.pop("NO_COLOR", None)
+        cli = os.path.join(os.path.dirname(__file__), "..", "src", "vistab.py")
+        return subprocess.run([sys.executable, cli] + argv, capture_output=True,
+                              text=True, input="ID,Name\n5,\u0627\u0644\u062e\u0648\u0627\u0631\u0632\u0645\u064a\n7,plain\n",
+                              env=e)
+
+    def test_default_rtl_gets_isolates(self):
+        r = self._run([])
+        self.assertEqual(r.returncode, 0)
+        self.assertIn(self.LRI, r.stdout)
+
+    def test_no_bidi_flag_removes_isolates(self):
+        r = self._run(["--no-bidi"])
+        self.assertEqual(r.returncode, 0)
+        self.assertNotIn(self.LRI, r.stdout)
 
 
 if __name__ == '__main__':

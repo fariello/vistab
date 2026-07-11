@@ -81,6 +81,8 @@ Visualize current capabilities and formatting styles. Flags remain supported as 
 
 Colors can be disabled globally with `--no-color` (or by setting the `NO_COLOR` environment variable); vistab then emits no styling escapes of its own, and a color-focused demo prints a `WARNING: colors turned off ...` notice to stderr so the monochrome output is not confusing.
 
+Right-to-left (Arabic, Hebrew, etc.) cells are wrapped in Unicode LTR isolates by default so they do not flip the table grid; the RTL text still reads correctly inside its cell. If your terminal ignores isolates, disable this with `--no-bidi`.
+
 ### 2. The `demo` Command
 Run interactive feature demonstrations:
 - **`vistab demo span`** (alias: `demo colspan`, `demo rowspan`, `--demo span`): Render a comprehensive column spanning (colspan) demo in action, with the corresponding Python code printed directly to stdout.

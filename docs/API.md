@@ -179,6 +179,22 @@ table.set_theme({
 - `set_alternating_row_style(fg1=None, bg1=None, fg2=None, bg2=None, **kwargs)`
 - `set_alternating_col_style(fg1=None, bg1=None, fg2=None, bg2=None, **kwargs)`
 
+#### Rendering Toggles
+
+### `set_color(enabled: bool = True) -> Vistab`
+Enables or disables vistab's own ANSI color/style output. When disabled, themes,
+coordinate styles, and borders render in plain monochrome; ANSI you put in cell content
+yourself is not stripped. Chainable.
+
+### `set_bidi(enabled: bool = True) -> Vistab`
+Enables (default) or disables bidi-safe rendering of right-to-left (RTL) text. When any
+cell contains RTL script (Arabic, Hebrew, etc.), vistab wraps each cell's content in
+Unicode LTR isolates (`U+2066`..`U+2069`) so the terminal's bidirectional algorithm does
+not reorder the whole line and flip the columns. The RTL text still reads correctly
+right-to-left inside its cell. The isolate characters are zero-width, so column widths and
+alignment are unchanged, and tables with no RTL content are byte-identical (unaffected). A
+few terminals ignore isolates; use `set_bidi(False)` if yours does. Chainable.
+
 ---
 
 ## 7. Operational Properties & Outputs

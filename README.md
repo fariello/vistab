@@ -4,6 +4,10 @@
 
 `vistab` is a lightweight Python **library** for creating beautiful text-based ASCII/Unicode tables. It comes out-of-the-box with support for fluid terminal formatting (ANSI escape sequences), coordinate-based discrete cell styling, and guarantees consistent string lengths across languages and scripts (RTL and LTR) and color variations.
 
+![Screenshot: the vistab showcase table rendering column spanning, a theme, CJK, Thai, Arabic and Hebrew text, and color-aware word wrapping, all inside a single aligned Unicode grid.](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-show-showcase-01.png)
+
+*The `vistab show showcase` demo: column spanning, theming, CJK/Thai/RTL scripts, and color-aware wrapping in one aligned table.*
+
 **Using vistab from Python? Import the `Vistab` class** (see the [API reference](docs/API.md)). A command-line entry point also exists, but the CLI is for ad-hoc terminal/CSV use only. In code, do not shell out to the `vistab` command: import and use the API.
 
 ```python
