@@ -1,6 +1,8 @@
 # Implementation Plan - `show showcase` demo + README screenshot refresh
 
-Status: PROPOSED (not yet executed)
+Status: PARTIALLY EXECUTED. Part 1 (`show showcase` demo) and Part 2a (broken CLI.md link)
+are DONE and committed (`23b2a02`). Remaining: Part 2b (maintainer captures the showcase PNG)
+and Part 2c (wire the hero image into the README). See "Execution status (2026-07-11)" below.
 
 > **Plan-review note (2026-07-11, revisions applied).** Claims verified against current
 > code: `--demo` choices at `src/vistab.py:3652`, the `show`/`demo` dispatch tables at
@@ -12,6 +14,26 @@ Status: PROPOSED (not yet executed)
 > OK" screenshot column is now grounded in the verified color-ON regression pin rather than
 > asserted (R4); the showcase gets a concrete width target so the hero image is legible (R5);
 > and the KISS/scope justification for a NEW demo subject is made explicit (R1).
+
+> **Plan-review note (2026-07-11, re-review after partial execution).** Re-verified against
+> the current tree, which now already implements most of this plan:
+> - **Part 1 DONE:** `print_showcase_demo()` exists at `src/vistab.py:3485`; wired into the
+>   `show` dispatch (`src/vistab.py:3628`, help at `3639`), the `demo` dispatch
+>   (`src/vistab.py:3660`, help at `3671`), and the `--demo` argparse `choices`
+>   (`src/vistab.py:3729`). Three CLI tests cover it (`tests/test_cli.py:279` render,
+>   `:291` width `<= 80`, `:342` `--no-color` fully monochrome + warns). Full suite 121 green.
+> - **Part 2a DONE:** `docs/CLI.md:118` now points at the existing `vistab-demo-themes-01.png`;
+>   verified every PNG referenced by `README.md`/`docs/CLI.md` exists in `docs/assets/` and
+>   every image URL is an absolute `raw.githubusercontent.com/.../main/docs/assets/...`.
+> - **Implementation deltas from the written spec (both benign, no defect):** the showcase uses
+>   `max_width=72` (the plan's R5 said "80"; 72 is stricter and still satisfies `<= 80`), and
+>   the `--no-color` policy chosen is "fully monochrome + warn" (the plan's R2 offered a choice;
+>   this is the stronger option). The prose below is updated to match what shipped.
+> - Findings this pass (all Low remediation risk, all fixed here): F1 stale "not executed"
+>   status corrected; F2 stale `file:line` anchors refreshed; F3 width-target text reconciled to
+>   72; F4 Open Questions 1 and 4 marked RESOLVED by the shipped decision; F5 Part 2c hardened
+>   to re-verify the new asset exists (absolute URL, meaningful alt text) before committing the
+>   README edit, so we do not reintroduce the broken-link class 2a just fixed.
 
 Two related pieces of v1.2.0 docs/polish, bundled because the new demo produces the new
 hero screenshot:
@@ -40,6 +62,20 @@ or parentheses.
 
 ---
 
+## Execution status (2026-07-11)
+
+| Part | Status | Evidence |
+|---|---|---|
+| 1. `show showcase` demo | **DONE** (`23b2a02`) | `print_showcase_demo()` at `src/vistab.py:3485`; wired at `:3628`/`:3660`/`:3729`; tests `tests/test_cli.py:279,291,342`; suite 121 green |
+| 2a. Fix broken CLI.md image | **DONE** (`23b2a02`) | `docs/CLI.md:118` -> `vistab-demo-themes-01.png`; all referenced PNGs exist; all URLs absolute |
+| 2b. Capture showcase PNG | **PENDING (maintainer)** | no `vistab-*showcase*.png` in `docs/assets/` yet |
+| 2c. Wire hero image into README | **PENDING** | no showcase image reference in `README.md` yet; blocked on 2b |
+
+Only 2b and 2c remain. The subsections below are retained for the historical record; the Part 1
+and Part 2a subsections describe work that has already shipped (kept for auditability).
+
+---
+
 ## Part 1: `vistab show showcase` demo
 
 ### Rationale (and scope justification, R1)
@@ -61,13 +97,17 @@ Open Question 4). Do not add the subject if it does not earn its keep as the fla
   a theme applied (e.g. `ocean-rows-index`), a `ColSpan` header grouping, at least one
   wrapped multi-line cell, and a cell with ANSI-colored and/or CJK content, so it visibly
   demonstrates colspan + theme + color-aware wrapping at once. **(R5) Width target:** the
-  table must fit within **80 columns** (set `max_width=80` or size columns accordingly) so
-  the hero screenshot reads cleanly and does not horizontally scroll (the `show themes` grid
-  is deliberately wide; the showcase must not repeat that). Verify the rendered visible width
-  (ANSI-stripped) is <= 80.
-- Wire it as a subject under BOTH the `show` and `demo` verbs' `valid_subjects`
-  (`src/vistab.py:3551` show, `3581` demo) as `"showcase": print_showcase_demo`, and add it
-  to the `--demo` argparse `choices`. Add subject-help lines for it in both verbs.
+  table must fit within **80 columns** so the hero screenshot reads cleanly and does not
+  horizontally scroll (the `show themes` grid is deliberately wide; the showcase must not
+  repeat that). Verify the rendered visible width (ANSI-stripped) is <= 80. *(As shipped:
+  `max_width=72`, which is comfortably within the 80 ceiling; the width test at
+  `tests/test_cli.py:291` asserts `<= 80`.)*
+- Wire it as a subject under BOTH the `show` and `demo` verbs' `valid_subjects` as
+  `"showcase": print_showcase_demo`, and add it to the `--demo` argparse `choices`. Add
+  subject-help lines for it in both verbs. *(As shipped: `show` dispatch at
+  `src/vistab.py:3628` (help `:3639`), `demo` dispatch at `:3660` (help `:3671`), `--demo`
+  `choices` at `:3729`. Earlier anchors 3551/3581/3652 predated the showcase code and are
+  superseded.)*
 - **Honor `--no-color`/`NO_COLOR` (reuse the v1.2.0 seam):** build the table with
   `.set_color(_CLI_COLOR)`, route any literal-escape titles through `_demo_text(...)`, and
   call `_maybe_warn_color_off()` at the end (this is a color-centric demo). Content ANSI that
@@ -129,11 +169,22 @@ Before declaring any "Likely OK" shot final, do a quick eyeball that the current
 color-on output matches the existing PNG; re-shoot only on a real mismatch. Do not re-shoot
 the 9 unchanged ones as a blocker.
 
-### 2c. Add the hero image to the README top (after Part 1 ships the demo)
+### 2c. Add the hero image to the README top (REMAINING; after 2b delivers the PNG)
 Once the showcase PNG exists, add it high in the README (near the top, above or beside the
 Quick Start) as the flagship image, captioned as the colspan+theme+wrapping showcase, with
 an **absolute** raw.githubusercontent URL (PyPI does not resolve relative image paths).
 Cross-link `show span`/`show themes` sections to it.
+
+**(F5) Guardrail so 2c does not reintroduce the broken-link defect 2a just fixed.** Before
+committing the README edit:
+- Decide and record the exact asset filename up front (recommend
+  `docs/assets/vistab-demo-showcase.png` to match the `vistab-demo-*` convention) so the
+  maintainer captures to that path.
+- Verify the file actually exists in `docs/assets/` (do not write an `<img>`/`![]` line for a
+  file that is not yet present; that is precisely the shipped broken-image class caught in 2a).
+- Use an absolute `raw.githubusercontent.com/.../main/docs/assets/...` URL and meaningful,
+  descriptive alt text (screen-reader accessible, per the honest-docs principle).
+- Re-run the "every referenced PNG exists" check over `README.md`/`docs/CLI.md` after the edit.
 
 ### Part-2 verification
 - No broken image links remain in `README.md`/`docs/CLI.md` (every referenced asset exists
@@ -150,8 +201,8 @@ Cross-link `show span`/`show themes` sections to it.
 - Agent does not generate image files.
 
 ## Open questions
-1. **Subject name:** `showcase` vs `demo`/`everything`/`hero`? Recommend `showcase`
-   (unambiguous, not colliding with the `demo` verb). Confirm.
+1. **Subject name:** RESOLVED. Shipped as `showcase` (unambiguous, no collision with the
+   `demo` verb), wired into both verbs and `--demo` choices.
 2. **Showcase content:** which theme + what sample data best reads as a hero image? Propose
    `ocean-rows-index` + a small realistic table with a `ColSpan` header, one wrapped cell,
    and one CJK/ANSI cell; maintainer to approve the exact look before it becomes the README
@@ -159,18 +210,21 @@ Cross-link `show span`/`show themes` sections to it.
 3. **Full re-shoot vs minimal:** re-capture only the 2 known-stale (themes done + new
    showcase), or refresh all 11 for visual consistency? Recommend minimal now; full refresh
    optional.
-4. **Hero from an existing demo instead? (R1/KISS)** Before building `show showcase`,
-   confirm a purpose-built showcase is wanted rather than promoting a re-shot existing demo
-   (e.g. `show span`, which already renders colspan + borders) to hero. If an existing shot
-   is acceptable, DROP Part 1 and keep only Part 2. Recommend the curated showcase (it tells
-   the combined story better), but this is the maintainer's call.
+4. **Hero from an existing demo instead? (R1/KISS)** RESOLVED. The curated `show showcase`
+   was built and shipped (one small function reusing existing machinery, no new abstraction),
+   as it tells the combined colspan + theme + CJK/ANSI + wrapping story in one image. Part 1
+   was kept, not dropped.
 
 ## Approval and execution gate
-Proposal only; not executed. Execution order on approval:
-1. **Fix 2a now** (the broken CLI.md image link) regardless of the Part-1 decision, since it
-   is a shipped doc defect independent of the screenshots.
-2. If the showcase is approved (Open Q4): implement Part 1 (demo + tests, honoring the R2
-   color pins and R5 width target); run verification.
-3. Hand the capture list (2b) to the maintainer; wire the hero image (2c) once the PNG
-   exists.
-4. Run full verification; move this IPD to `.agents/plans/executed/`.
+Partially executed (see "Execution status"). Done: Part 1 and Part 2a (`23b2a02`, tests green).
+Remaining steps:
+1. **2b (maintainer):** capture the showcase PNG from `vistab show showcase` to
+   `docs/assets/vistab-demo-showcase.png` (the agent does not fabricate PNGs).
+2. **2c (agent, after 2b):** wire the hero image into the README top with an absolute URL and
+   meaningful alt text, honoring the F5 guardrail (verify the file exists first, then re-run
+   the referenced-PNG existence check). Cross-link the `show span`/`show themes` sections.
+3. Optionally (Open Q3) re-shoot the "Likely OK" screenshots if the maintainer wants a
+   consistent refresh; not a blocker.
+4. Run full verification; when 2c lands, move this IPD to `.agents/plans/executed/`.
+
+This IPD stays in `pending/` until 2b + 2c complete (it is not fully executed yet).
