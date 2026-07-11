@@ -152,7 +152,9 @@ print(table.draw())
 
 ## Coordinate-Based Cell Styling
 
-`vistab` supports a fluent, declarative API to inject background colors, foreground colors, and text styles (like bolding and underlining) targeting specific grids—ranging from individual cells, whole rows, columns, headers, or borders.
+`vistab` supports a fluent, declarative API to inject background colors, foreground colors, and text styles (like bolding and underlining) targeting specific grids, ranging from individual cells, whole rows, columns, headers, or borders.
+
+You can view this demonstration yourself by running `vistab show anatomy`:
 
 ![Anatomy of a Vistab Table](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-demo-anatomy.png)
 
@@ -213,10 +215,9 @@ vistab another_data.csv --theme my_custom_theme
 
 You can view the built-in themes (which you can alter and save as new themes) by running:
 ```bash
-vistab --demo themes
+vistab show themes
 ```
-![Available Themes 1](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-demo-themes-01.png)
-![Available Themes 2](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-demo-themes-02.png)
+![Available Themes](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-demo-themes-01.png)
 
 ## Custom Themes
 
@@ -337,7 +338,7 @@ Because terminal color renderings vary across different user host profiles and c
 
 You can view the palette directly on the console by executing:
 ```bash
-vistab --demo colors
+vistab show colors
 ```
 ![Defined Colors](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-demo-colors.png)
 
@@ -347,7 +348,7 @@ A major benchmark advantage of `vistab` is native, invisible terminal styling su
 
 You can view a comprehensive color-wrapping conformance test demonstrating dynamic alignment across complex CJK blocks by executing:
 ```bash
-vistab --demo capabilities
+vistab show capabilities
 ```
 ![Test Output](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-demo-capabilities.png)
 
