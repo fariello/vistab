@@ -30,3 +30,14 @@
 ## Section 6 (compatibility/packaging/release)
 - Operator/stakeholder: install path clear (`pip install vistab`, `[cjk]` extra documented); CI proves cross-platform (Linux+Windows) × Python 3.9-3.13; secret-scan CI present. First-run: `vistab` + STDIN or `vistab file.csv` works. The one operator-facing gap: shipping as 1.1.3 despite a v1.2.0 feature set (S1-BUG1) — version pinning would mislead.
 - Software engineer: 3.7/3.8 claimed but untested (CI1); code is 3.7-syntax-safe. No breaking API change this cycle (colspan/verbs are additive; apply_theme retained as alias) — backward compatible.
+
+## Section 8 — Eight-persona final sign-off
+1. QA/QC: ACCEPT — 105 tests green, no defects; error paths handled.
+2. Testing/regression: ACCEPT — strong suite + fixtures; colspan gaps now closed (A3).
+3. UI/UX: ACCEPT — consistent CLI verbs/flags, self-documenting errors, cleaner theme demo.
+4. Architect: ACCEPT — cohesive single-module design; deferred split (D1) is not a blocker; ARCHITECTURE.md aids orientation.
+5. Software engineer: ACCEPT (with note) — clean code/resources; loose type hints (D2) deferred, runtime-harmless.
+6. Power user: ACCEPT — scriptable, themeable, escape hatches, pipeline support.
+7. Novice: ACCEPT — install + first success from README/CLI without a manual.
+8. Stakeholder: ACCEPT — delivers its goal; version now honestly reflects the shipped feature set (v1.2.0).
+No persona raises a release blocker.

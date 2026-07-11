@@ -33,3 +33,8 @@
 - A1 version 1.2.0 (+CHANGELOG), A2 requires-python>=3.9 [d8f652b]; A3 colspan tests, A4 ARCHITECTURE.md [50f1b1b].
 - 105 tests pass. D1 (module split) + D2 (type-hint overhaul) deferred (RR Medium-High/Medium).
 - No High/LIVE/MEM findings existed to fix or escalate.
+
+## Section 8 (final ship review) — complete
+- Final validation 105 pass; --version 1.2.0. 8-persona sign-off all ACCEPT.
+- Gates: no LIVE/High findings; NO pending plans/prompts. Recommendation: GO (v1.2.0).
+- Push: no auto-push (recommend user push + tag v1.2.0). No restart.
