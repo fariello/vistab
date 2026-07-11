@@ -75,8 +75,11 @@ Visualize current capabilities and formatting styles. Flags remain supported as 
 - **`vistab show themes`** (alias: `--demo themes`): Render a color matrix showcasing every pre-built Theme algorithm.
 - **`vistab show styles`** (alias: `--demo styles`): Visualize structural framework limits parsing valid physical Table styles.
 - **`vistab show colors`** (alias: `--demo colors`): Print the terminal execution dictionary displaying CLI colors.
-- **`vistab show capabilities`** (alias: `show caps`, `--demo capabilities`): Run a comprehensive CJK and ANSI wrapping capabilities test.
-- **`vistab show anatomy`** (alias: `--demo anatomy`): Render a detailed guide displaying the components of a table layout.
+- **`vistab show capabilities`** (alias: `show caps`, `show wrapping`, `--demo capabilities`): ANSI + CJK-safe word-wrapping and datatype-parsing conformance.
+- **`vistab show anatomy`** (alias: `--demo anatomy`): Labeled diagram of a table's parts (borders, header, cells) and coordinate styling.
+- **`vistab show span`** (alias: `show spans`, `demo span`, `--demo span`): Column-spanning demonstration with example code beneath each table.
+
+Colors can be disabled globally with `--no-color` (or by setting the `NO_COLOR` environment variable); vistab then emits no styling escapes of its own, and a color-focused demo prints a `WARNING: colors turned off ...` notice to stderr so the monochrome output is not confusing.
 
 ### 2. The `demo` Command
 Run interactive feature demonstrations:

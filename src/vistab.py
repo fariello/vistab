@@ -102,6 +102,35 @@ __all__ = ["Vistab", "ArraySizeError", "StringLengthCalculator", "ColSpan"]
 __author__ = 'Gabriele Fariello <gfariello@fariel.com>'
 __license__ = 'BSD 3-Clause 2026'
 __version__ = '1.2.0'
+
+# CLI color state for the built-in demos. Set by main() from --no-color / NO_COLOR.
+# _CLI_COLOR_TRIGGER records WHY color was suppressed, for an honest warning.
+_CLI_COLOR = True
+_CLI_COLOR_TRIGGER = None  # one of: None, "--no-color", "NO_COLOR"
+
+
+def _demo_text(s: str) -> str:
+    """Pass demo text through unchanged when CLI color is on; strip ANSI escapes when off.
+
+    The built-in demos embed literal escape sequences (titles, color swatches) that do not
+    flow through Vistab's styling helpers, so this helper enforces --no-color for them too.
+    """
+    if _CLI_COLOR:
+        return s
+    return StringLengthCalculator._ANSI_ESCAPE.sub('', s)
+
+
+def _maybe_warn_color_off():
+    """Print an honest 'colors turned off' warning after a color-dependent demo.
+
+    No-op when color is on. Names the actual trigger (--no-color or NO_COLOR).
+    Goes to stderr so it stays out of the primary (captured) stdout payload.
+    """
+    if _CLI_COLOR:
+        return
+    trigger = _CLI_COLOR_TRIGGER or "--no-color"
+    sys.stderr.write(f"WARNING: colors turned off by {trigger}\n")
+
 __credits__ = """\
 Gabriele Fariello <gfariello@fariel.com>
     - Wrote this module adding robust handling for unicode characters and ANSI escape sequences
@@ -1129,6 +1158,7 @@ class Vistab:
         self._table_style = {}
         self._header_style = {}
         self._border_style = {}
+        self._color_enabled = True  # When False, no vistab styling ANSI is emitted (see set_color).
         self._title = None
         self.on_wrap_conflict = "warn"
         self.on_short_row = "pad"
@@ -1445,6 +1475,8 @@ class Vistab:
         return active
 
     def _get_active_ansi_wrap(self, row_idx=None, col_idx=None, is_header=False, is_abnormal=False):
+        if not self._color_enabled:
+            return "", ""
         """Compute the final active ANSI configuration applying precedence logic."""
         active = {}
 
@@ -1499,10 +1531,21 @@ class Vistab:
 
     def _get_border_ansi(self):
         """Compute the active ANSI configuration for table borders."""
-        if not self._border_style:
+        if not self._color_enabled or not self._border_style:
             return "", ""
         codes = [f"\033[{val}m" for val in self._border_style.values()]
         return "".join(codes), "\033[0m"
+
+    def set_color(self, enabled: bool = True) -> 'Vistab':
+        """Enable or disable vistab's own ANSI color/style output.
+
+        When disabled (``set_color(False)``), vistab emits no styling escape
+        sequences of its own: themes, coordinate styles, and borders render in
+        plain monochrome. This does NOT strip ANSI that you put in cell content
+        yourself. Returns ``self`` for chaining.
+        """
+        self._color_enabled = bool(enabled)
+        return self
 
     @property
     def max_width(self) -> int:
@@ -3216,7 +3259,7 @@ def print_styles_list():
     print(t1.draw())
 
 def print_coordinate_styles_demo():
-    print("\033[1m\033[1;36mCoordinate-Based Styling Demonstration\033[0m")
+    print(_demo_text("\033[1m\033[1;36mCoordinate-Based Styling Demonstration\033[0m"))
     print("These styles target specific cells, columns, and rows without mutating structural padding strings or column decorators!\n")
 
     t = Vistab([
@@ -3225,7 +3268,7 @@ def print_coordinate_styles_demo():
         ["Network Edge", "eth0 / IPv4 Bridge Interface", "10Gbps", "Active", "+4.5"],
         ["Database", "PostgreSQL\nShard Cluster", "4,210 qs", "Syncing", "0.0"],
         ["Memory Cache", "Redis Local Buffer Sequence", "99.9%", "Active", "+0.1"]
-    ], style="round-header", padding=2)
+    ], style="round-header", padding=2).set_color(_CLI_COLOR)
 
     # 1. Structural alignments and format geometries
     t.set_max_width(75)  # Aggressive shrink to violently force all rows to wrap and demonstrate valigns
@@ -3248,7 +3291,7 @@ def print_coordinate_styles_demo():
     t.set_cell_style(3, 1, bg="magenta", fg="bright_white", italic=True) # Deep orthogonal mapping
 
     print(t.draw())
-    print("\n\033[3mCode executed:\033[0m")
+    print(_demo_text("\n\033[3mCode executed:\033[0m"))
     print("table.set_cols_align('clrcr')")
     print("table.set_cols_valign('mmbmt')")
     print("table.set_header_style(bg='red', fg='bright_white', bold=True)")
@@ -3259,6 +3302,7 @@ def print_coordinate_styles_demo():
     print("table.set_cell_style(2, 4, fg='bright_white', bold=True)             # Priority intercept")
     print("table.set_cell_style(3, 1, bg='magenta', fg='bright_white')          # Deep override")
     print()
+    _maybe_warn_color_off()
 
 def print_colors_list():
     fg_data = []
@@ -3308,37 +3352,74 @@ def print_colors_list():
     t_ts.set_title("\033[1;36m\033[4mText Decorators (bold=True, etc)\033[0m")
     t_ts.set_rows(ts_data, header=False)
 
-    master = Vistab(style="round", padding=0)
+    master = Vistab(style="round", padding=0).set_color(_CLI_COLOR)
     master.set_table_wrap(False)
     master.set_cols_align("c")
     combined_output = f"{t_fg.draw()}\n{t_bg.draw()}\n{t_ts.draw()}"
     master.set_rows([[combined_output]], header=False)
-    print(master.draw())
+    # Swatches/titles embed literal ANSI as content; _demo_text strips it under --no-color.
+    print(_demo_text(master.draw()))
+    _maybe_warn_color_off()
+
+def _highlight_span_code(code: str) -> str:
+    """Emphasize span-specific tokens in example code (bright cyan), gated on CLI color.
+
+    Literal substring replacement over a small fixed token list. No tokenizer/parser.
+    """
+    if not _CLI_COLOR:
+        return code
+    on, off = "\033[1;96m", "\033[0m"
+    for tok in ("ColSpan", "set_cell_span", "set_header_span", "combine="):
+        code = code.replace(tok, f"{on}{tok}{off}")
+    return code
+
+
+def _print_span_code(code: str):
+    """Print an example-code block with span-token highlighting (color-aware)."""
+    print(_demo_text("\033[3mExample code:\033[0m") if _CLI_COLOR else "Example code:")
+    print(_highlight_span_code(code))
+
 
 def print_span_demo():
-    print("\033[1m\033[1;36mColumn Spanning (Colspan) Demonstration\033[0m")
+    print(_demo_text("\033[1m\033[1;36mColumn Spanning (Colspan) Demonstration\033[0m"))
     print("Vistab supports inline and post-ingestion column spanning. Note: Rowspan is coming soon.\n")
 
+    # 1. Inline spans, with the code directly beneath the table it produced.
     print("--- 1. Inline Spans in Headers and Rows ---")
-    table = Vistab(style="round", padding=1)
+    table = Vistab(style="round", padding=1).set_color(_CLI_COLOR)
     table.set_header(["Category", ColSpan("Sub-header Block", 2), "Status"])
     table.add_row(["Engine", ColSpan("Data block spanning 2 columns", 2), "Active"])
     table.add_row(["Memory", "16 GB", "LPDDR5", "Healthy"])
     print(table.draw())
+    _print_span_code(
+        "from vistab import Vistab, ColSpan\n"
+        "table = Vistab(style='round')\n"
+        "table.set_header(['Category', ColSpan('Sub-header Block', 2), 'Status'])\n"
+        "table.add_row(['Engine', ColSpan('Data block spanning 2 columns', 2), 'Active'])"
+    )
     print()
 
+    # 2. Coordinate mutators, code beneath.
     print("--- 2. Programmatic Coordinate Mutators ---")
-    table2 = Vistab(style="light", padding=1)
+    table2 = Vistab(style="light", padding=1).set_color(_CLI_COLOR)
     table2.set_header(["Name", "", "", "Status"])
     table2.add_row(["Alice", "Age: 25", "City: Paris", "Active"])
     table2.add_row(["Bob", "", "", "Inactive"])
     table2.set_header_span(0, 3)
     table2.set_cell_span(1, 1, 2)
     print(table2.draw())
+    _print_span_code(
+        "table2 = Vistab(style='light')\n"
+        "table2.set_header(['Name', '', '', 'Status'])\n"
+        "table2.add_row(['Alice', 'Age: 25', 'City: Paris', 'Active'])\n"
+        "table2.set_header_span(0, 3)\n"
+        "table2.set_cell_span(1, 1, 2)  # merge Alice's age/city cells"
+    )
     print()
 
+    # 3. Lossless content merging, code beneath.
     print("--- 3. Lossless Content Merging ---")
-    table3 = Vistab(style="light", padding=1)
+    table3 = Vistab(style="light", padding=1).set_color(_CLI_COLOR)
     table3.set_header(["Name", "Age", "City"])
     table3.add_row(["Alice", 25, "Paris"])
     print("Pre-merged:")
@@ -3346,28 +3427,17 @@ def print_span_demo():
     table3.set_cell_span(0, 0, 3, combine=", ")
     print("Post-merged (combine=', '):")
     print(table3.draw())
+    _print_span_code(
+        "table3 = Vistab(style='light')\n"
+        "table3.set_header(['Name', 'Age', 'City'])\n"
+        "table3.add_row(['Alice', 25, 'Paris'])\n"
+        "table3.set_cell_span(0, 0, 3, combine=', ')  # -> 'Alice, 25, Paris'"
+    )
     print()
-
-    print("\033[3mExample code:\033[0m")
-    print("from vistab import Vistab, ColSpan")
-    print("# 1. Inline declaration:")
-    print("table = Vistab(style='round')")
-    print("table.set_header(['Category', ColSpan('Sub-header Block', 2), 'Status'])")
-    print("table.add_row(['Engine', ColSpan('Data block spanning 2 columns', 2), 'Active'])")
-    print()
-    print("# 2. Programmatic coordinate mutators:")
-    print("table2 = Vistab(style='light')")
-    print("table2.set_header(['Name', '', '', 'Status'])")
-    print("table2.add_row(['Alice', 'Age: 25', 'City: Paris', 'Active'])")
-    print("table2.set_header_span(0, 3)")
-    print("table2.set_cell_span(0, 1, 2) # merges Alice's age/city info")
-    print()
-    print("# 3. Lossless content merging:")
-    print("table3.set_cell_span(row_idx, col_idx, colspan, combine=', ')")
-    print()
+    _maybe_warn_color_off()
 
 def print_themes_demo():
-    print("\033[1m\033[1;36mBuilt-In Theme Macro Demonstrations\033[0m")
+    print(_demo_text("\033[1m\033[1;36mBuilt-In Theme Macro Demonstrations\033[0m"))
     print("Predefined themes combining geometry layouts with zebra-striping and boundary padding!\n")
 
     tdata = [
@@ -3400,8 +3470,10 @@ def print_themes_demo():
 
     demo_tb = Vistab(t2data, header=False, style="none", padding=0)
     demo_tb.set_table_wrap(False)
-    print(demo_tb.draw())
+    # Inner theme tables embed ANSI as content; _demo_text strips it under --no-color.
+    print(_demo_text(demo_tb.draw()))
     print()
+    _maybe_warn_color_off()
 
 def main():
     import argparse
@@ -3416,6 +3488,16 @@ def main():
     # (e.g. `┌`, `─`), attempting to blast those sequences into CP1252 pipes forcefully
     # triggers fatal `UnicodeEncodeError` crashes. Reconfiguring the buffer bypasses this safely.
 
+
+    # Resolve CLI color state early so the verb dispatch (built-in demos) honors it too.
+    # Explicit --no-color and the NO_COLOR env var suppress vistab's own styling ANSI.
+    # (Non-TTY output is intentionally left colored for now to avoid changing piped output;
+    # see the IPD Open Question.)
+    global _CLI_COLOR, _CLI_COLOR_TRIGGER
+    if "--no-color" in sys.argv:
+        _CLI_COLOR, _CLI_COLOR_TRIGGER = False, "--no-color"
+    elif os.environ.get("NO_COLOR"):
+        _CLI_COLOR, _CLI_COLOR_TRIGGER = False, "NO_COLOR"
 
     # Enable global theme resolution mapping native OS layers
     config_dir = os.path.join(os.path.expanduser("~"), ".config", "vistab")
@@ -3434,8 +3516,10 @@ def main():
             
             alias_map = {
                 "caps": "capabilities",
+                "wrapping": "capabilities",
                 "colspan": "span",
                 "rowspan": "span",
+                "spans": "span",
                 "adv": "advanced",
             }
             
@@ -3466,15 +3550,19 @@ def main():
                     "capabilities": print_test_demo,
                     "anatomy": print_coordinate_styles_demo,
                     "themes": print_themes_demo,
+                    "span": print_span_demo,
                 }
+                def _show_subject_lines(w):
+                    w("Available subjects:\n")
+                    w("  styles         Compare all available grid boundary styles\n")
+                    w("  colors         Color swatch matrix of foreground/background colors and text styles\n")
+                    w("  capabilities   ANSI + CJK-safe word-wrapping and datatype-parsing conformance (alias: caps, wrapping)\n")
+                    w("  anatomy        Labeled diagram of a table's parts (borders, header, cells) and coordinate styling\n")
+                    w("  themes         Grid of built-in color theme macros\n")
+                    w("  span           Column-spanning demonstration with example code (alias: spans, colspan, rowspan)\n")
                 if not subject:
                     sys.stdout.write("Usage: vistab show <subject>\n\n")
-                    sys.stdout.write("Available subjects:\n")
-                    sys.stdout.write("  styles         Show a table comparing all available grid boundary styles\n")
-                    sys.stdout.write("  colors         Show a color swatch matrix of foreground/background colors and styles\n")
-                    sys.stdout.write("  capabilities   Show a demonstration of Vistab's parsing and formatting capabilities\n")
-                    sys.stdout.write("  anatomy        Show a coordinate-based styling demonstration\n")
-                    sys.stdout.write("  themes         Show a grid of built-in color theme macros\n")
+                    _show_subject_lines(sys.stdout.write)
                     sys.exit(0)
                 elif subject in valid_subjects:
                     valid_subjects[subject]()
@@ -3482,12 +3570,7 @@ def main():
                 else:
                     sys.stderr.write(f"\033[1;31m[ERROR]\033[0m Unknown show subject '{args_rest[0]}'.\n\n")
                     sys.stderr.write("Usage: vistab show <subject>\n\n")
-                    sys.stderr.write("Available subjects:\n")
-                    sys.stderr.write("  styles         Show a table comparing all available grid boundary styles\n")
-                    sys.stderr.write("  colors         Show a color swatch matrix of foreground/background colors and styles\n")
-                    sys.stderr.write("  capabilities   Show a demonstration of Vistab's parsing and formatting capabilities\n")
-                    sys.stderr.write("  anatomy        Show a coordinate-based styling demonstration\n")
-                    sys.stderr.write("  themes         Show a grid of built-in color theme macros\n")
+                    _show_subject_lines(sys.stderr.write)
                     sys.exit(2)
                     
             elif verb == "demo":
@@ -3525,11 +3608,12 @@ def main():
                     sys.exit(2)
 
     usage_str = (
+        "vistab is usable on the command line, but is intended primarily as a Python library:\n"
+        "           from vistab import Vistab   (see docs/API.md)\n\n"
         "vistab [options] [files ...]\n"
         "       cat data.csv | vistab -t ocean -w 120\n\n"
-        "       vistab show <subject>    (styles, colors, capabilities, anatomy, themes)\n"
-        "       vistab help [subject]    (colors, advanced)\n"
-        "       vistab demo span         (colspan/rowspan capabilities)\n\n"
+        "       vistab show <subject>    (styles, colors, capabilities, anatomy, themes, span)\n"
+        "       vistab help [subject]    (colors, advanced)\n\n"
         "       vistab --help            (standard table formatting options)\n"
         "       vistab --help-colors     (target-specific color coordinates)\n"
         "       vistab --help-advanced   (streams and jagged data matrices)\n"
@@ -3561,7 +3645,7 @@ def main():
     parser.add_argument("--version", action="version", version=f"vistab {__version__}", help=b_help("show version and exit"))
 
     diag_grp = parser.add_argument_group("Diagnostic & Demo Operations")
-    diag_grp.add_argument("--demo", type=str, choices=["styles", "colors", "capabilities", "caps", "anatomy", "themes", "span", "colspan", "rowspan"], help=b_help("Run built-in demonstrations (preferred: 'vistab show <subject>')"))
+    diag_grp.add_argument("--demo", type=str, choices=["styles", "colors", "capabilities", "caps", "wrapping", "anatomy", "themes", "span", "spans", "colspan", "rowspan"], help=b_help("Run built-in demonstrations (preferred: 'vistab show <subject>')"))
     diag_grp.add_argument("--help-colors", action="store_true", help=b_help("Show advanced coordinate-based color parameters (-0, -E, -b, etc.)"))
     diag_grp.add_argument("--help-advanced", action="store_true", help=b_help("Show advanced streaming, sorting, and jagged matrix behaviors"))
 
@@ -3597,6 +3681,7 @@ def main():
     visual_grp.add_argument("-X", "--no-hlines", action="store_true", help=b_help("Disable horizontal lines iteratively between rows"))
     visual_grp.add_argument("-V", "--no-vlines", action="store_true", help=b_help("Disable vertical lines between columns"))
     visual_grp.add_argument("-U", "--no-header-line", action="store_true", help=b_help("Disable the horizontal divider below the header"))
+    visual_grp.add_argument("--no-color", action="store_true", help=b_help("Disable all color/style output (also honors the NO_COLOR env var)"))
 
     color_grp = parser.add_argument_group("Coordinate-Based Targeting (Colors)")
     color_grp.add_argument("--mark-abnormal", type=str, metavar="COLOR", help=a_help("Highlight skipped strings mutated."))
@@ -3701,14 +3786,13 @@ def main():
         # Exit without disrupting
         sys.exit(0)
 
-    # Resolve aliases for --demo flags
+    # Resolve aliases for --demo flags (same alias set as the show/demo verbs)
     demo_val = args.demo
     if demo_val:
         demo_val = demo_val.lower()
-        if demo_val == "caps":
-            demo_val = "capabilities"
-        elif demo_val in ["colspan", "rowspan"]:
-            demo_val = "span"
+        _demo_aliases = {"caps": "capabilities", "wrapping": "capabilities",
+                         "colspan": "span", "rowspan": "span", "spans": "span"}
+        demo_val = _demo_aliases.get(demo_val, demo_val)
 
     if demo_val == "styles":
         print_styles_list()
@@ -3764,6 +3848,7 @@ def main():
             streams_to_parse.append(("dummy", "Config Mapping"))
         elif not _printed_anything:
             parser.print_usage(sys.stderr)
+            sys.stderr.write("vistab is primarily a Python library; the CLI is for ad-hoc use. In code: from vistab import Vistab\n")
             sys.stderr.write("[\033[1;31mERROR\033[0m] No tabular dataset found. Please provide a file path argument or pipe data into STDIN.\n")
             sys.stderr.write("Tip: Run 'vistab --help' for a complete list of configurations and options.\n")
             sys.exit(1)
@@ -3831,6 +3916,7 @@ def main():
             max_width=args.width,
             padding=args.padding
         )
+        table.set_color(_CLI_COLOR)  # honor --no-color / NO_COLOR for the rendered table
 
         # Apply jagged logic mapped constraints
         table.on_short_row = args.on_short
