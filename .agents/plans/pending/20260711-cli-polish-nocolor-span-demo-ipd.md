@@ -2,6 +2,17 @@
 
 Status: PROPOSED (not yet executed)
 
+> **Plan-review note (2026-07-11, revisions applied).** Traced the actual ANSI-emission
+> sites. Table *styling* ANSI is centralized (`_get_active_ansi_wrap` at
+> `src/vistab.py:1497-1498`, `_get_border_ansi` at `1504-1505`), so a `_color_enabled` gate
+> there is sound for tables. **But two gaps were found and fixed in the plan:** (R1) the
+> color demos emit ANSI as *cell content and titles* (e.g. `print_colors_list` swatches at
+> `src/vistab.py:3271`, titles at `3276/3293/3308`), which bypass the styling helpers, so
+> `--no-color` must also govern demo/title/content color or the demos will still print color
+> (and item 6's warning would lie); (R2) the "no `\033[` at all" verification is wrong
+> because reset codes and *user-supplied* content ANSI legitimately remain, so the
+> regression pin was reframed. R3/R4 tighten the color-ON pin and the highlight rule.
+
 Grew out of a hands-on CLI session. Five related improvements to the CLI/demo surface,
 plus one genuinely new small feature (`--no-color` / `NO_COLOR`) that a later item depends
 on. No table *rendering* semantics change.
@@ -87,8 +98,18 @@ toggle and no `--no-color` flag or `NO_COLOR` handling.
 - Add a `Vistab` instance flag, e.g. `self._color_enabled` (default `True`), with a public
   setter/property (e.g. `set_color(enabled: bool)` / `color_enabled`).
 - Gate ANSI emission on it at the **central** points: the ANSI-wrap and border-ANSI
-  helpers return empty on/off pairs when `_color_enabled` is False. (Prefer one choke point
-  so the toggle can't be bypassed; verify no other path emits raw `\033[` for styling.)
+  helpers (`_get_active_ansi_wrap` `src/vistab.py:1497-1498`, `_get_border_ansi`
+  `1504-1505`) return empty on/off pairs when `_color_enabled` is False.
+- **(R1) Content/demo/title ANSI is NOT covered by those helpers.** The color demos build
+  ANSI directly into cell content and titles (e.g. `print_colors_list` swatches
+  `f"\033[{val}m Sample \033[0m"` at `src/vistab.py:3271`; `set_title("\033[1;36m...")` at
+  `3276/3293/3308`; demo section titles throughout). A gate on the styling helpers alone
+  will still print those colors. So the CLI color-off path must ALSO make the color demos
+  render without their hardcoded escapes: the cleanest approach is a module-level
+  "color emitting allowed?" check the demos consult before embedding raw escapes (or route
+  demo swatches/titles through the same suppression). Whatever the mechanism, the invariant
+  is: **when color is off, no vistab-generated styling escape reaches stdout, including from
+  demos and titles.** (User-supplied content ANSI is out of scope; see R2.)
 - CLI: add `--no-color`; also honor the `NO_COLOR` env var (any non-empty value) and
   default to no color when stdout is not a TTY *only if that does not regress current piped
   behavior* (see Open Question 1 - piping currently emits color; changing that is a
@@ -107,7 +128,10 @@ three demo tables first, then dumps all example code at the bottom.
   **its** example code directly beneath it (not all code at the end).
 - Lightly colorize the example code, **highlighting only the span-specific tokens**
   (`ColSpan`, `set_cell_span`, `set_header_span`, `combine=`) so the eye lands on the point
-  of the demo. Do NOT build a general syntax highlighter (over-scope, Complexity axis).
+  of the demo. **(R4) Concrete rule:** literal substring replacement of that fixed token
+  list, wrapping each in one style code then reset (e.g. bold or bright color), applied to
+  the code strings before printing. NO tokenizer, NO Python parser, NO general syntax
+  highlighting (over-scope, Complexity axis). The token list is small and fixed.
 - **Respect item 4:** all code colorization is suppressed when color is off (`--no-color`,
   `NO_COLOR`, or the chosen non-TTY rule). When suppressed, print plain code.
 
@@ -149,9 +173,17 @@ itself from being colorized (it is a plain notice).
   - `vistab show span`, `show spans`, `demo span`, `demo spans` all render the span demo
     (exit 0); output identical across the aliases.
   - `capabilities`/`caps`/`wrapping` resolve to the same renderer; `anatomy` unchanged.
-  - Color toggle: a `Vistab` with color disabled emits **no** `\033[` escape sequences for
-    a styled table; with color enabled, output is byte-identical to today (regression pin).
-  - CLI `--no-color` and `NO_COLOR=1` each produce escape-free output for a themed render.
+  - **Color toggle (R2, corrected):** for a table built with vistab styles/themes but
+    **plain-string content**, a color-disabled render adds **no vistab styling escapes** and
+    is byte-identical to the same table built with no styles applied. Do NOT assert "zero
+    `\033[` anywhere": reset codes and any *user-supplied* content ANSI legitimately remain;
+    the pin is "vistab emits no styling color," not "the output contains no escape bytes."
+  - **Color ON regression pin (R3):** capture the rendered output of a representative themed
+    table BEFORE item 4, assert it is byte-identical AFTER (item 4 edits the central ANSI
+    helpers, which is exactly where a default-output regression would hide).
+  - CLI `--no-color` and `NO_COLOR=1`: a themed render, and `show colors`/`show themes`,
+    produce output with no vistab-generated styling escapes (including demo swatches/titles,
+    per R1).
   - Span demo: with color on, span tokens are highlighted; with `--no-color`, the demo code
     contains no escape sequences.
   - Suppression warning (item 6): `vistab show colors --no-color` (and `themes`, `anatomy`,
