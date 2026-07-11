@@ -2,11 +2,7 @@
 
 # vistab
 
-`vistab` is a lightweight Python **library** for creating beautiful text-based ASCII/Unicode tables. It comes out-of-the-box with support for fluid terminal formatting (ANSI escape sequences), coordinate-based discrete cell styling, and guarantees consistent string lengths across languages and scripts (RTL and LTR) and color variations.
-
-![Screenshot: the vistab showcase table rendering column spanning, a theme, CJK, Thai, Arabic and Hebrew text, and color-aware word wrapping, all inside a single aligned Unicode grid.](https://raw.githubusercontent.com/fariello/vistab/v1.2.0/docs/assets/vistab-show-showcase-01.png)
-
-*The `vistab show showcase` demo: column spanning, theming, CJK/Thai/RTL scripts, and color-aware wrapping in one aligned table.*
+`vistab` is a lightweight Python **library** for creating beautiful text-based ASCII/Unicode tables. It comes out-of-the-box with support for fluid terminal formatting (ANSI escape sequences), coordinate-based discrete cell styling, and guarantees consistent string lengths across languages and scripts (RTL and LTR) and color variations. (See the [Showcase](#showcase) for a one-glance demo of everything.)
 
 **Using vistab from Python? Import the `Vistab` class** (see the [API reference](https://github.com/fariello/vistab/blob/v1.2.0/docs/API.md)). A command-line entry point also exists, but the CLI is for ad-hoc terminal/CSV use only. In code, do not shell out to the `vistab` command: import and use the API.
 
@@ -26,6 +22,24 @@ print(t.draw())
 - **Coordinate Styling API**: Style rows, columns, headers, or specific cells via clean method chaining.
 - **Hierarchical Configuration**: Load table paddings and themes from localized configurations (`vistab.toml`).
 - **Data-Aware Engine**: Auto-wraps text, infers data types, and parses CSV formats natively.
+
+
+## Showcase
+
+The fastest way to see what `vistab` can do is the built-in flagship demo, which renders one
+table exercising the headline capabilities at once (column spanning in both headers and data
+rows, a theme, CJK/Thai/Arabic/Hebrew scripts with correct widths, inline ANSI color, and
+color-aware word wrapping):
+
+```bash
+vistab show showcase
+```
+
+![Screenshot: the vistab showcase table rendering column spanning, a theme, CJK, Thai, Arabic and Hebrew text, and color-aware word wrapping, all inside a single aligned Unicode grid.](https://raw.githubusercontent.com/fariello/vistab/v1.2.0/docs/assets/vistab-show-showcase-01.png)
+
+The demo also prints the Python that builds it. Right-to-left scripts (Arabic, Hebrew) are
+kept from flipping the grid via Unicode LTR isolates; disable that with `--no-bidi`, and
+disable color with `--no-color`, if your terminal needs it.
 
 
 ## Detailed Documentation
