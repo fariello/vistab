@@ -1,0 +1,6 @@
+id,source,section,status,description,remediation_risk,files,commit,validation,reason_not_done
+A1,RR2-S2-B1,7,completed,Route styles title through _demo_text,Low,src/vistab.py,53703c8,show styles --no-color escape-free,-
+A2,RR2-S2-U1,7,completed,Capabilities demo emits color-off warning; content stays colored (it is the demo),Low,src/vistab.py,53703c8,warning printed,-
+A3,RR2-S3-T1,7,completed,Add show span/spans CLI tests,Low,tests/test_cli.py,53703c8,pytest 113,-
+A4,RR2-S3-T2,7,completed,Add --no-color/NO_COLOR/set_color tests,Low,tests/test_cli.py,53703c8,pytest 113,-
+A5,RR2-S6-A1,7,completed,Fold Unreleased items into [1.2.0],Low,CHANGELOG.md,53703c8,inspect,-

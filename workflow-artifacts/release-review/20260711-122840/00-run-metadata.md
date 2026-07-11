@@ -1,0 +1,11 @@
+# 00 Run Metadata
+- Run ID: 20260711-122840
+- Workflow: release-review (focused re-review after prior GO 20260710-194844)
+- Agent/model: opencode (its_direct/pt3-claude-opus-4.8-1m-us)
+- Repository: /home/gfariello/VC/vistab ; subject = vistab project (framework/workflow-artifacts out of scope)
+- Git: yes ; branch main ; head 0b99dae ; remote origin git@github.com:fariello/vistab.git
+- Working tree: clean ; origin/main synced (0 ahead/behind) — user pushed
+- Release state: v1.2.0 code on main + PyPI, but NO PyPI publish yet (PyPI latest = 1.1.3) and NO git tags. This review gates the real v1.2.0 release.
+- Python: 3.14 ; test baseline: 105 passed ; version: 1.2.0
+- Mode: serial, single continuous pass. Loop-guard: this is a targeted follow-up to run 20260710-194844 (GO); focus the delta, do not re-litigate the unchanged core.
+- Delta under review (commits 922e17b..HEAD): library-first framing docs (01cdc5c); CLI-polish batch (fa22d5f: --no-color/NO_COLOR, show span parity, span-demo redesign, library messaging). +203/-60 in src/vistab.py, +57 tests.
