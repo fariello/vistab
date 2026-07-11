@@ -339,6 +339,98 @@ class TestVistabColspan(unittest.TestCase):
             "└───────┴─────────┴────────┴──────────┘",
         ])
 
+    def _visible_width(self, out):
+        """Max visible (ANSI-stripped) width across all rendered lines."""
+        import re
+        return max(len(re.sub(r"\x1b\[[0-9;]*m", "", line)) for line in out.splitlines())
+
+    def test_colspan_honors_max_width_by_wrapping(self):
+        """Regression: a spanned cell whose merged content exceeds its combined
+        column budget must WRAP within max_width, not expand the table past it.
+
+        Before the fix this rendered 56 columns wide for max_width=40."""
+        t = Vistab(style="light", max_width=40)
+        t.set_header(["A", "B", "C"])
+        t.add_row(["x", "some long value here", "another long value here too"])
+        t.add_row(["y", "p", "q"])
+        t.set_cell_span(0, 1, 2)
+        out = t.draw()
+        # Ceiling honored.
+        self.assertLessEqual(self._visible_width(out), 40)
+        # Merged content fully present across wrapped lines (not truncated).
+        for word in ["some", "long", "value", "here", "another", "too"]:
+            self.assertIn(word, out)
+
+    def test_colspan_near_zero_column_block_still_wraps(self):
+        """Edge case (F1/F3): a span covering a column that has no standalone
+        content, under a tight max_width. The block must still be wide enough to
+        wrap the merged content legibly (borrowing width from columns outside the
+        span) rather than collapsing or looping in the wrapper."""
+        t = Vistab(style="light", max_width=30)
+        t.set_header(["id", "name", "notes"])
+        # Column index 2 ("notes") never carries standalone content: its only
+        # occupant is the spanned block and an empty cell.
+        t.add_row(["1", "this is a fairly long merged value that must wrap", ""])
+        t.add_row(["2", "bob", "ok"])
+        t.set_cell_span(0, 1, 2)
+        out = t.draw()
+        self.assertLessEqual(self._visible_width(out), 30)
+        for word in ["this", "fairly", "merged", "value", "must", "wrap"]:
+            self.assertIn(word, out)
+
+    def test_colspan_under_max_width_that_already_fits_is_unchanged(self):
+        """A span whose merged content already fits within its combined budget
+        under max_width must not be spuriously wrapped: same as no ceiling."""
+        no_ceiling = Vistab(style="light")
+        no_ceiling.set_header(["A", "B", "C"])
+        no_ceiling.add_row(["x", "hi", "there"])
+        no_ceiling.add_row(["y", "p", "q"])
+        no_ceiling.set_cell_span(0, 1, 2)
+
+        with_ceiling = Vistab(style="light", max_width=200)
+        with_ceiling.set_header(["A", "B", "C"])
+        with_ceiling.add_row(["x", "hi", "there"])
+        with_ceiling.add_row(["y", "p", "q"])
+        with_ceiling.set_cell_span(0, 1, 2)
+
+        self.assertEqual(with_ceiling.draw(), no_ceiling.draw())
+
+    def test_colspan_max_width_pin_nonspan_wrapping_unchanged(self):
+        """Byte-identical pin: plain (non-span) max_width wrapping is untouched
+        by the colspan fix."""
+        t = Vistab(style="light", max_width=40)
+        t.set_header(["A", "B", "C"])
+        t.add_row(["x", "some long value here", "another long value here too"])
+        t.add_row(["y", "p", "q"])
+        self.assertEqual(t.draw().splitlines(), [
+            "┌───┬─────────────────┬────────────────┐",
+            "│ A │        B        │       C        │",
+            "├───┼─────────────────┼────────────────┤",
+            "│ x │ some long value │ another long   │",
+            "│   │ here            │ value here too │",
+            "├───┼─────────────────┼────────────────┤",
+            "│ y │ p               │ q              │",
+            "└───┴─────────────────┴────────────────┘",
+        ])
+
+    def test_colspan_pin_span_without_max_width_unchanged(self):
+        """Byte-identical pin: a span WITHOUT a width ceiling still expands its
+        covered columns to fit on one line (the correct no-ceiling behavior)."""
+        t = Vistab(style="light")
+        t.set_header(["A", "B", "C"])
+        t.add_row(["x", "some long value here", "another long value here too"])
+        t.add_row(["y", "p", "q"])
+        t.set_cell_span(0, 1, 2)
+        self.assertEqual(t.draw().splitlines(), [
+            "┌───┬─────────────────────────┬────────────────────────┐",
+            "│ A │            B            │           C            │",
+            "├───┼─────────────────────────┴────────────────────────┤",
+            "│ x │ some long value here another long value here too │",
+            "├───┼─────────────────────────┬────────────────────────┤",
+            "│ y │ p                       │ q                      │",
+            "└───┴─────────────────────────┴────────────────────────┘",
+        ])
+
     def test_colspan_sorting(self):
         """Verify sorting table rows with spans preserves span adjacency."""
         from vistab import ColSpan

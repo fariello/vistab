@@ -1,6 +1,10 @@
 # Implementation Plan - Fix: colspan violates max_width (merged content not wrapped to fit)
 
-Status: REVISED after plan-review (2026-07-11). Ready to execute on approval.
+Status: EXECUTED (2026-07-11). Fix landed in `_compute_cols_width`; 5 regression tests added
+(suite 116 -> 121 green); CHANGELOG `[Unreleased]` Fixed entry added. During execution the
+"already fits under a generous max_width" case revealed that a pure clamp would wrongly wrap a
+span that had budget headroom, so the final implementation expands the span up to the
+remaining budget first, then borrows for the minimum block width only when no headroom exists.
 
 ## Plan-review verification (2026-07-11)
 

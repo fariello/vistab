@@ -2744,13 +2744,54 @@ class Vistab:
 
         for c, k, req in spanned_cells_to_process:
             curr = self._span_block_width(c, k)
-            if req > curr:
-                deficit = req - curr
-                base, extra = divmod(deficit, k)
-                for j in range(c, c+k):
-                    self._width[j] += base
-                for j in range(c, c+extra):
-                    self._width[j] += 1
+            if req <= curr:
+                continue
+            deficit = req - curr
+
+            if self._max_width:
+                # A width ceiling is in force. Expand the span to fit on one line
+                # only as far as the remaining budget allows; beyond that the content
+                # wraps into its block instead of growing the table past max_width.
+                deco_width = 3 * (ncols - 1) + [0, 4][self.has_border]
+                headroom = self._max_width - (sum(self._width) + deco_width)
+                grow = min(deficit, max(0, headroom))
+                if grow > 0:
+                    base, extra = divmod(grow, k)
+                    for j in range(c, c + k):
+                        self._width[j] += base
+                    for j in range(c, min(c + extra, c + k)):
+                        self._width[j] += 1
+
+                # A block can still be too narrow to wrap legibly when its covered
+                # columns have little or no standalone content (their maxi was 0/tiny,
+                # so the shrink pass gave them almost nothing) and no budget headroom
+                # was available. In that case borrow width from the widest columns
+                # OUTSIDE the span, keeping the total (and therefore max_width)
+                # unchanged, until the block reaches a minimum legible width.
+                covered = set(range(c, c + k))
+                min_block = k + (k - 1) * self._sep_width()
+                while self._span_block_width(c, k) < min_block:
+                    donor = -1
+                    donor_w = 1
+                    for j in range(ncols):
+                        if j in covered:
+                            continue
+                        if self._width[j] > donor_w:
+                            donor_w = self._width[j]
+                            donor = j
+                    if donor < 0:
+                        break  # no slack to borrow; block wraps as best it can
+                    self._width[donor] -= 1
+                    self._width[c] += 1
+                continue
+
+            # No width ceiling: expand covered columns to fit on one line (original
+            # behavior, unchanged).
+            base, extra = divmod(deficit, k)
+            for j in range(c, c+k):
+                self._width[j] += base
+            for j in range(c, c+extra):
+                self._width[j] += 1
 
     def _infer_auto_dtypes(self) -> None:
         """ upgrade 'a' (automatic) columns into strict numeric constraints.

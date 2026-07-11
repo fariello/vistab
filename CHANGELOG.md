@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fitting within 80 columns. Honors `--no-color` and warns when color is suppressed.
 
 ### Fixed
+- **Colspan now honors `max_width`.** A spanned (colspan) cell whose merged content exceeded
+  its combined column budget used to widen the covered columns past `max_width`, blowing the
+  documented hard width ceiling. It now expands to fit only as far as the remaining budget
+  allows and wraps the rest within its block, like any other cell. Spans without a ceiling
+  still expand to fit on one line as before.
 - Repaired a broken screenshot link in `docs/CLI.md` (referenced a non-existent
   `vistab-M-themes-output.png`, a leftover of the removed `-M` flag).
 
