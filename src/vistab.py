@@ -3214,32 +3214,36 @@ def print_test_demo():
     ]
 
     # Print the second row of the table outside a table line-by-line.
-    print("\033[1mTest text line-by-line:\033[0m")
+    # NOTE: this demo's colored CONTENT is the whole point (it proves ANSI/CJK-aware
+    # wrapping), so content color is preserved even under --no-color; only the chrome
+    # (section titles, table styling) honors color-off, and a warning is emitted.
+    print(_demo_text("\033[1mTest text line-by-line:\033[0m"))
     for phrase in tdata[1]:
         print(phrase)
     print()
 
 
-    print("\033[1m\033[1;31mANSI\033[0m\033[1m Color / Escape Sequence Aware Text-Based Tables (width=80)\033[0m:")
-    t1 = Vistab(tdata)
+    print(_demo_text("\033[1m\033[1;31mANSI\033[0m\033[1m Color / Escape Sequence Aware Text-Based Tables (width=80)\033[0m:"))
+    t1 = Vistab(tdata).set_color(_CLI_COLOR)
     t1.set_max_width(80)
     t1.set_cell_style(1, 4, bg="blue")
     print(t1.draw())
 
-    print("\n\033[1mBelow is the same table without ANSI color / escape sequences. They should wrap the same way.\033[0m")
+    print(_demo_text("\n\033[1mBelow is the same table without ANSI color / escape sequences. They should wrap the same way.\033[0m"))
     tdata2 = [
         [_strip_ansi(cell) for cell in row]
         for row in tdata
     ]
-    t2 = Vistab(tdata2)
+    t2 = Vistab(tdata2).set_color(_CLI_COLOR)
     t2.set_max_width(80)
     t2.set_cell_style(1, 4, bg="blue")
     print(t2.draw())
+    _maybe_warn_color_off()
 
 
 
 def print_styles_list():
-    print("\033[1mAvailable Styles\033[0m (Note: the default is \"light\"):")
+    print(_demo_text("\033[1mAvailable Styles\033[0m (Note: the default is \"light\"):"))
     style_list = sorted(Vistab.STYLES.keys())
     data = []
     for row in split_list(style_list, 5):

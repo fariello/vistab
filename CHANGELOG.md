@@ -9,25 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-07-11
+
 ### Added
 - **`--no-color` / `NO_COLOR`.** New CLI flag (and honored env var) that disables all of
   vistab's own color/style output table-wide; also exposed on the library as
   `Vistab.set_color(enabled=True)`. User-supplied ANSI in cell content is left untouched.
-- **`vistab show span`** now works (previously only `demo span`); `spans` is accepted as an
-  alias, and `show wrapping` aliases `show capabilities`.
-
-### Changed
-- **Span demo (`show span`) redesigned:** example code is printed directly beneath the table
-  it produced, with the span-specific calls highlighted; color-focused demos print a
-  `WARNING: colors turned off ...` notice when color is suppressed.
-- **Library-first CLI messaging:** the usage/no-data output now leads with
-  `from vistab import Vistab`, positioning the CLI as the secondary, ad-hoc surface.
-- **Docs framing: library-first.** The module docstring, `README.md`, and `AGENTS.md` now
-  foreground `from vistab import Vistab` as the primary interface, with the CLI clearly
-  positioned as a secondary, ad-hoc terminal/CSV surface. No API, CLI, or rendering behavior
-  changed.
-
-## [1.2.0] - 2026-07-10
+- **`vistab show span`** (previously only `demo span`); `spans` is accepted as an alias, and
+  `show wrapping` aliases `show capabilities`.
 
 ### Changed
 - **License changed from BSD-3-Clause to Apache-2.0.** Now licensed under the Apache License 2.0
@@ -50,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Theme API Standardization**: Promoted `set_theme()` as the official API; `apply_theme()` is deprecated (emits `DeprecationWarning`).
 - **Internal Cell Representation**: Row/header entries are now wrapped in `VistabCell` objects internally. While public API usage is unaffected, code that accesses the private `_rows` or `_header` structures directly must now use `str(cell)` to extract string values.
 - **`set_header_span` and `set_cell_span` mutators**: Added a `combine` string parameter (default `" "`) to merge existing covered cell values together, with `combine=None` triggering strict overwrite-prevention validation.
+- **Span demo (`show span`) redesigned:** example code is printed directly beneath the table it produced, with the span-specific calls highlighted; color-focused demos print a `WARNING: colors turned off ...` notice when color is suppressed.
+- **Library-first framing:** the module docstring, `README.md`, `AGENTS.md`, and the CLI usage/no-data output now foreground `from vistab import Vistab` as the primary interface, positioning the CLI as a secondary, ad-hoc surface. No API, CLI, or rendering behavior changed.
 
 ### Fixed
 - **`has_header = False` now un-headers row 0.** Previously, a table built via `Vistab(rows)` (no explicit `header=`) consumed row 0 as a header, and setting `has_header = False` afterward suppressed the divider but still rendered row 0 with centered header alignment. The setter now moves the consumed row back into the data rows (span-safe) and cell alignment is gated on `has_header`, so that row uses the body `alignment=`. Setting `has_header = True` re-consumes the current first row.

@@ -252,5 +252,95 @@ class TestCLIVerbs(unittest.TestCase):
         self.assertEqual(e.exception.code, 0)
         self.assertIn("Column Spanning (Colspan) Demonstration", mock_stdout.getvalue())
 
+    # --- Release-review 20260711-122840 gap coverage ---
+
+    @patch('sys.stdout', new_callable=io.StringIO)
+    @patch('sys.argv', ['vistab', 'show', 'span'])
+    def test_show_span_parity(self, mock_stdout):
+        """show span (verb parity added this batch) must render the span demo (T1)."""
+        import vistab
+        with self.assertRaises(SystemExit) as e:
+            vistab.main()
+        self.assertEqual(e.exception.code, 0)
+        self.assertIn("Column Spanning (Colspan) Demonstration", mock_stdout.getvalue())
+
+    @patch('sys.stdout', new_callable=io.StringIO)
+    @patch('sys.argv', ['vistab', 'show', 'spans'])
+    def test_show_spans_alias(self, mock_stdout):
+        """show spans alias resolves to the span demo (T1)."""
+        import vistab
+        with self.assertRaises(SystemExit) as e:
+            vistab.main()
+        self.assertEqual(e.exception.code, 0)
+        self.assertIn("Column Spanning (Colspan) Demonstration", mock_stdout.getvalue())
+
+
+class TestCLINoColor(unittest.TestCase):
+    """Release-review 20260711-122840 gap coverage for --no-color / NO_COLOR (T2)."""
+
+    ANSI = None
+
+    def _run(self, argv, env=None):
+        import re, subprocess, os
+        e = dict(os.environ); e.pop("NO_COLOR", None)
+        if env:
+            e.update(env)
+        cli = os.path.join(os.path.dirname(__file__), "..", "src", "vistab.py")
+        r = subprocess.run([sys.executable, cli] + argv, capture_output=True, text=True,
+                           input="A,B\n1,2\n", env=e)
+        return r.stdout, r.stderr, r.returncode
+
+    def _has_ansi(self, s):
+        import re
+        return re.search(r'\x1b\[[0-9;]*[A-Za-z]', s) is not None
+
+    def test_no_color_flag_themed_render_has_no_escapes(self):
+        out, _, rc = self._run(["-t", "ocean", "--no-color"])
+        self.assertEqual(rc, 0)
+        self.assertFalse(self._has_ansi(out))
+
+    def test_no_color_env_themed_render_has_no_escapes(self):
+        out, _, rc = self._run(["-t", "ocean"], env={"NO_COLOR": "1"})
+        self.assertEqual(rc, 0)
+        self.assertFalse(self._has_ansi(out))
+
+    def test_show_colors_no_color_warns_and_is_monochrome(self):
+        # show colors --no-color: stdout escape-free, warning on stderr naming the trigger.
+        import subprocess, os
+        e = dict(os.environ); e.pop("NO_COLOR", None)
+        cli = os.path.join(os.path.dirname(__file__), "..", "src", "vistab.py")
+        r = subprocess.run([sys.executable, cli, "show", "colors", "--no-color"],
+                           capture_output=True, text=True, env=e)
+        self.assertFalse(self._has_ansi(r.stdout))
+        self.assertIn("colors turned off", r.stderr)
+
+
+class TestSetColorLibrary(unittest.TestCase):
+    """Library-level set_color(False) suppresses vistab styling escapes (T2)."""
+
+    def _has_ansi(self, s):
+        import re
+        return re.search(r'\x1b\[[0-9;]*[A-Za-z]', s) is not None
+
+    def test_set_color_false_no_styling_escapes(self):
+        t = Vistab(style="light")
+        t.set_theme("ocean")
+        t.add_rows([["A", "B"], ["1", "2"]])
+        t.set_color(False)
+        self.assertFalse(self._has_ansi(t.draw()))
+
+    def test_set_color_true_default_still_colored(self):
+        t = Vistab(style="light")
+        t.set_theme("ocean")
+        t.add_rows([["A", "B"], ["1", "2"]])
+        self.assertTrue(self._has_ansi(t.draw()))  # default: color on
+
+    def test_set_color_false_preserves_user_content_ansi(self):
+        t = Vistab(style="light")
+        t.add_row(["\033[31mred\033[0m"])
+        t.set_color(False)
+        self.assertIn("\033[31m", t.draw())  # user content ANSI is not stripped
+
+
 if __name__ == '__main__':
     unittest.main()
