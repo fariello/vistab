@@ -2,7 +2,18 @@
 
 # vistab
 
-`vistab` is a lightweight Python module for creating beautiful text-based ASCII/Unicode tables. It comes out-of-the-box with support for fluid terminal formatting (ANSI escape sequences), coordinate-based discrete cell styling, and guarantees consistent string lengths across languages and scripts (RTL and LTR) and color variations.
+`vistab` is a lightweight Python **library** for creating beautiful text-based ASCII/Unicode tables. It comes out-of-the-box with support for fluid terminal formatting (ANSI escape sequences), coordinate-based discrete cell styling, and guarantees consistent string lengths across languages and scripts (RTL and LTR) and color variations.
+
+**Using vistab from Python? Import the `Vistab` class** (see the [API reference](docs/API.md)). A command-line entry point also exists, but the CLI is for ad-hoc terminal/CSV use only. In code, do not shell out to the `vistab` command: import and use the API.
+
+```python
+from vistab import Vistab
+
+t = Vistab(header=["Name", "Age"])
+t.add_row(["Sarah", 27])
+t.set_cols_align(["l", "r"])
+print(t.draw())
+```
 
 ## Key Features
 
@@ -16,8 +27,8 @@
 ## Detailed Documentation
 Looking for an exhaustive configuration breakdown or command-line parser bindings?
 
-- **[Vistab Python API Reference](docs/API.md)** *(Covers all objects, data formatting algorithms, and properties)*
-- **[Command-Line (CLI) Manual](docs/CLI.md)** *(Covers mapping raw CSV structures and terminal limits)*
+- **[Vistab Python API Reference](docs/API.md)** *(the primary interface: all objects, data formatting algorithms, and properties)*
+- **[Command-Line (CLI) Manual](docs/CLI.md)** *(secondary, for ad-hoc terminal/CSV use: mapping raw CSV structures and terminal limits)*
 
 ## Installation
 

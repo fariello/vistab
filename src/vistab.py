@@ -3,7 +3,18 @@
 # This was inspired by texttable, an excellent lightweight module for creating simple ASCII tables by Gerome Fournier <jef(at)foutaise.org>. Thank you for your inspiration.
 # Copyright (C) 2018-2026 Gabriele Fariello where applicable.
 
-r"""module for creating simple ASCII tables.
+r"""vistab: a Python LIBRARY for building aligned, color-aware text tables.
+
+Import it and call the API; do not shell out to the CLI for programmatic use:
+
+    from vistab import Vistab
+    t = Vistab(header=["Name", "Age"])
+    t.add_row(["Sarah", 27])
+    t.set_cols_align(["l", "r"])
+    print(t.draw())
+
+A command-line entry point also exists for ad-hoc CSV/terminal use (see docs/CLI.md),
+but in Python code prefer `from vistab import Vistab`.
 
 Example:
 

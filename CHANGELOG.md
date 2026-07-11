@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Docs framing: library-first.** The module docstring, `README.md`, and `AGENTS.md` now
+  foreground `from vistab import Vistab` as the primary interface, with the CLI clearly
+  positioned as a secondary, ad-hoc terminal/CSV surface. No API, CLI, or rendering behavior
+  changed.
+
 ## [1.2.0] - 2026-07-10
 
 ### Changed
