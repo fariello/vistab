@@ -1,14 +1,14 @@
-[README](README.md) | [API](docs/API.md) | [CLI](docs/CLI.md) | [SPEC](FUNCTIONAL_SPEC.md) | [CHANGELOG](CHANGELOG.md)
+[README](https://github.com/fariello/vistab/blob/v1.2.0/README.md) | [API](https://github.com/fariello/vistab/blob/v1.2.0/docs/API.md) | [CLI](https://github.com/fariello/vistab/blob/v1.2.0/docs/CLI.md) | [SPEC](https://github.com/fariello/vistab/blob/v1.2.0/FUNCTIONAL_SPEC.md) | [CHANGELOG](https://github.com/fariello/vistab/blob/v1.2.0/CHANGELOG.md)
 
 # vistab
 
 `vistab` is a lightweight Python **library** for creating beautiful text-based ASCII/Unicode tables. It comes out-of-the-box with support for fluid terminal formatting (ANSI escape sequences), coordinate-based discrete cell styling, and guarantees consistent string lengths across languages and scripts (RTL and LTR) and color variations.
 
-![Screenshot: the vistab showcase table rendering column spanning, a theme, CJK, Thai, Arabic and Hebrew text, and color-aware word wrapping, all inside a single aligned Unicode grid.](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-show-showcase-01.png)
+![Screenshot: the vistab showcase table rendering column spanning, a theme, CJK, Thai, Arabic and Hebrew text, and color-aware word wrapping, all inside a single aligned Unicode grid.](https://raw.githubusercontent.com/fariello/vistab/v1.2.0/docs/assets/vistab-show-showcase-01.png)
 
 *The `vistab show showcase` demo: column spanning, theming, CJK/Thai/RTL scripts, and color-aware wrapping in one aligned table.*
 
-**Using vistab from Python? Import the `Vistab` class** (see the [API reference](docs/API.md)). A command-line entry point also exists, but the CLI is for ad-hoc terminal/CSV use only. In code, do not shell out to the `vistab` command: import and use the API.
+**Using vistab from Python? Import the `Vistab` class** (see the [API reference](https://github.com/fariello/vistab/blob/v1.2.0/docs/API.md)). A command-line entry point also exists, but the CLI is for ad-hoc terminal/CSV use only. In code, do not shell out to the `vistab` command: import and use the API.
 
 ```python
 from vistab import Vistab
@@ -31,8 +31,8 @@ print(t.draw())
 ## Detailed Documentation
 Looking for an exhaustive configuration breakdown or command-line parser bindings?
 
-- **[Vistab Python API Reference](docs/API.md)** *(the primary interface: all objects, data formatting algorithms, and properties)*
-- **[Command-Line (CLI) Manual](docs/CLI.md)** *(secondary, for ad-hoc terminal/CSV use: mapping raw CSV structures and terminal limits)*
+- **[Vistab Python API Reference](https://github.com/fariello/vistab/blob/v1.2.0/docs/API.md)** *(the primary interface: all objects, data formatting algorithms, and properties)*
+- **[Command-Line (CLI) Manual](https://github.com/fariello/vistab/blob/v1.2.0/docs/CLI.md)** *(secondary, for ad-hoc terminal/CSV use: mapping raw CSV structures and terminal limits)*
 
 ## Installation
 
@@ -69,9 +69,9 @@ print(table.draw())
 
 **Output:**
 
-> **Note on Web Rendering:** We display the raw output below as an image because some package registries (like PyPI) enforce code-block font stacks (e.g., `Source Code Pro`) that lack glyphs for Unicode Extended Box Drawing characters. When falling back to secondary system fonts for characters like `╭` or `╪`, the physical grid mathematically misaligns. On your local terminal—and on full-featured renderers like GitHub or BitBucket—the actual text output mathematically aligns perfectly!
+> **Note on Web Rendering:** We display the raw output below as an image because some package registries (like PyPI) enforce code-block font stacks (e.g., `Source Code Pro`) that lack glyphs for Unicode Extended Box Drawing characters. When falling back to secondary system fonts for characters like `╭` or `╪`, the physical grid mathematically misaligns. On your local terminal (and on full-featured renderers like GitHub or BitBucket) the actual text output mathematically aligns perfectly!
 
-![Screenshot: Terminal output displaying a formatted 3-column data matrix. The headers are 'Name', 'Age', and 'Nickname'. The table perfectly encapsulates complex multi-line text blocks across individual cells mapping 'Sarah Jones' directly alongside her age, wrapped inside exactly aligned rounded Unicode border geometries.](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-code-output-01.png)
+![Screenshot: Terminal output displaying a formatted 3-column data matrix. The headers are 'Name', 'Age', and 'Nickname'. The table perfectly encapsulates complex multi-line text blocks across individual cells mapping 'Sarah Jones' directly alongside her age, wrapped inside exactly aligned rounded Unicode border geometries.](https://raw.githubusercontent.com/fariello/vistab/v1.2.0/docs/assets/vistab-code-output-01.png)
 
 ## Built-in Styles
 
@@ -79,7 +79,7 @@ To view available styles, run:
 ```bash
 vistab show styles
 ```
-![Available Styles](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-demo-styles.png)
+![Available Styles](https://raw.githubusercontent.com/fariello/vistab/v1.2.0/docs/assets/vistab-demo-styles.png)
 
 ## Cookbook Examples
 
@@ -160,11 +160,11 @@ print(table.draw())
 
 You can view this demonstration yourself by running `vistab show anatomy`:
 
-![Anatomy of a Vistab Table](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-demo-anatomy.png)
+![Anatomy of a Vistab Table](https://raw.githubusercontent.com/fariello/vistab/v1.2.0/docs/assets/vistab-demo-anatomy.png)
 
 ## Coordinate-Based Word Wrapping (Nested Tables)
 
-If you need absolute structural control over spatial layouts—for example, if you are embedding pre-rendered ASCII tables inside the cells of another `Vistab`—you can bypass the internal word-wrapping engine entirely using coordinate mapping. 
+If you need absolute structural control over spatial layouts (for example, if you are embedding pre-rendered ASCII tables inside the cells of another `Vistab`) you can bypass the internal word-wrapping engine entirely using coordinate mapping. 
 
 By setting `wrap=False` on specific axes, `Vistab` guarantees it will preserve your structural spacing verbatim without snapping or aggressively pruning layouts:
 
@@ -221,7 +221,7 @@ You can view the built-in themes (which you can alter and save as new themes) by
 ```bash
 vistab show themes
 ```
-![Available Themes](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-demo-themes-01.png)
+![Available Themes](https://raw.githubusercontent.com/fariello/vistab/v1.2.0/docs/assets/vistab-demo-themes-01.png)
 
 ## Custom Themes
 
@@ -251,7 +251,7 @@ vistab ~/test.csv --theme ocean-rows-index
 
 produces:
 
-![Theme ocean-rows-index table example](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-theme-ocean-rows-index-example.png)
+![Theme ocean-rows-index table example](https://raw.githubusercontent.com/fariello/vistab/v1.2.0/docs/assets/vistab-theme-ocean-rows-index-example.png)
 
 You may then change that theme by running:
 ```bash
@@ -261,7 +261,7 @@ vistab ~/test.csv --theme ocean-rows-index --no-hlines \
 ```
 Which results in:
 
-![Example of a modified theme](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-theme-ocean-rows-index-example-modified.png)
+![Example of a modified theme](https://raw.githubusercontent.com/fariello/vistab/v1.2.0/docs/assets/vistab-theme-ocean-rows-index-example-modified.png)
 
 To see how to generate that specific output using code, you can run:
 
@@ -344,7 +344,7 @@ You can view the palette directly on the console by executing:
 ```bash
 vistab show colors
 ```
-![Defined Colors](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-demo-colors.png)
+![Defined Colors](https://raw.githubusercontent.com/fariello/vistab/v1.2.0/docs/assets/vistab-demo-colors.png)
 
 ## ANSI Color Layout Support
 
@@ -354,7 +354,7 @@ You can view a comprehensive color-wrapping conformance test demonstrating dynam
 ```bash
 vistab show capabilities
 ```
-![Test Output](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-demo-capabilities.png)
+![Test Output](https://raw.githubusercontent.com/fariello/vistab/v1.2.0/docs/assets/vistab-demo-capabilities.png)
 
 ## Advanced Formatting (Datatypes)
 
@@ -383,14 +383,14 @@ table.add_rows([
 ## Detailed API Reference
 
 For the complete list of endpoints, configuration schemas, parameters, and wrapping constraints available in `vistab`:
-**Please refer to the absolute granular [Vistab Core API Documentation](docs/API.md)**
+**Please refer to the absolute granular [Vistab Core API Documentation](https://github.com/fariello/vistab/blob/v1.2.0/docs/API.md)**
 
 ## License
 
-This project is licensed under the Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE) for details.
+This project is licensed under the Apache License 2.0. See [LICENSE](https://github.com/fariello/vistab/blob/v1.2.0/LICENSE) and [NOTICE](https://github.com/fariello/vistab/blob/v1.2.0/NOTICE) for details.
 
 ---
-[README](README.md) | [API](docs/API.md) | [CLI](docs/CLI.md) | [SPEC](FUNCTIONAL_SPEC.md) | [CHANGELOG](CHANGELOG.md)
+[README](https://github.com/fariello/vistab/blob/v1.2.0/README.md) | [API](https://github.com/fariello/vistab/blob/v1.2.0/docs/API.md) | [CLI](https://github.com/fariello/vistab/blob/v1.2.0/docs/CLI.md) | [SPEC](https://github.com/fariello/vistab/blob/v1.2.0/FUNCTIONAL_SPEC.md) | [CHANGELOG](https://github.com/fariello/vistab/blob/v1.2.0/CHANGELOG.md)
 
 
 ---

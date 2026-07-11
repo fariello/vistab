@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "vistab"
 version = "1.2.0"
-description = "A simple module for creating ASCII tables"
+description = "Beautiful terminal ASCII/Unicode tables: themes, column spanning, color-aware wrapping, and CJK/RTL-correct widths"
 authors = [
     { name = "Gabriele G. R. Fariello", email = "gfariello@fariel.com" }
 ]
@@ -20,6 +20,13 @@ classifiers = [
 dependencies = [
     "wcwidth",
 ]
+
+[project.urls]
+Homepage = "https://github.com/fariello/vistab"
+Documentation = "https://github.com/fariello/vistab/blob/v1.2.0/docs/API.md"
+Source = "https://github.com/fariello/vistab"
+Changelog = "https://github.com/fariello/vistab/blob/v1.2.0/CHANGELOG.md"
+Issues = "https://github.com/fariello/vistab/issues"
 
 [project.optional-dependencies]
 cjk = ["cjkwrap"]

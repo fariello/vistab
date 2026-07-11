@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), 
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.2.0] - 2026-07-11
 
 ### Added
 - **Bidi-safe rendering of right-to-left text.** When a cell contains RTL script (Arabic,
@@ -20,33 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`vistab show showcase`** (also `demo showcase` / `--demo showcase`): a curated one-table
   demonstration combining column spanning, a theme, CJK/Thai/Arabic/Hebrew content, ANSI, and
   color-aware word-wrapping, fitting within 80 columns. Honors `--no-color` and `--no-bidi`.
-
-### Fixed
-- **Colspan now honors `max_width`.** A spanned (colspan) cell whose merged content exceeded
-  its combined column budget used to widen the covered columns past `max_width`, blowing the
-  documented hard width ceiling. It now expands to fit only as far as the remaining budget
-  allows and wraps the rest within its block, like any other cell. Spans without a ceiling
-  still expand to fit on one line as before.
-- Repaired a broken screenshot link in `docs/CLI.md` (referenced a non-existent
-  `vistab-M-themes-output.png`, a leftover of the removed `-M` flag).
-
-## [1.2.0] - 2026-07-11
-
-### Added
 - **`--no-color` / `NO_COLOR`.** New CLI flag (and honored env var) that disables all of
   vistab's own color/style output table-wide; also exposed on the library as
   `Vistab.set_color(enabled=True)`. User-supplied ANSI in cell content is left untouched.
 - **`vistab show span`** (previously only `demo span`); `spans` is accepted as an alias, and
   `show wrapping` aliases `show capabilities`.
-
-### Changed
-- **License changed from BSD-3-Clause to Apache-2.0.** Now licensed under the Apache License 2.0
-  (see `LICENSE` and the new `NOTICE`). Apache-2.0 requires redistributions and derivative works to
-  retain the `NOTICE` file and display its attribution reasonably prominently ("Based on the original
-  vistab by Gabriele G. R. Fariello — https://github.com/fariello/vistab"), and adds an explicit
-  patent grant. Copyright holder normalized to the full legal name **Gabriele G. R. Fariello**.
-
-### Added
 - **Column Spanning (Colspan) support**: Added first-class column spanning for both headers and rows, enabling cells to merge across multiple adjacent columns.
 - **`ColSpan` wrapping data model**: Introduced `ColSpan` wrapper to declare spans inline during ingestion, supporting both `colspan` and `span` keyword arguments.
 - **`set_header_span` and `set_cell_span` mutators**: Programmatic APIs to dynamically configure column spans post-ingestion. Supports negative indices.
@@ -57,6 +35,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Subject/Verb/Object CLI Subcommands**: Added natural-language subcommand structure (`show`, `help`, `demo`) as the primary CLI entry points, supporting aliases like `show caps`, `help adv`, and `demo span` (prints colspan demo alongside its Python code). Existing flags remain supported as aliases.
 
 ### Changed
+- **License changed from BSD-3-Clause to Apache-2.0.** Now licensed under the Apache License 2.0
+  (see `LICENSE` and the new `NOTICE`). Apache-2.0 requires redistributions and derivative works to
+  retain the `NOTICE` file and display its attribution reasonably prominently ("Based on the original
+  vistab by Gabriele G. R. Fariello — https://github.com/fariello/vistab"), and adds an explicit
+  patent grant. Copyright holder normalized to the full legal name **Gabriele G. R. Fariello**.
 - **Theme API Standardization**: Promoted `set_theme()` as the official API; `apply_theme()` is deprecated (emits `DeprecationWarning`).
 - **Internal Cell Representation**: Row/header entries are now wrapped in `VistabCell` objects internally. While public API usage is unaffected, code that accesses the private `_rows` or `_header` structures directly must now use `str(cell)` to extract string values.
 - **`set_header_span` and `set_cell_span` mutators**: Added a `combine` string parameter (default `" "`) to merge existing covered cell values together, with `combine=None` triggering strict overwrite-prevention validation.
@@ -64,6 +47,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Library-first framing:** the module docstring, `README.md`, `AGENTS.md`, and the CLI usage/no-data output now foreground `from vistab import Vistab` as the primary interface, positioning the CLI as a secondary, ad-hoc surface. No API, CLI, or rendering behavior changed.
 
 ### Fixed
+- **Colspan now honors `max_width`.** A spanned (colspan) cell whose merged content exceeded
+  its combined column budget used to widen the covered columns past `max_width`, blowing the
+  documented hard width ceiling. It now expands to fit only as far as the remaining budget
+  allows and wraps the rest within its block, like any other cell. Spans without a ceiling
+  still expand to fit on one line as before.
+- Repaired a broken screenshot link in `docs/CLI.md` (referenced a non-existent
+  `vistab-M-themes-output.png`, a leftover of the removed `-M` flag).
 - **`has_header = False` now un-headers row 0.** Previously, a table built via `Vistab(rows)` (no explicit `header=`) consumed row 0 as a header, and setting `has_header = False` afterward suppressed the divider but still rendered row 0 with centered header alignment. The setter now moves the consumed row back into the data rows (span-safe) and cell alignment is gated on `has_header`, so that row uses the body `alignment=`. Setting `has_header = True` re-consumes the current first row.
 
 
