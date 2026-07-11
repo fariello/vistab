@@ -275,6 +275,31 @@ class TestCLIVerbs(unittest.TestCase):
         self.assertIn("Column Spanning (Colspan) Demonstration", mock_stdout.getvalue())
 
 
+    @patch('sys.stdout', new_callable=io.StringIO)
+    @patch('sys.argv', ['vistab', 'show', 'showcase'])
+    def test_show_showcase(self, mock_stdout):
+        """show showcase renders the curated colspan+theme+CJK hero table (exit 0)."""
+        import vistab
+        with self.assertRaises(SystemExit) as e:
+            vistab.main()
+        self.assertEqual(e.exception.code, 0)
+        out = mock_stdout.getvalue()
+        self.assertIn("showcase", out)
+        self.assertIn("Contact", out)      # the colspan header group
+        self.assertIn("关羽", out)          # CJK content rendered
+
+    def test_showcase_width_within_80(self):
+        """The hero table must fit within 80 visible columns (screenshot legibility)."""
+        import subprocess, os
+        from vistab import StringLengthCalculator
+        e = dict(os.environ); e.pop("NO_COLOR", None)
+        cli = os.path.join(os.path.dirname(__file__), "..", "src", "vistab.py")
+        out = subprocess.run([sys.executable, cli, "show", "showcase"],
+                             capture_output=True, text=True, env=e).stdout
+        widest = max((StringLengthCalculator.len(l) for l in out.splitlines()), default=0)
+        self.assertLessEqual(widest, 80)
+
+
 class TestCLINoColor(unittest.TestCase):
     """Release-review 20260711-122840 gap coverage for --no-color / NO_COLOR (T2)."""
 
@@ -312,6 +337,15 @@ class TestCLINoColor(unittest.TestCase):
         r = subprocess.run([sys.executable, cli, "show", "colors", "--no-color"],
                            capture_output=True, text=True, env=e)
         self.assertFalse(self._has_ansi(r.stdout))
+        self.assertIn("colors turned off", r.stderr)
+
+    def test_show_showcase_no_color_monochrome_and_warns(self):
+        import subprocess, os
+        e = dict(os.environ); e.pop("NO_COLOR", None)
+        cli = os.path.join(os.path.dirname(__file__), "..", "src", "vistab.py")
+        r = subprocess.run([sys.executable, cli, "show", "showcase", "--no-color"],
+                           capture_output=True, text=True, env=e)
+        self.assertFalse(self._has_ansi(r.stdout))     # fully monochrome (content ANSI stripped)
         self.assertIn("colors turned off", r.stderr)
 
 

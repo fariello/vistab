@@ -3440,6 +3440,42 @@ def print_span_demo():
     print()
     _maybe_warn_color_off()
 
+
+def print_showcase_demo():
+    """Curated 'hero' demo: colspan + a theme + CJK/ANSI content + wrapping in one table.
+
+    Fits within 80 columns so it reads cleanly as a README screenshot. Honors --no-color:
+    the table is built with the CLI color state, its title flows through _demo_text, and a
+    color-off warning fires (this is a color-centric demo).
+    """
+    print(_demo_text("\033[1m\033[1;36mvistab showcase: colspan + theme + CJK/ANSI wrapping\033[0m"))
+    print("One table exercising the headline capabilities at once.\n")
+
+    t = Vistab(style="round-header", max_width=72).set_color(_CLI_COLOR)
+    t.set_theme("ocean-rows-index")
+    t.set_header(["ID", ColSpan("Contact", 2), "Notes"])
+    t.set_cols_align(["r", "l", "l", "l"])
+    t.add_row(["1", "Ada Lovelace", "ada@lovelace.io",
+               "First programmer; notes wrap across lines cleanly."])
+    t.add_row(["2", "关羽 (Guan Yu)", "guan@shu.han",
+               "CJK width handled beside ASCII."])
+    t.add_row(["3", _demo_text("José \033[1;31mÑoño\033[0m"), "jose@ex.com",
+               "Accents + inline ANSI coexist with the theme."])
+    print(t.draw())
+
+    print(_demo_text("\n\033[3mExample code:\033[0m") if _CLI_COLOR else "\nExample code:")
+    print(_highlight_span_code(
+        "from vistab import Vistab, ColSpan\n"
+        "t = Vistab(style='round-header', max_width=72)\n"
+        "t.set_theme('ocean-rows-index')\n"
+        "t.set_header(['ID', ColSpan('Contact', 2), 'Notes'])\n"
+        "t.set_cols_align(['r', 'l', 'l', 'l'])\n"
+        "t.add_row(['1', 'Ada Lovelace', 'ada@lovelace.io', 'First programmer; ...'])\n"
+        "print(t.draw())"
+    ))
+    print()
+    _maybe_warn_color_off()
+
 def print_themes_demo():
     print(_demo_text("\033[1m\033[1;36mBuilt-In Theme Macro Demonstrations\033[0m"))
     print("Predefined themes combining geometry layouts with zebra-striping and boundary padding!\n")
@@ -3555,9 +3591,11 @@ def main():
                     "anatomy": print_coordinate_styles_demo,
                     "themes": print_themes_demo,
                     "span": print_span_demo,
+                    "showcase": print_showcase_demo,
                 }
                 def _show_subject_lines(w):
                     w("Available subjects:\n")
+                    w("  showcase       One curated table: colspan + theme + CJK/ANSI wrapping (the flagship demo)\n")
                     w("  styles         Compare all available grid boundary styles\n")
                     w("  colors         Color swatch matrix of foreground/background colors and text styles\n")
                     w("  capabilities   ANSI + CJK-safe word-wrapping and datatype-parsing conformance (alias: caps, wrapping)\n")
@@ -3579,6 +3617,7 @@ def main():
                     
             elif verb == "demo":
                 valid_subjects = {
+                    "showcase": print_showcase_demo,
                     "span": print_span_demo,
                     "styles": print_styles_list,
                     "colors": print_colors_list,
@@ -3586,15 +3625,18 @@ def main():
                     "anatomy": print_coordinate_styles_demo,
                     "themes": print_themes_demo,
                 }
+                def _demo_subject_lines(w):
+                    w("Available subjects:\n")
+                    w("  showcase       One curated table: colspan + theme + CJK/ANSI wrapping (the flagship demo)\n")
+                    w("  span           Show a demonstration of column spanning with example code\n")
+                    w("  styles         Show a table comparing all available grid boundary styles\n")
+                    w("  colors         Show a color swatch matrix of foreground/background colors and styles\n")
+                    w("  capabilities   Show a demonstration of Vistab's parsing and formatting capabilities\n")
+                    w("  anatomy        Show a coordinate-based styling demonstration\n")
+                    w("  themes         Show a grid of built-in color theme macros\n")
                 if not subject:
                     sys.stdout.write("Usage: vistab demo <subject>\n\n")
-                    sys.stdout.write("Available subjects:\n")
-                    sys.stdout.write("  span           Show a demonstration of column spanning with example code\n")
-                    sys.stdout.write("  styles         Show a table comparing all available grid boundary styles\n")
-                    sys.stdout.write("  colors         Show a color swatch matrix of foreground/background colors and styles\n")
-                    sys.stdout.write("  capabilities   Show a demonstration of Vistab's parsing and formatting capabilities\n")
-                    sys.stdout.write("  anatomy        Show a coordinate-based styling demonstration\n")
-                    sys.stdout.write("  themes         Show a grid of built-in color theme macros\n")
+                    _demo_subject_lines(sys.stdout.write)
                     sys.exit(0)
                 elif subject in valid_subjects:
                     valid_subjects[subject]()
@@ -3602,13 +3644,7 @@ def main():
                 else:
                     sys.stderr.write(f"\033[1;31m[ERROR]\033[0m Unknown demo subject '{args_rest[0]}'.\n\n")
                     sys.stderr.write("Usage: vistab demo <subject>\n\n")
-                    sys.stderr.write("Available subjects:\n")
-                    sys.stderr.write("  span           Show a demonstration of column spanning with example code\n")
-                    sys.stderr.write("  styles         Show a table comparing all available grid boundary styles\n")
-                    sys.stderr.write("  colors         Show a color swatch matrix of foreground/background colors and styles\n")
-                    sys.stderr.write("  capabilities   Show a demonstration of Vistab's parsing and formatting capabilities\n")
-                    sys.stderr.write("  anatomy        Show a coordinate-based styling demonstration\n")
-                    sys.stderr.write("  themes         Show a grid of built-in color theme macros\n")
+                    _demo_subject_lines(sys.stderr.write)
                     sys.exit(2)
 
     usage_str = (
@@ -3649,7 +3685,7 @@ def main():
     parser.add_argument("--version", action="version", version=f"vistab {__version__}", help=b_help("show version and exit"))
 
     diag_grp = parser.add_argument_group("Diagnostic & Demo Operations")
-    diag_grp.add_argument("--demo", type=str, choices=["styles", "colors", "capabilities", "caps", "wrapping", "anatomy", "themes", "span", "spans", "colspan", "rowspan"], help=b_help("Run built-in demonstrations (preferred: 'vistab show <subject>')"))
+    diag_grp.add_argument("--demo", type=str, choices=["showcase", "styles", "colors", "capabilities", "caps", "wrapping", "anatomy", "themes", "span", "spans", "colspan", "rowspan"], help=b_help("Run built-in demonstrations (preferred: 'vistab show <subject>')"))
     diag_grp.add_argument("--help-colors", action="store_true", help=b_help("Show advanced coordinate-based color parameters (-0, -E, -b, etc.)"))
     diag_grp.add_argument("--help-advanced", action="store_true", help=b_help("Show advanced streaming, sorting, and jagged matrix behaviors"))
 

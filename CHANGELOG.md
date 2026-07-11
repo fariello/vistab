@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **`vistab show showcase`** (also `demo showcase` / `--demo showcase`): a curated one-table
+  demonstration combining column spanning, a theme, CJK/ANSI content, and word-wrapping,
+  fitting within 80 columns. Honors `--no-color` and warns when color is suppressed.
+
+### Fixed
+- Repaired a broken screenshot link in `docs/CLI.md` (referenced a non-existent
+  `vistab-M-themes-output.png`, a leftover of the removed `-M` flag).
+
 ## [1.2.0] - 2026-07-11
 
 ### Added

@@ -115,7 +115,7 @@ Use `--show-code` to generate the literal Python dictionary reproducing your aes
 vistab data.csv --theme graphite --table-bg-color bright_black --align lrl --show-code
 ```
 
-![Screenshot: Massive colorful matrix structurally displaying 15 different pre-configured theme executions mapped across distinct visual borders.](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-M-themes-output.png)
+![Screenshot: a grid of vistab's built-in theme macros rendered in the terminal.](https://raw.githubusercontent.com/fariello/vistab/main/docs/assets/vistab-demo-themes-01.png)
 
 ---
 [README](../README.md) | [API](API.md) | [CLI](CLI.md) | [SPEC](../FUNCTIONAL_SPEC.md) | [CHANGELOG](../CHANGELOG.md)
