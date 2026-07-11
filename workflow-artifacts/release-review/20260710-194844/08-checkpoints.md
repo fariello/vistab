@@ -28,3 +28,8 @@
 - CI already strong (test matrix + secret-scan); no additions. Finding CI1 (Low): requires-python 3.7 vs CI floor 3.9.
 - Packaging valid (P1). No schema files (implicit contracts fine, no drift). Backward-compatible release (additive features, apply_theme alias retained).
 - KEY release item: S1-BUG1 version bump to 1.2.0. Sections 1-6 complete -> ready for implementation-plan.
+
+## Section 7 (implementation) — complete
+- A1 version 1.2.0 (+CHANGELOG), A2 requires-python>=3.9 [d8f652b]; A3 colspan tests, A4 ARCHITECTURE.md [50f1b1b].
+- 105 tests pass. D1 (module split) + D2 (type-hint overhaul) deferred (RR Medium-High/Medium).
+- No High/LIVE/MEM findings existed to fix or escalate.
