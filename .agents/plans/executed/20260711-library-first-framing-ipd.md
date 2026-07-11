@@ -1,6 +1,6 @@
 # Implementation Plan - Make vistab read as a LIBRARY first (docs/docstring framing)
 
-Status: PROPOSED (not yet executed)
+Status: EXECUTED (library-first docstring/README/AGENTS framing shipped in 1.2.0). Status corrected 2026-07-11 during release-review 20260711-181922 (stale PROPOSED line on an executed/-located plan).
 
 > **Plan-review note (2026-07-11, revisions applied).** Claims verified against the
 > actual files. The proposed docstring example (`Vistab(header=[...])`, `add_row`,

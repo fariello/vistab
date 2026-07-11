@@ -3,7 +3,7 @@
 - Date: 2026-07-09
 - Concern: documentation
 - Scope: whole project docs — `README.md`, `docs/API.md`, `docs/CLI.md`, `FUNCTIONAL_SPEC.md`, `TODO.md`, `CHANGELOG.md`, inline docstrings, and the CLI code paths that emit/generate docs-by-example. Verified against `src/vistab.py` (v1.1.3) and packaging.
-- Status: PENDING (awaiting human approval; not executed)
+- Status: EXECUTED / CLOSED (documentation accuracy sweep applied; docs shipped in 1.2.0). Status corrected 2026-07-11 during release-review 20260711-181922 (stale PENDING line on an executed/-located assessment).
 - Author: merged from two `assess documentation` runs — Antigravity/Gemini (`20260709-assess-documentation.md`) and opencode (`20260709-assess-documentation-opencode.md`).
 
 > **Provenance / merge note.** Two independent documentation assessments were run. The

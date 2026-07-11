@@ -3,7 +3,7 @@
 - Date: 2026-07-10
 - Concern: bug fix (functionality / intuitive API)
 - Scope: `src/vistab.py` — the `has_header` setter, the `_draw_line` alignment selection, and a regression test in `tests/`. Source bug report: `.agents/prompts/pending/20260710-has-header-false-alignment-bug.md`.
-- Status: PENDING (awaiting execution)
+- Status: EXECUTED (shipped in 1.2.0; fix at src/vistab.py align gating + has_header setter; tests in tests/test_vistab.py TestHasHeaderAlignment; CHANGELOG [1.2.0]). Status corrected 2026-07-11 during release-review 20260711-181922 (was a stale "PENDING" line on an already-executed, executed/-located plan).
 - Author: opencode (its_direct/pt3-claude-opus-4.8-1m-us)
 
 ## Goal

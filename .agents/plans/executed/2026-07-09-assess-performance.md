@@ -3,7 +3,7 @@
 - Date: 2026-07-09
 - Concern: performance
 - Scope: The proposed colspan design in `.agents/plans/pending/20260709-colspan-support.md`, assessed against the real render hot paths in `src/vistab.py`. This is a performance review of a *pending* design, not of shipped code.
-- Status: PENDING (awaiting human approval; not executed)
+- Status: EXECUTED / CLOSED (performance assessment informed the shipped colspan design). Status corrected 2026-07-11 during release-review 20260711-181922 (stale PENDING line on an executed/-located assessment).
 - Author: opencode (its_direct/pt3-claude-opus-4.8-1m-us)
 
 > **Plan-review note (revisions applied):** This IPD was reviewed pre-execution and the

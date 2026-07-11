@@ -3,7 +3,7 @@
 - Date: 2026-07-09
 - Concern: ui-ux (API usability) + correctness (grid integrity)
 - Scope: The shipped colspan feature in `src/vistab.py` (`ColSpan`, `set_header_span`, `set_cell_span`, `_apply_span_to_list`) and its docs (`docs/API.md`, `README.md`). No changes to the rendering/geometry engine.
-- Status: PENDING (awaiting human approval; not executed)
+- Status: EXECUTED (colspan hardening shipped in 1.2.0). Status corrected 2026-07-11 during release-review 20260711-181922 (stale PENDING line on an executed/-located plan).
 - Author: opencode (its_direct/pt3-claude-opus-4.8-1m-us)
 
 > **Plan-review note (revisions applied):** Reviewed pre-execution; `file:line` claims

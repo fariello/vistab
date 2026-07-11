@@ -3,7 +3,7 @@
 - Date: 2026-07-09
 - Concern: ui-ux (behavior/usability of a shipped feature)
 - Scope: Two behaviors of the shipped colspan feature in `src/vistab.py` — (B1) `set_cell_span`/`set_header_span` raising when covered cells are non-empty, and (B2) visual misalignment when a plain data row sits under a spanned header. Docs to sync if behavior is confirmed: `docs/API.md`, `README.md`, `FUNCTIONAL_SPEC.md`.
-- Status: PENDING (decisions RESOLVED; plan-review applied 2026-07-09; awaiting execution approval; not executed)
+- Status: EXECUTED (colspan mutator strictness + mixed-row alignment decisions implemented and shipped in 1.2.0). Status corrected 2026-07-11 during release-review 20260711-181922 (stale PENDING line on an executed/-located decisions doc).
 - Author: opencode (its_direct/pt3-claude-opus-4.8-1m-us)
 
 > **Plan-review note (revisions applied 2026-07-09).** Re-verified against current HEAD

@@ -1,6 +1,6 @@
 # Implementation Plan - CLI polish: library-first messaging, show/demo span, color control, span-demo redesign
 
-Status: PROPOSED (not yet executed)
+Status: EXECUTED (--no-color, show/demo span, span-demo redesign shipped in 1.2.0). Status corrected 2026-07-11 during release-review 20260711-181922 (stale PROPOSED line on an executed/-located plan).
 
 > **Plan-review note (2026-07-11, revisions applied).** Traced the actual ANSI-emission
 > sites. Table *styling* ANSI is centralized (`_get_active_ansi_wrap` at

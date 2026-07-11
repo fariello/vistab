@@ -3,7 +3,7 @@
 - Date: 2026-07-10
 - Concern: ui-ux / CLI design (with docs sync)
 - Scope: `src/vistab.py` `main()` CLI dispatch only (plus the theme-demo padding fix and a new `span` demo); docs sync in `docs/CLI.md`, `README.md`, `FUNCTIONAL_SPEC.md`, `CHANGELOG.md`. No library/rendering-engine changes except the two demo-content tweaks.
-- Status: PENDING (awaiting human approval; not executed)
+- Status: EXECUTED (show/help/demo verbs shipped in 1.2.0). Status corrected 2026-07-11 during release-review 20260711-181922 (stale PENDING line on an executed/-located plan).
 - Author: opencode (its_direct/pt3-claude-opus-4.8-1m-us)
 
 > **Updates incorporated (2026-07-10).** Three refinements from
