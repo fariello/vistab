@@ -1,10 +1,10 @@
-[README](https://github.com/fariello/vistab/blob/v1.2.0/README.md) | [API](https://github.com/fariello/vistab/blob/v1.2.0/docs/API.md) | [CLI](https://github.com/fariello/vistab/blob/v1.2.0/docs/CLI.md) | [SPEC](https://github.com/fariello/vistab/blob/v1.2.0/FUNCTIONAL_SPEC.md) | [CHANGELOG](https://github.com/fariello/vistab/blob/v1.2.0/CHANGELOG.md)
+[README](https://github.com/fariello/vistab/blob/v1.3.0/README.md) | [API](https://github.com/fariello/vistab/blob/v1.3.0/docs/API.md) | [CLI](https://github.com/fariello/vistab/blob/v1.3.0/docs/CLI.md) | [SPEC](https://github.com/fariello/vistab/blob/v1.3.0/FUNCTIONAL_SPEC.md) | [CHANGELOG](https://github.com/fariello/vistab/blob/v1.3.0/CHANGELOG.md)
 
 # vistab
 
 `vistab` is a lightweight Python **library** for creating beautiful text-based ASCII/Unicode tables. It comes out-of-the-box with support for fluid terminal formatting (ANSI escape sequences), coordinate-based discrete cell styling, and guarantees consistent string lengths across languages and scripts (RTL and LTR) and color variations. (See the [Showcase](#showcase) for a one-glance demo of everything.)
 
-**Using vistab from Python? Import the `Vistab` class** (see the [API reference](https://github.com/fariello/vistab/blob/v1.2.0/docs/API.md)). A command-line entry point also exists, but the CLI is for ad-hoc terminal/CSV use only. In code, do not shell out to the `vistab` command: import and use the API.
+**Using vistab from Python? Import the `Vistab` class** (see the [API reference](https://github.com/fariello/vistab/blob/v1.3.0/docs/API.md)). A command-line entry point also exists, but the CLI is for ad-hoc terminal/CSV use only. In code, do not shell out to the `vistab` command: import and use the API.
 
 ```python
 from vistab import Vistab
@@ -35,7 +35,7 @@ color-aware word wrapping):
 vistab show showcase
 ```
 
-![Screenshot: the vistab showcase table rendering column spanning, a theme, CJK, Thai, Arabic and Hebrew text, and color-aware word wrapping, all inside a single aligned Unicode grid.](https://raw.githubusercontent.com/fariello/vistab/v1.2.0/docs/assets/vistab-show-showcase-01.png)
+![Screenshot: the vistab showcase table rendering column spanning, a theme, CJK, Thai, Arabic and Hebrew text, and color-aware word wrapping, all inside a single aligned Unicode grid.](https://raw.githubusercontent.com/fariello/vistab/v1.3.0/docs/assets/vistab-show-showcase-01.png)
 
 The demo also prints the Python that builds it. Right-to-left scripts (Arabic, Hebrew) are
 kept from flipping the grid via Unicode LTR isolates; disable that with `--no-bidi`, and
@@ -45,8 +45,8 @@ disable color with `--no-color`, if your terminal needs it.
 ## Detailed Documentation
 Looking for an exhaustive configuration breakdown or command-line parser bindings?
 
-- **[Vistab Python API Reference](https://github.com/fariello/vistab/blob/v1.2.0/docs/API.md)** *(the primary interface: all objects, data formatting algorithms, and properties)*
-- **[Command-Line (CLI) Manual](https://github.com/fariello/vistab/blob/v1.2.0/docs/CLI.md)** *(secondary, for ad-hoc terminal/CSV use: mapping raw CSV structures and terminal limits)*
+- **[Vistab Python API Reference](https://github.com/fariello/vistab/blob/v1.3.0/docs/API.md)** *(the primary interface: all objects, data formatting algorithms, and properties)*
+- **[Command-Line (CLI) Manual](https://github.com/fariello/vistab/blob/v1.3.0/docs/CLI.md)** *(secondary, for ad-hoc terminal/CSV use: mapping raw CSV structures and terminal limits)*
 
 ## Installation
 
@@ -85,7 +85,7 @@ print(table.draw())
 
 > **Note on Web Rendering:** We display the raw output below as an image because some package registries (like PyPI) enforce code-block font stacks (e.g., `Source Code Pro`) that lack glyphs for Unicode Extended Box Drawing characters. When falling back to secondary system fonts for characters like `╭` or `╪`, the physical grid mathematically misaligns. On your local terminal (and on full-featured renderers like GitHub or BitBucket) the actual text output mathematically aligns perfectly!
 
-![Screenshot: Terminal output displaying a formatted 3-column data matrix. The headers are 'Name', 'Age', and 'Nickname'. The table perfectly encapsulates complex multi-line text blocks across individual cells mapping 'Sarah Jones' directly alongside her age, wrapped inside exactly aligned rounded Unicode border geometries.](https://raw.githubusercontent.com/fariello/vistab/v1.2.0/docs/assets/vistab-code-output-01.png)
+![Screenshot: Terminal output displaying a formatted 3-column data matrix. The headers are 'Name', 'Age', and 'Nickname'. The table perfectly encapsulates complex multi-line text blocks across individual cells mapping 'Sarah Jones' directly alongside her age, wrapped inside exactly aligned rounded Unicode border geometries.](https://raw.githubusercontent.com/fariello/vistab/v1.3.0/docs/assets/vistab-code-output-01.png)
 
 ## Built-in Styles
 
@@ -93,7 +93,7 @@ To view available styles, run:
 ```bash
 vistab show styles
 ```
-![Available Styles](https://raw.githubusercontent.com/fariello/vistab/v1.2.0/docs/assets/vistab-demo-styles.png)
+![Available Styles](https://raw.githubusercontent.com/fariello/vistab/v1.3.0/docs/assets/vistab-demo-styles.png)
 
 ## Cookbook Examples
 
@@ -135,14 +135,16 @@ table.set_cols_dtype("a,t,f4,i")
 
 When evaluated, the `a` (automatic) datatype parses columns by inferring numeric types (`scientific` -> `float` -> `integer`), creating uniform alignment.
 
-The single-letter codes are: `a` (auto), `t` (text), `i` (int), `I` (int with thousands separators, e.g. `1,234,567`), `f` (float), `e` (scientific). Numeric codes take an optional precision suffix (`f2`, `e4`).
+The single-letter codes are: `a` (auto), `t` (text), `i` (int), `I` (int with thousands separators, e.g. `1,234,567`), `f` (float), `F` (float with thousands separators, e.g. `123,456.79`), `e` (scientific), `E` (scientific with thousands separators). Numeric codes take an optional precision suffix (`f2`, `F2`, `e4`).
 
 #### Thousands separators with decimals, currency, and custom formats
 
-The built-in `I` code groups **integers** only, and there is no built-in currency type. For grouped decimals (`123,456.789`), dollars (`$123,456.79`), or any other currency or custom format, pass a **callable** for that column. vistab does not guess a locale; you supply the symbol and placement, so every currency is supported by construction:
+For **grouped decimals** (`123,456.79`), use the `F` code (float with thousands separators), e.g. `set_cols_dtype(["F2"])` or `--dtype "F2"` on the CLI. `I` groups integers only.
+
+There is **no built-in currency type**. For dollars (`$123,456.79`) or any other currency or custom format, pass a **callable** for that column. vistab does not guess a locale; you supply the symbol and placement, so every currency is supported by construction:
 
 ```python
-# Comma-grouped float with 3 decimals -> "123,456.789"
+# Grouped float with 3 decimals -> "123,456.789"  (or just: set_cols_dtype(["F3"]))
 table.set_cols_dtype([lambda v: f"{float(v):,.3f}"])
 
 # US dollars -> "$123,456.79"
@@ -201,7 +203,7 @@ print(table.draw())
 
 You can view this demonstration yourself by running `vistab show anatomy`:
 
-![Anatomy of a Vistab Table](https://raw.githubusercontent.com/fariello/vistab/v1.2.0/docs/assets/vistab-demo-anatomy.png)
+![Anatomy of a Vistab Table](https://raw.githubusercontent.com/fariello/vistab/v1.3.0/docs/assets/vistab-demo-anatomy.png)
 
 ## Coordinate-Based Word Wrapping (Nested Tables)
 
@@ -262,7 +264,7 @@ You can view the built-in themes (which you can alter and save as new themes) by
 ```bash
 vistab show themes
 ```
-![Available Themes](https://raw.githubusercontent.com/fariello/vistab/v1.2.0/docs/assets/vistab-demo-themes-01.png)
+![Available Themes](https://raw.githubusercontent.com/fariello/vistab/v1.3.0/docs/assets/vistab-demo-themes-01.png)
 
 ## Custom Themes
 
@@ -292,7 +294,7 @@ vistab ~/test.csv --theme ocean-rows-index
 
 produces:
 
-![Theme ocean-rows-index table example](https://raw.githubusercontent.com/fariello/vistab/v1.2.0/docs/assets/vistab-theme-ocean-rows-index-example.png)
+![Theme ocean-rows-index table example](https://raw.githubusercontent.com/fariello/vistab/v1.3.0/docs/assets/vistab-theme-ocean-rows-index-example.png)
 
 You may then change that theme by running:
 ```bash
@@ -302,7 +304,7 @@ vistab ~/test.csv --theme ocean-rows-index --no-hlines \
 ```
 Which results in:
 
-![Example of a modified theme](https://raw.githubusercontent.com/fariello/vistab/v1.2.0/docs/assets/vistab-theme-ocean-rows-index-example-modified.png)
+![Example of a modified theme](https://raw.githubusercontent.com/fariello/vistab/v1.3.0/docs/assets/vistab-theme-ocean-rows-index-example-modified.png)
 
 To see how to generate that specific output using code, you can run:
 
@@ -385,7 +387,7 @@ You can view the palette directly on the console by executing:
 ```bash
 vistab show colors
 ```
-![Defined Colors](https://raw.githubusercontent.com/fariello/vistab/v1.2.0/docs/assets/vistab-demo-colors.png)
+![Defined Colors](https://raw.githubusercontent.com/fariello/vistab/v1.3.0/docs/assets/vistab-demo-colors.png)
 
 ## ANSI Color Layout Support
 
@@ -395,7 +397,7 @@ You can view a comprehensive color-wrapping conformance test demonstrating dynam
 ```bash
 vistab show capabilities
 ```
-![Test Output](https://raw.githubusercontent.com/fariello/vistab/v1.2.0/docs/assets/vistab-demo-capabilities.png)
+![Test Output](https://raw.githubusercontent.com/fariello/vistab/v1.3.0/docs/assets/vistab-demo-capabilities.png)
 
 ## Advanced Formatting (Datatypes)
 
@@ -424,14 +426,14 @@ table.add_rows([
 ## Detailed API Reference
 
 For the complete list of endpoints, configuration schemas, parameters, and wrapping constraints available in `vistab`:
-**Please refer to the absolute granular [Vistab Core API Documentation](https://github.com/fariello/vistab/blob/v1.2.0/docs/API.md)**
+**Please refer to the absolute granular [Vistab Core API Documentation](https://github.com/fariello/vistab/blob/v1.3.0/docs/API.md)**
 
 ## License
 
-This project is licensed under the Apache License 2.0. See [LICENSE](https://github.com/fariello/vistab/blob/v1.2.0/LICENSE) and [NOTICE](https://github.com/fariello/vistab/blob/v1.2.0/NOTICE) for details.
+This project is licensed under the Apache License 2.0. See [LICENSE](https://github.com/fariello/vistab/blob/v1.3.0/LICENSE) and [NOTICE](https://github.com/fariello/vistab/blob/v1.3.0/NOTICE) for details.
 
 ---
-[README](https://github.com/fariello/vistab/blob/v1.2.0/README.md) | [API](https://github.com/fariello/vistab/blob/v1.2.0/docs/API.md) | [CLI](https://github.com/fariello/vistab/blob/v1.2.0/docs/CLI.md) | [SPEC](https://github.com/fariello/vistab/blob/v1.2.0/FUNCTIONAL_SPEC.md) | [CHANGELOG](https://github.com/fariello/vistab/blob/v1.2.0/CHANGELOG.md)
+[README](https://github.com/fariello/vistab/blob/v1.3.0/README.md) | [API](https://github.com/fariello/vistab/blob/v1.3.0/docs/API.md) | [CLI](https://github.com/fariello/vistab/blob/v1.3.0/docs/CLI.md) | [SPEC](https://github.com/fariello/vistab/blob/v1.3.0/FUNCTIONAL_SPEC.md) | [CHANGELOG](https://github.com/fariello/vistab/blob/v1.3.0/CHANGELOG.md)
 
 
 ---

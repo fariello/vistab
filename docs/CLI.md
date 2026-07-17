@@ -34,10 +34,10 @@ The CLI lets you manage data layout, spacing, and wrapper constraints via standa
 - **`-a, --align`**: Target horizontal alignments (`l=left`, `c=center`, `r=right`). Example: `-a lrc`
 - **`--valign`**: Target vertical alignments (`t=top`, `m=middle`, `b=bottom`). Example: `--valign ttb`
 - **`--dtype`**: Force per-column data types (one code per column) for uniform output.
-   * **Codes:** `a=auto`, `t=text`, `i=int`, `I=int with thousands separators` (e.g. `1,234`), `f=float`, `e=scientific`.
+   * **Codes:** `a=auto`, `t=text`, `i=int`, `I=int with thousands separators` (e.g. `1,234`), `f=float`, `F=float with thousands separators` (e.g. `123,456.79`), `e=scientific`, `E=scientific with thousands separators`.
    * **Auto Inference (`a`)**: Applies uniform cascades resolving floating point formatting across unified columns.
-   * **Inline Precisions (`f2`, `e5`)**: Set decimal places directly. Example: `--dtype "i,f2,e4"`.
-   * **Thousands separators + decimals, or currency (`123,456.79`, `$123,456.79`)**: the CLI codes do **not** produce these. `I` groups integers only; `f2` gives decimals without grouping; there is no currency code. For grouped decimals or money, use the library API with a callable (see the README "Number formatting" recipes), for example `set_cols_dtype([lambda v: f"${float(v):,.2f}"])`. vistab does not guess a locale or currency; you supply the symbol and placement.
+   * **Inline Precisions (`f2`, `F2`, `e5`)**: Set decimal places directly. Example: `--dtype "i,F2,e4"` gives an int, a grouped 2-decimal float (`123,456.79`), and scientific.
+   * **Currency (`$123,456.79`)**: there is no currency code (grouped decimals are covered by `F`). For money, use the library API with a callable (see the README "Number formatting" recipes), e.g. `set_cols_dtype([lambda v: f"${float(v):,.2f}"])`. vistab does not guess a locale or currency; you supply the symbol and placement.
 
 ### 3. Data Pipelines & Streaming
 - **`--stream`**: Bypasses full array buffering, printing mapped iterations continuously.

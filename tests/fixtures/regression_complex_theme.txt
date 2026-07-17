@@ -12,7 +12,9 @@ Tip: format strings take one character per column; check they match your column 
   i  int    integer
   I  int,   integer with thousands separators (e.g. 1,234,567)
   f  float  fixed-point decimal (e.g. 3.14)
+  F  float, float with thousands separators (e.g. 123,456.79)
   e  exp    scientific/exponential notation (e.g. 3.14e+00)
-  numeric codes (i, I, f, e) accept an optional precision suffix, e.g. 'f2'
-  'I' groups integers only; for grouped DECIMALS or CURRENCY (e.g. $123,456.79)
-  use the library API with a callable: set_cols_dtype([lambda v: f"${float(v):,.2f}"])
+  E  exp,   scientific/exponential with thousands separators
+  numeric codes (i, I, f, F, e, E) accept an optional precision suffix, e.g. 'F2'
+  for CURRENCY (e.g. $123,456.79) use the library API with a callable:
+  set_cols_dtype([lambda v: f"${float(v):,.2f}"])

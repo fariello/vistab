@@ -121,8 +121,10 @@ Sets the per-column data type / formatting. Accepts a string (one code per colum
     * `'i'` = **int**: `123456`.
     * `'I'` = **int with thousands separators**: `123,456` (integer only; decimals are rounded away).
     * `'f'` = **float**: fixed-point decimal, e.g. `123456.79`.
+    * `'F'` = **float with thousands separators**: e.g. `123,456.79`.
     * `'e'` = **scientific/exponential**: e.g. `1.23e+05`.
-*   **Precision suffix**: numeric codes accept a decimal-place count, e.g. `'f2'` -> `123456.79`, `'e4'`. Without a suffix, the global `set_precision(n)` value is used.
+    * `'E'` = **scientific with thousands separators**.
+*   **Precision suffix**: numeric codes accept a decimal-place count, e.g. `'f2'` -> `123456.79`, `'F2'` -> `123,456.79`, `'e4'`. Without a suffix, the global `set_precision(n)` value is used.
 *   **A callable** `value -> str` may be given per column for any format the built-in codes do not cover. This is the escape hatch for **comma-grouped decimals and currency**, which the single-letter codes do not produce:
 
 ```python
@@ -139,10 +141,9 @@ table.set_cols_dtype([lambda v: f"{float(v):,.2f}\u00a0kr"]) # suffix:       123
 table.set_cols_dtype([lambda v: (f"({abs(float(v)):,.2f})" if float(v) < 0 else f"{float(v):,.2f}")])
 ```
 
-> **Note:** the built-in `'I'` code groups **integers** only; there is no single-letter code
-> that combines thousands separators with decimals, and there is no built-in currency type.
-> Use a callable (above) for those. (A comma flag for floats, e.g. `'f,2'`, is under
-> consideration; a callable works today.)
+> **Note:** use `'F'` for grouped decimals (`123,456.79`) and `'I'` for grouped integers.
+> There is no built-in currency type; use a callable (above) for currency, since vistab does
+> not guess a locale.
 
 ### `set_precision(width: int)`
 Establishes default global precision logic for all unresolved floats and sequences.

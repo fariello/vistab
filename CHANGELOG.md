@@ -7,6 +7,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), 
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-07-17
+
+### Added
+- **Grouped-number column data types `F` and `E`.** `F` formats a float with thousands
+  separators (e.g. `123,456.79`), mirroring how `I` relates to `i`; `E` is the grouped
+  scientific form. Both accept the usual precision suffix (`F2`, `E4`) and fall back to text
+  for non-numeric cells. Reachable from the CLI (`--dtype "F2"`). This closes the
+  "commas AND decimals" gap without overloading the comma separator. Currency remains a
+  documented callable (vistab does not guess a locale).
+
 ## [1.2.0] - 2026-07-11
 
 ### Added

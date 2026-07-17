@@ -101,7 +101,7 @@ __all__ = ["Vistab", "ArraySizeError", "StringLengthCalculator", "ColSpan"]
 
 __author__ = 'Gabriele Fariello <gfariello@fariel.com>'
 __license__ = 'BSD 3-Clause 2026'
-__version__ = '1.2.0'
+__version__ = '1.3.0'
 
 # Column data-type codes: the single source of truth. Each entry is (code, short label,
 # explanation). Used by set_cols_dtype validation/errors, the CLI --dtype help, and the CLI
@@ -112,7 +112,9 @@ COLUMN_DTYPES = [
     ("i", "int",      "integer"),
     ("I", "int,",     "integer with thousands separators (e.g. 1,234,567)"),
     ("f", "float",    "fixed-point decimal (e.g. 3.14)"),
+    ("F", "float,",   "float with thousands separators (e.g. 123,456.79)"),
     ("e", "exp",      "scientific/exponential notation (e.g. 3.14e+00)"),
+    ("E", "exp,",     "scientific/exponential with thousands separators"),
 ]
 # Numeric codes (i, I, f, e) accept an optional precision suffix, e.g. 'f2' = 2 decimals.
 _DTYPE_CODES = tuple(code for code, _, _ in COLUMN_DTYPES)
@@ -123,9 +125,9 @@ def _dtype_help(oneline: bool = False) -> str:
     if oneline:
         return ", ".join(f"'{c}' ({label})" for c, label, _ in COLUMN_DTYPES)
     lines = [f"  {c}  {label:<6} {desc}" for c, label, desc in COLUMN_DTYPES]
-    lines.append("  numeric codes (i, I, f, e) accept an optional precision suffix, e.g. 'f2'")
-    lines.append("  'I' groups integers only; for grouped DECIMALS or CURRENCY (e.g. $123,456.79)")
-    lines.append("  use the library API with a callable: set_cols_dtype([lambda v: f\"${float(v):,.2f}\"])")
+    lines.append("  numeric codes (i, I, f, F, e, E) accept an optional precision suffix, e.g. 'F2'")
+    lines.append("  for CURRENCY (e.g. $123,456.79) use the library API with a callable:")
+    lines.append("  set_cols_dtype([lambda v: f\"${float(v):,.2f}\"])")
     return "\n".join(lines)
 
 
@@ -2538,6 +2540,24 @@ class Vistab:
         return '%.*e' % (n, cls._to_float(x))
 
     @classmethod
+    def _fmt_comma_float(cls, x, **kw):
+        """Float with thousands separators (grouped), e.g. 123,456.79.
+
+        Precision is taken from the `n` kw-argument (or the global precision).
+        Non-numeric input raises FallbackToText, matching the other numeric codes.
+        """
+        n = kw.get('n')
+        return f"{cls._to_float(x):,.{n}f}"
+
+    @classmethod
+    def _fmt_comma_exp(cls, x, **kw):
+        """Scientific/exponential with thousands separators on the mantissa's integer
+        part (rarely needed, provided for symmetry with the grouped float code).
+        """
+        n = kw.get('n')
+        return f"{cls._to_float(x):,.{n}e}"
+
+    @classmethod
     def _fmt_text(cls, x, **kw):
         """Format string / text."""
         return obj2unicode(x)
@@ -2570,7 +2590,9 @@ class Vistab:
             'i': self._fmt_int,
             'I': self._fmt_comma_int,
             'f': self._fmt_float,
+            'F': self._fmt_comma_float,
             'e': self._fmt_exp,
+            'E': self._fmt_comma_exp,
             't': self._fmt_text,
         }
 

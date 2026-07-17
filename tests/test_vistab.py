@@ -899,7 +899,13 @@ class TestWrappingBoundaries(unittest.TestCase):
 class TestColumnDtypes(unittest.TestCase):
     """Valid column data types are enumerated and explained; invalid ones fail loudly."""
 
-    VALID = ("a", "t", "i", "I", "f", "e")
+    VALID = ("a", "t", "i", "I", "f", "F", "e", "E")
+
+    def _cell(self, dtype, val):
+        """Render one value under one dtype and return the visible cell text."""
+        t = Vistab(style="none")
+        t.set_header(["x"]); t.add_row([val]); t.set_cols_dtype([dtype])
+        return t.draw().splitlines()[-1].strip()
 
     def test_all_valid_codes_accepted(self):
         for code in self.VALID:
@@ -928,6 +934,42 @@ class TestColumnDtypes(unittest.TestCase):
         self.assertIn("thousands separators", msg)   # explains 'I'
         self.assertIn("exponential", msg)            # explains 'e'
         self.assertIn("precision suffix", msg)
+
+    def test_grouped_float_F_groups_and_keeps_decimals(self):
+        self.assertEqual(self._cell("F2", 123456.789), "123,456.79")
+        self.assertEqual(self._cell("F0", 1234567), "1,234,567")
+
+    def test_grouped_float_F_preserves_negative_sign(self):
+        self.assertEqual(self._cell("F2", -1234.5), "-1,234.50")
+
+    def test_grouped_exp_E_groups_mantissa(self):
+        # grouped scientific renders without error and uses the requested precision
+        self.assertEqual(self._cell("E2", 123456.789), "1.23e+05")
+
+    def test_bare_F_uses_global_precision(self):
+        """Bare 'F' (no suffix) uses the global precision default, like bare 'f'.
+        For a small value needing no grouping, 'F' and 'f' render identically."""
+        self.assertEqual(self._cell("F", 3.14159), self._cell("f", 3.14159))
+
+    def test_grouped_code_over_non_numeric_falls_back_to_text(self):
+        """A grouped code over a non-numeric cell must render as text, not crash
+        (same behavior as the existing 'I' code)."""
+        self.assertEqual(self._cell("F", "hello"), "hello")
+        self.assertEqual(self._cell("E", "world"), "world")
+
+    def test_f_F_i_I_are_distinct_for_same_value(self):
+        v = 1234567.89
+        self.assertEqual(self._cell("f", v), "1234567.890")   # no grouping
+        self.assertEqual(self._cell("F", v), "1,234,567.890") # grouped, decimals
+        self.assertEqual(self._cell("i", v), "1234568")       # rounded, no grouping
+        self.assertEqual(self._cell("I", v), "1,234,568")     # rounded, grouped
+
+    def test_existing_dtype_strings_unchanged_by_new_codes(self):
+        """Adding F/E must not change how existing codes or comma-decorated strings parse."""
+        import re
+        tok = lambda s: re.findall(r'[a-zA-Z]\d*', s.replace(",", ""))
+        self.assertEqual(tok("a,t,f4,i"), tok("atf4i"))
+        self.assertEqual(tok("a,t,f4,i"), ["a", "t", "f4", "i"])
 
     def test_dtype_help_enumeration_matches_format_map(self):
         """The documented codes must exactly match the codes the formatter accepts,
