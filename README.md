@@ -135,6 +135,33 @@ table.set_cols_dtype("a,t,f4,i")
 
 When evaluated, the `a` (automatic) datatype parses columns by inferring numeric types (`scientific` -> `float` -> `integer`), creating uniform alignment.
 
+The single-letter codes are: `a` (auto), `t` (text), `i` (int), `I` (int with thousands separators, e.g. `1,234,567`), `f` (float), `e` (scientific). Numeric codes take an optional precision suffix (`f2`, `e4`).
+
+#### Thousands separators with decimals, currency, and custom formats
+
+The built-in `I` code groups **integers** only, and there is no built-in currency type. For grouped decimals (`123,456.789`), dollars (`$123,456.79`), or any other currency or custom format, pass a **callable** for that column. vistab does not guess a locale; you supply the symbol and placement, so every currency is supported by construction:
+
+```python
+# Comma-grouped float with 3 decimals -> "123,456.789"
+table.set_cols_dtype([lambda v: f"{float(v):,.3f}"])
+
+# US dollars -> "$123,456.79"
+table.set_cols_dtype([lambda v: f"${float(v):,.2f}"])
+
+# Euro / Swedish krona / Indian rupee: you choose symbol and placement
+table.set_cols_dtype([lambda v: f"\u20ac{float(v):,.2f}"])     # \u20ac123,456.79
+table.set_cols_dtype([lambda v: f"{float(v):,.2f}\u00a0kr"])   # 123,456.79 kr
+table.set_cols_dtype([lambda v: f"\u20b9{float(v):,.2f}"])     # \u20b9123,456.79
+
+# Accounting style: negatives in parentheses
+table.set_cols_dtype([lambda v: (f"(${abs(float(v)):,.2f})" if float(v) < 0 else f"${float(v):,.2f}")])
+```
+
+A callable receives the raw cell value and returns the formatted string, so any Python
+[format specification](https://docs.python.org/3/library/string.html#format-specification-mini-language)
+(grouping, precision, sign, fill/width) is available. Callables are a library-API feature; the
+CLI `--dtype` flag supports only the single-letter codes above.
+
 ### 4. Shorthand Styling & Native Formatting
 
 You don't need to pass massive syntax strings to evaluate layout injections:

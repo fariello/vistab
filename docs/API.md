@@ -112,10 +112,37 @@ Evaluates explicit mappings resolving horizontal cell justification (`'l'=left`,
 Evaluates positional geometry mapping vertical alignments (`'t'=top`, `'m'=middle`, `'b'=bottom`). Can unpack single-string lists safely (e.g., `["mmbmt"]`).
 
 ### `set_cols_dtype(array: Union[str, List[str]])`
-Applies robust precision formats wrapping types safely. Can unpack single-string lists (e.g., `["if2e4a"]`). 
-*   **Categories**: `'t'=text`, `'f'=float`, `'i'=int`, `'e'=scientific`, `'I'=comma int`.
-*   **Automatic (`'a'`)**: evaluates column types systematically scaling uniform numeric sequences via internal cascading hierarchy (`scientific -> float -> integer`), bypassing formatting inconsistencies.
-*   **Dynamic Precisions (`'f2'`, `'e4'`)**: Precision overrides structurally integrate directly within dtype arrays (e.g., `["i", "f2", "e4", "a"]`) escaping the global baseline decimal configurations.
+Sets the per-column data type / formatting. Accepts a string (one code per column, e.g.
+`"tif2"`), a list of codes (e.g. `["t", "i", "f2"]`), or a single-string list (`["tif2"]`).
+
+*   **Codes**:
+    * `'a'` = **auto**: pick the most appropriate type per column (the default). Cascades scientific -> float -> integer for uniform numeric columns.
+    * `'t'` = **text**: no numeric coercion.
+    * `'i'` = **int**: `123456`.
+    * `'I'` = **int with thousands separators**: `123,456` (integer only; decimals are rounded away).
+    * `'f'` = **float**: fixed-point decimal, e.g. `123456.79`.
+    * `'e'` = **scientific/exponential**: e.g. `1.23e+05`.
+*   **Precision suffix**: numeric codes accept a decimal-place count, e.g. `'f2'` -> `123456.79`, `'e4'`. Without a suffix, the global `set_precision(n)` value is used.
+*   **A callable** `value -> str` may be given per column for any format the built-in codes do not cover. This is the escape hatch for **comma-grouped decimals and currency**, which the single-letter codes do not produce:
+
+```python
+# Comma-grouped float with 3 decimals -> "123,456.789"
+table.set_cols_dtype([lambda v: f"{float(v):,.3f}"])
+
+# US dollars, comma-grouped, 2 decimals -> "$123,456.79"
+table.set_cols_dtype([lambda v: f"${float(v):,.2f}"])
+
+# Other currencies: you supply the symbol/placement, vistab does not guess a locale
+table.set_cols_dtype([lambda v: f"\u20ac{float(v):,.2f}"])   # euro prefix:  \u20ac123,456.79
+table.set_cols_dtype([lambda v: f"{float(v):,.2f}\u00a0kr"]) # suffix:       123,456.79 kr
+# Negatives in parentheses (accounting):
+table.set_cols_dtype([lambda v: (f"({abs(float(v)):,.2f})" if float(v) < 0 else f"{float(v):,.2f}")])
+```
+
+> **Note:** the built-in `'I'` code groups **integers** only; there is no single-letter code
+> that combines thousands separators with decimals, and there is no built-in currency type.
+> Use a callable (above) for those. (A comma flag for floats, e.g. `'f,2'`, is under
+> consideration; a callable works today.)
 
 ### `set_precision(width: int)`
 Establishes default global precision logic for all unresolved floats and sequences.

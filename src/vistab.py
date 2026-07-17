@@ -123,8 +123,9 @@ def _dtype_help(oneline: bool = False) -> str:
     if oneline:
         return ", ".join(f"'{c}' ({label})" for c, label, _ in COLUMN_DTYPES)
     lines = [f"  {c}  {label:<6} {desc}" for c, label, desc in COLUMN_DTYPES]
-    lines.append("  a callable(value) -> str is also accepted (library API only)")
     lines.append("  numeric codes (i, I, f, e) accept an optional precision suffix, e.g. 'f2'")
+    lines.append("  'I' groups integers only; for grouped DECIMALS or CURRENCY (e.g. $123,456.79)")
+    lines.append("  use the library API with a callable: set_cols_dtype([lambda v: f\"${float(v):,.2f}\"])")
     return "\n".join(lines)
 
 

@@ -13,5 +13,6 @@ Tip: format strings take one character per column; check they match your column 
   I  int,   integer with thousands separators (e.g. 1,234,567)
   f  float  fixed-point decimal (e.g. 3.14)
   e  exp    scientific/exponential notation (e.g. 3.14e+00)
-  a callable(value) -> str is also accepted (library API only)
   numeric codes (i, I, f, e) accept an optional precision suffix, e.g. 'f2'
+  'I' groups integers only; for grouped DECIMALS or CURRENCY (e.g. $123,456.79)
+  use the library API with a callable: set_cols_dtype([lambda v: f"${float(v):,.2f}"])
