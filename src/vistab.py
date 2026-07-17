@@ -3724,12 +3724,23 @@ def main():
     import json
     import os
 
-    # Safely force standard output boundaries to use UTF-8 on Windows environments.
-    # By default, Windows maps `sys.stdout` to rigid region-specific charmaps (e.g. `cp1252`).
-    # Because Vistab draws deeply complex table boundaries using rich Unicode box-drawing characters
-    # (e.g. `┌`, `─`), attempting to blast those sequences into CP1252 pipes forcefully
-    # triggers fatal `UnicodeEncodeError` crashes. Reconfiguring the buffer bypasses this safely.
-
+    # Safely force standard output to UTF-8. Vistab draws tables with rich Unicode box-drawing
+    # characters (e.g. `┌`, `─`) plus CJK/RTL content, so if `sys.stdout` is bound to a
+    # non-UTF-8 codec, writing a table raises a fatal `UnicodeEncodeError`. This happens on
+    # Windows (region charmaps like cp1252) AND on POSIX runners under a C/POSIX locale where
+    # stdout defaults to ASCII (this is exactly what makes CI fail on Python < 3.14, which do
+    # not enable UTF-8 mode by default). `reconfigure` exists on Python >= 3.7 text streams;
+    # guard it defensively so an exotic stream that lacks it never crashes startup.
+    # stdin is included because vistab reads CSV from stdin; under an ASCII ambient the CLI
+    # would otherwise fail to decode non-ASCII input (CJK/RTL) the same way it failed to encode
+    # non-ASCII output.
+    for _stream in (sys.stdin, sys.stdout, sys.stderr):
+        _rc = getattr(_stream, "reconfigure", None)
+        if callable(_rc):
+            try:
+                _rc(encoding="utf-8")
+            except Exception:
+                pass  # best effort; if it cannot be reconfigured, fall through unchanged
 
     # Resolve CLI color state early so the verb dispatch (built-in demos) honors it too.
     # Explicit --no-color and the NO_COLOR env var suppress vistab's own styling ANSI.

@@ -17,6 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   "commas AND decimals" gap without overloading the comma separator. Currency remains a
   documented callable (vistab does not guess a locale).
 
+### Fixed
+- **CLI no longer crashes on non-UTF-8 terminals.** The CLI now forces `stdin`/`stdout`/`stderr`
+  to UTF-8 at startup, so drawing tables with Unicode box-drawing characters and CJK/RTL content
+  works under a POSIX `C`/`POSIX` locale (where stdout defaults to ASCII on Python < 3.14) and on
+  Windows region codepages (e.g. cp1252). Previously these raised `UnicodeEncodeError` and printed
+  a traceback instead of a table (this was also failing the GitHub Actions test matrix).
+
 ## [1.2.0] - 2026-07-11
 
 ### Added

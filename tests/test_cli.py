@@ -316,7 +316,7 @@ class TestCLIVerbs(unittest.TestCase):
         e = dict(os.environ); e.pop("NO_COLOR", None)
         cli = os.path.join(os.path.dirname(__file__), "..", "src", "vistab.py")
         out = subprocess.run([sys.executable, cli, "show", "showcase"],
-                             capture_output=True, text=True, env=e).stdout
+                             capture_output=True, text=True, encoding="utf-8", env=e).stdout
         widest = max((StringLengthCalculator.len(l) for l in out.splitlines()), default=0)
         self.assertLessEqual(widest, 80)
 
@@ -333,7 +333,7 @@ class TestCLINoColor(unittest.TestCase):
             e.update(env)
         cli = os.path.join(os.path.dirname(__file__), "..", "src", "vistab.py")
         r = subprocess.run([sys.executable, cli] + argv, capture_output=True, text=True,
-                           input="A,B\n1,2\n", env=e)
+                           encoding="utf-8", input="A,B\n1,2\n", env=e)
         return r.stdout, r.stderr, r.returncode
 
     def _has_ansi(self, s):
@@ -356,7 +356,7 @@ class TestCLINoColor(unittest.TestCase):
         e = dict(os.environ); e.pop("NO_COLOR", None)
         cli = os.path.join(os.path.dirname(__file__), "..", "src", "vistab.py")
         r = subprocess.run([sys.executable, cli, "show", "colors", "--no-color"],
-                           capture_output=True, text=True, env=e)
+                           capture_output=True, text=True, encoding="utf-8", env=e)
         self.assertFalse(self._has_ansi(r.stdout))
         self.assertIn("colors turned off", r.stderr)
 
@@ -365,7 +365,7 @@ class TestCLINoColor(unittest.TestCase):
         e = dict(os.environ); e.pop("NO_COLOR", None)
         cli = os.path.join(os.path.dirname(__file__), "..", "src", "vistab.py")
         r = subprocess.run([sys.executable, cli, "show", "showcase", "--no-color"],
-                           capture_output=True, text=True, env=e)
+                           capture_output=True, text=True, encoding="utf-8", env=e)
         self.assertFalse(self._has_ansi(r.stdout))     # fully monochrome (content ANSI stripped)
         self.assertIn("colors turned off", r.stderr)
 
@@ -407,7 +407,8 @@ class TestNoBidiCLI(unittest.TestCase):
         e = dict(os.environ); e.pop("NO_COLOR", None)
         cli = os.path.join(os.path.dirname(__file__), "..", "src", "vistab.py")
         return subprocess.run([sys.executable, cli] + argv, capture_output=True,
-                              text=True, input="ID,Name\n5,\u0627\u0644\u062e\u0648\u0627\u0631\u0632\u0645\u064a\n7,plain\n",
+                              text=True, encoding="utf-8",
+                              input="ID,Name\n5,\u0627\u0644\u062e\u0648\u0627\u0631\u0632\u0645\u064a\n7,plain\n",
                               env=e)
 
     def test_default_rtl_gets_isolates(self):
@@ -419,6 +420,36 @@ class TestNoBidiCLI(unittest.TestCase):
         r = self._run(["--no-bidi"])
         self.assertEqual(r.returncode, 0)
         self.assertNotIn(self.LRI, r.stdout)
+
+
+class TestNonUTF8Environment(unittest.TestCase):
+    """Regression: the CLI must not crash when stdin/stdout are bound to a non-UTF-8
+    codec (Windows cp1252, or a POSIX C/POSIX locale where stdout defaults to ASCII on
+    Python < 3.14). This was a live CI failure: box-drawing/CJK/RTL glyphs raised
+    UnicodeEncodeError and the CLI emitted a traceback instead of a table.
+    See release-review 20260717-191234 finding S3-CI1."""
+
+    def _run_ascii_ambient(self, argv, input_text):
+        import subprocess, os
+        cli = os.path.join(os.path.dirname(__file__), "..", "src", "vistab.py")
+        # Emulate an older-Python CI runner: disable UTF-8 mode + C locale so the child's
+        # stdin/stdout default to ASCII. Do NOT set PYTHONIOENCODING here; the fix must come
+        # from the CLI reconfiguring its own streams, not from the ambient env.
+        env = {"PATH": os.environ.get("PATH", ""), "LC_ALL": "C", "LANG": "C",
+               "PYTHONUTF8": "0", "SYSTEMROOT": os.environ.get("SYSTEMROOT", "")}
+        return subprocess.run([sys.executable, cli] + argv, capture_output=True,
+                              text=True, encoding="utf-8", input=input_text, env=env)
+
+    def test_cjk_render_under_ascii_ambient_does_not_crash(self):
+        r = self._run_ascii_ambient(["-t", "ocean"], "A,B\nAda,\u5173\u7fbd\n")
+        self.assertEqual(r.returncode, 0, f"CLI crashed under ASCII ambient:\n{r.stderr}")
+        self.assertIn("\u5173\u7fbd", r.stdout)          # CJK survived round-trip
+        self.assertNotIn("Traceback", r.stdout + r.stderr)
+
+    def test_box_drawing_under_ascii_ambient_does_not_crash(self):
+        r = self._run_ascii_ambient([], "A,B\n1,2\n")
+        self.assertEqual(r.returncode, 0, f"CLI crashed under ASCII ambient:\n{r.stderr}")
+        self.assertIn("\u2502", r.stdout)                # a box-drawing vertical bar rendered
 
 
 if __name__ == '__main__':
