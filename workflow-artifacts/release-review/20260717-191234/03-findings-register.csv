@@ -1,0 +1,6 @@
+id,section,type,severity,remediation_risk,title,status,evidence,resolution
+20260717-191234-S2-1,2,QUAL,INFO,Low,New F/E formatters robust across edge inputs,not_applicable,"_fmt_comma_float/_fmt_comma_exp handle 0/-0.0/huge/whitespace/int/non-numeric (fallback) with no crash; verified",No finding
+20260717-191234-S3-1,3,TEST,INFO,Low,Full suite green,not_applicable,146 passed,No finding
+20260717-191234-S4-1,4,DOC,INFO,Low,F/E documented consistently across README/API/CLI/help/CHANGELOG,not_applicable,grep + _dtype_help verified,No finding
+20260717-191234-S6-1,6,REL,INFO,Low,1.2.1 version consistent; build + twine PASS; long_description clean,not_applicable,"pyproject/__version__/--version all 1.2.1; 0 relative links; 25 v1.2.1 URLs; no stray 1.2.0/1.3.0; twine PASSED",No finding
+20260717-191234-S6-2,6,REL,MEDIUM,Low,1.2.1 not yet tagged/pushed/published,identified,"v1.2.1 tag does not exist; origin/main behind; PyPI has 1.2.0","Release-checklist item (Section 9): create+push v1.2.1 tag on release commit, push main, twine upload. Maintainer action; not a repo defect."
