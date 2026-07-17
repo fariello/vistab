@@ -1,12 +1,19 @@
 # Implementation Plan - Numeric formatting grammar: thousands grouping for floats/exp (and an optional literal prefix/suffix)
 
-Status: executed (2026-07-17). Shipped as 1.3.0. Added `F`/`E` codes + `_fmt_comma_float`
-/`_fmt_comma_exp` + format_map, `F`/`E` in COLUMN_DTYPES (tokenizer UNCHANGED); 7 new tests
-(grouping, negatives, non-numeric fallback, bare-F global precision, f/F/i/I distinctness,
-existing-strings-unchanged); docs synced (README/API/CLI + _dtype_help); CHANGELOG [1.3.0];
-version bumped to 1.3.0 and README/pyproject URLs repinned to v1.3.0; regenerated the
-regression fixture for the grown help text. Full suite 146 green; build + twine check PASS.
-OQ decisions taken as recommended: letter `F`, include `E`, currency stays a callable. The comma overload (first plan-review) reframed the grammar to the collision-free
+Status: executed (2026-07-17). Shipped as **1.2.1** (patch bump). Added `F`/`E` codes +
+`_fmt_comma_float`/`_fmt_comma_exp` + format_map, `F`/`E` in COLUMN_DTYPES (tokenizer
+UNCHANGED); 7 new tests (grouping, negatives, non-numeric fallback, bare-F global precision,
+f/F/i/I distinctness, existing-strings-unchanged); docs synced (README/API/CLI + _dtype_help);
+CHANGELOG [1.2.1]; version bumped to 1.2.1 and README/pyproject URLs repinned to v1.2.1;
+regenerated the regression fixture for the grown help text. Full suite 146 green; build +
+twine check PASS. OQ decisions taken as recommended: letter `F`, include `E`, currency stays
+a callable.
+
+> Version correction (2026-07-17): the plan text below proposed 1.3.0 on the mistaken premise
+> that 1.2.0 was not on PyPI. It IS published (verified via `curl https://pypi.org/pypi/vistab/json`).
+> Because the F/E codes are purely additive and backward-compatible, the release is a PATCH bump
+> to 1.2.1, not a minor bump to 1.3.0. References to "1.3.0" in the planning sections below are
+> superseded by 1.2.1. The comma overload (first plan-review) reframed the grammar to the collision-free
 `F`/`E` codes; the second plan-review verified all `path:line` claims and added edge-case test
 coverage, named the release version, and hardened the execution gate.
 
