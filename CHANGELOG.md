@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   documented callable (vistab does not guess a locale).
 
 ### Fixed
+- **Import no longer fails on Python 3.9-3.13.** A return annotation used `typing.Set` without
+  importing it. Python 3.14 defers annotation evaluation (PEP 649) so it imported there, but on
+  3.9-3.13 the annotation was evaluated at definition time and raised
+  `NameError: name 'Set' is not defined`, breaking every import of `vistab` (and the entire CI
+  test matrix). `Set` is now imported.
 - **CLI no longer crashes on non-UTF-8 terminals.** The CLI now forces `stdin`/`stdout`/`stderr`
   to UTF-8 at startup, so drawing tables with Unicode box-drawing characters and CJK/RTL content
   works under a POSIX `C`/`POSIX` locale (where stdout defaults to ASCII on Python < 3.14) and on

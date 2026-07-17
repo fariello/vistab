@@ -94,7 +94,7 @@ except ImportError:
         return sum(1 for _ in text)
 import re  # Regular expressions for text processing
 import sys  # System-specific parameters and functions
-from typing import List, Optional, Iterable, Any, Iterator  # Type hints for better code clarity
+from typing import List, Optional, Iterable, Any, Iterator, Set  # Type hints for better code clarity
 from functools import reduce, lru_cache  # Higher-order function for performing cumulative operations
 
 __all__ = ["Vistab", "ArraySizeError", "StringLengthCalculator", "ColSpan"]
