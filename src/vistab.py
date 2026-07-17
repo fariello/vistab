@@ -103,6 +103,31 @@ __author__ = 'Gabriele Fariello <gfariello@fariel.com>'
 __license__ = 'BSD 3-Clause 2026'
 __version__ = '1.2.0'
 
+# Column data-type codes: the single source of truth. Each entry is (code, short label,
+# explanation). Used by set_cols_dtype validation/errors, the CLI --dtype help, and the CLI
+# format-error tip so the valid types are enumerated and explained in exactly one place.
+COLUMN_DTYPES = [
+    ("a", "auto",     "automatic: pick the most appropriate type per column (the default)"),
+    ("t", "text",     "treat the value as plain text (no numeric coercion)"),
+    ("i", "int",      "integer"),
+    ("I", "int,",     "integer with thousands separators (e.g. 1,234,567)"),
+    ("f", "float",    "fixed-point decimal (e.g. 3.14)"),
+    ("e", "exp",      "scientific/exponential notation (e.g. 3.14e+00)"),
+]
+# Numeric codes (i, I, f, e) accept an optional precision suffix, e.g. 'f2' = 2 decimals.
+_DTYPE_CODES = tuple(code for code, _, _ in COLUMN_DTYPES)
+
+
+def _dtype_help(oneline: bool = False) -> str:
+    """Human-readable enumeration of every valid column data-type code."""
+    if oneline:
+        return ", ".join(f"'{c}' ({label})" for c, label, _ in COLUMN_DTYPES)
+    lines = [f"  {c}  {label:<6} {desc}" for c, label, desc in COLUMN_DTYPES]
+    lines.append("  a callable(value) -> str is also accepted (library API only)")
+    lines.append("  numeric codes (i, I, f, e) accept an optional precision suffix, e.g. 'f2'")
+    return "\n".join(lines)
+
+
 # CLI color state for the built-in demos. Set by main() from --no-color / NO_COLOR.
 # _CLI_COLOR_TRIGGER records WHY color was suppressed, for an honest warning.
 _CLI_COLOR = True
@@ -1853,7 +1878,10 @@ class Vistab:
         Args:
             array (Union[str, List[str]]): A list of strings representing the data types for the columns.
                            Acceptable values are: 't' (text), 'f' (float, decimal),
-                           'e' (float, exponent), 'i' (integer), and 'a' (automatic).
+                           'e' (float, exponent), 'i' (integer), 'I' (integer with thousands
+                           separators), and 'a' (automatic). Numeric codes accept an optional
+                           precision suffix, e.g. 'f2'. An invalid code raises ValueError that
+                           enumerates and explains every valid type.
 
         Example usage:
         ```
@@ -1883,8 +1911,11 @@ class Vistab:
             array = re.findall(r'[a-zA-Z]\d*', array.replace(",", ""))
 
         for a in array:
-            if not callable(a) and (not isinstance(a, str) or len(a) == 0 or a[0] not in ('a', 't', 'f', 'e', 'i', 'I')):
-                raise ValueError(f"Data type '{a}' is invalid. Allowed data type characters are: 'a', 't', 'f', 'e', 'i', 'I' or a callable.")
+            if not callable(a) and (not isinstance(a, str) or len(a) == 0 or a[0] not in _DTYPE_CODES):
+                raise ValueError(
+                    f"Column data type '{a}' is invalid. Valid column data types are:\n"
+                    f"{_dtype_help()}"
+                )
         self._check_row_size(array)
         self._dtype = array
         return self
@@ -3860,7 +3891,7 @@ def main():
     layout_grp.add_argument("-p", "--padding", type=int, default=1, help=b_help("Cell padding integer (default: 1)"))
     layout_grp.add_argument("-a", "--align", type=str, help=b_help("Column alignment string (e.g. 'lrc')"))
     layout_grp.add_argument("-v", "--valign", type=str, help=b_help("Column vertical alignment string (e.g. 'tmb')"))
-    layout_grp.add_argument("-d", "--dtype", type=str, help=b_help("Column datatypes string (e.g. 'tfi')"))
+    layout_grp.add_argument("-d", "--dtype", type=str, help=b_help(f"Per-column data types, one char per column (e.g. 'tfi'). Valid: {_dtype_help(oneline=True)}; numeric codes take an optional precision suffix like 'f2'"))
     layout_grp.add_argument("-P", "--precision", type=int, help=b_help("Float decimal precision mapping globally"))
 
     visual_grp = parser.add_argument_group("Visual Elements & Toggles")
@@ -4322,11 +4353,12 @@ def main():
         except Exception as eval_err:
             print(f"\n\033[1;31m[COMMAND-LINE FORMAT ERROR]\033[0m within stream '{source_name}'")
             print(f"Details: {eval_err}\n")
-            print("Tip: Ensure your formatting inputs perfectly map to your CSV column lengths!")
+            print("Tip: format strings take one character per column; check they match your column count and use valid codes.")
             print("--align:  l (left), c (center), r (right)                   | e.g., 'lrc'")
             print("--valign: t (top), m (middle), b (bottom)                   | e.g., 'tmb'")
-            print("--dtype:  t (text), f (float), i (int), e (exp), a (auto)   | e.g., 'ttfi'")
             print("--col-widths: Comma-separated integers                      | e.g., '40,10,15'")
+            print("--dtype:  one character per column (e.g. 'ttfi'). Valid column data types:")
+            print(_dtype_help())
             sys.exit(1)
 
     for i, (source_type, source_name) in enumerate(streams_to_parse):

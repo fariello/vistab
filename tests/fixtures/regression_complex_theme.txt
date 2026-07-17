@@ -2,8 +2,16 @@
 [1;31m[COMMAND-LINE FORMAT ERROR][0m within stream '<PROJECT_ROOT>/tests/data/small_7x12.csv'
 Details: array should contain 12 elements not 1 (array=['c'])
 
-Tip: Ensure your formatting inputs perfectly map to your CSV column lengths!
+Tip: format strings take one character per column; check they match your column count and use valid codes.
 --align:  l (left), c (center), r (right)                   | e.g., 'lrc'
 --valign: t (top), m (middle), b (bottom)                   | e.g., 'tmb'
---dtype:  t (text), f (float), i (int), e (exp), a (auto)   | e.g., 'ttfi'
 --col-widths: Comma-separated integers                      | e.g., '40,10,15'
+--dtype:  one character per column (e.g. 'ttfi'). Valid column data types:
+  a  auto   automatic: pick the most appropriate type per column (the default)
+  t  text   treat the value as plain text (no numeric coercion)
+  i  int    integer
+  I  int,   integer with thousands separators (e.g. 1,234,567)
+  f  float  fixed-point decimal (e.g. 3.14)
+  e  exp    scientific/exponential notation (e.g. 3.14e+00)
+  a callable(value) -> str is also accepted (library API only)
+  numeric codes (i, I, f, e) accept an optional precision suffix, e.g. 'f2'

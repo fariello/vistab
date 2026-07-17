@@ -896,5 +896,50 @@ class TestWrappingBoundaries(unittest.TestCase):
             self.assertIn(code, out)
 
 
+class TestColumnDtypes(unittest.TestCase):
+    """Valid column data types are enumerated and explained; invalid ones fail loudly."""
+
+    VALID = ("a", "t", "i", "I", "f", "e")
+
+    def test_all_valid_codes_accepted(self):
+        for code in self.VALID:
+            t = Vistab(style="light")
+            t.set_header(["A", "B"])
+            t.add_row(["1", "2"])
+            t.set_cols_dtype([code, "t"])   # should not raise
+            self.assertIsNotNone(t.draw())
+
+    def test_precision_suffix_accepted(self):
+        t = Vistab(style="light")
+        t.set_header(["A"]); t.add_row([3.14159])
+        t.set_cols_dtype(["f2"])           # numeric + precision suffix
+        self.assertIn("3.14", t.draw())
+
+    def test_invalid_code_raises_enumerating_and_explaining_all_types(self):
+        t = Vistab(style="light")
+        with self.assertRaises(ValueError) as ctx:
+            t.set_cols_dtype("tx")          # 'x' is invalid
+        msg = str(ctx.exception)
+        self.assertIn("'x' is invalid", msg)
+        # Every valid code is enumerated...
+        for code in self.VALID:
+            self.assertIn(f"  {code}  ", msg)
+        # ...and explained (not just listed), and the precision suffix is documented.
+        self.assertIn("thousands separators", msg)   # explains 'I'
+        self.assertIn("exponential", msg)            # explains 'e'
+        self.assertIn("precision suffix", msg)
+
+    def test_dtype_help_enumeration_matches_format_map(self):
+        """The documented codes must exactly match the codes the formatter accepts,
+        so help can never drift from behavior."""
+        from vistab import COLUMN_DTYPES, _DTYPE_CODES
+        self.assertEqual(tuple(c for c, _, _ in COLUMN_DTYPES), _DTYPE_CODES)
+        # every documented code actually formats without KeyError
+        for code in _DTYPE_CODES:
+            t = Vistab(); t.set_header(["A"]); t.add_row(["1"])
+            t.set_cols_dtype([code])
+            self.assertIsNotNone(t.draw())
+
+
 if __name__ == '__main__':
     unittest.main()
