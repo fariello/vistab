@@ -1,8 +1,12 @@
 # Implementation Plan - Numeric formatting grammar: thousands grouping for floats/exp (and an optional literal prefix/suffix)
 
-Status: REVISED after plan-review (2026-07-17). See "Plan-review findings" below. The comma
-overload is worse than first stated and reframes the recommended grammar: prefer a NON-comma
-grouping flag to avoid the ambiguity entirely.
+Status: reviewed (2026-07-17). Awaiting human approval before execution; see the approval and
+execution gate. The comma overload (first plan-review) reframed the grammar to the collision-free
+`F`/`E` codes; the second plan-review verified all `path:line` claims and added edge-case test
+coverage, named the release version, and hardened the execution gate.
+
+## Workflow history
+- 2026-07-17 /plan-review (its_direct/pt3-claude-opus-4.8-1m-us): APPROVE WITH REVISIONS APPLIED; PR-001..PR-004.
 
 ## Plan-review findings (2026-07-17, verified against src/vistab.py:1912)
 
@@ -118,21 +122,32 @@ parentheses.
 ## Invariants / anti-regression
 
 - All existing dtype strings render byte-identically: `f2`, `e4`, `i`, `I`, `t`, `a`, and
-  comma-SEPARATED lists like `"a,t,f4,i"` must be unchanged. This is the highest-risk area
-  because of the comma overload (separator vs grouping flag). Pin with characterization tests
-  BEFORE changing the tokenizer.
+  comma-decorated strings like `"a,t,f4,i"` (== `"atf4i"`) must be unchanged. Since the `F`/`E`
+  codes add NEW letters and the tokenizer/comma-strip is untouched, this holds by construction;
+  pin it with characterization tests anyway to lock the guarantee.
 - Callable dtypes unchanged.
+- Grouped codes inherit the existing `FallbackToText` behavior: a grouped code over a
+  non-numeric cell must render as text (like `I` does today), not crash (verified: `I` over
+  `"hello"` renders `hello`).
+- Bare `F`/`E` (no precision suffix) use the global `set_precision` default, exactly as bare
+  `f`/`e` do (verified: bare `f` renders with the default precision, does not error).
 - `_dtype_help()`/`COLUMN_DTYPES` remain the single source of truth; the drift-guard test
-  (`test_dtype_help_enumeration_matches_format_map`) still holds.
+  (`test_dtype_help_enumeration_matches_format_map`) still holds with `F`/`E` added to BOTH
+  `COLUMN_DTYPES` and `format_map`.
 
 ## Verification
 
 - **Regression pins (byte-identical):** `set_cols_dtype("a,t,f4,i")` (decorative-comma string),
   `"atf4i"`, and `["f2","e4","i","I"]` all render exactly as before. The tokenizer is
   untouched, so this should hold trivially; pin it anyway to lock the guarantee.
-- **New:** `F2` -> `123,456.79`; `F` uses global precision; `E` grouped scientific (if
+- **New:** `F2` -> `123,456.79`; bare `F` uses global precision; `E` grouped scientific (if
   included); `F`/`f`/`I`/`i` produce the four distinct expected strings for the same value;
   grouped code + a callable column coexist; invalid tokens still raise the enumerating error.
+- **Edge cases (required, from plan-review):**
+  - Negative value: `F2` over `-1234.5` -> `-1,234.50` (sign preserved, grouped).
+  - Non-numeric value: `F` over `"hello"` falls back to text (renders `hello`, no crash),
+    matching the current `I`-over-text behavior.
+  - Large value crossing multiple groups: `F0` over `1234567` -> `1,234,567`.
 - **CLI:** `--dtype "tF2"` produces grouped decimals end-to-end.
 - **Drift guard:** `test_dtype_help_enumeration_matches_format_map` still passes with `F`/`E`
   added to both `COLUMN_DTYPES` and `format_map`.
@@ -140,10 +155,15 @@ parentheses.
 
 ## Docs / help sync
 
-- README "Thousands separators..." subsection: add the `f,2` code beside the callable recipes
-  (callables still recommended for currency).
-- `docs/API.md` `set_cols_dtype`, `docs/CLI.md` `--dtype`: document the grouping flag.
-- CHANGELOG `[Unreleased]`/next version Added entry.
+- README "Thousands separators with decimals, currency, and custom formats" subsection: add
+  the `F` (and `E`) grouped code beside the callable recipes (callables still recommended for
+  currency, which `F` does not cover).
+- `docs/API.md` `set_cols_dtype`, `docs/CLI.md` `--dtype`: document the `F`/`E` codes.
+- CHANGELOG: add an `Added` entry under a NEW `[1.3.0]` section. (1.2.0 is already published
+  to PyPI at release time; a new additive public code is a minor bump, so this ships as 1.3.0,
+  not by re-opening [Unreleased]. Bump `pyproject.toml` and `__version__` to 1.3.0 as part of
+  execution, or explicitly defer the release to a later batch, do not ship the code under a
+  1.2.0 label.)
 
 ## Non-goals
 
@@ -164,6 +184,28 @@ parentheses.
 
 ## Approval and execution gate
 
-Proposal only; not executed. On approval: pin the comma-separated-list and existing-code
-regression tests first, implement the tokenizer + formatter changes, add the new + overload
-tests, sync docs/CHANGELOG, run full verification, and move this IPD to executed.
+Proposal only; not executed. Requires human approval (`Status: approved`) before execution.
+
+Open questions that must be resolved by the human before or at execution:
+- OQ1 currency affordance (recommend code-only; callables cover currency).
+- OQ2 include `E` grouped scientific (recommend yes; trivial and symmetric).
+- OQ3 confirm the letter `F` reads best for "grouped float" alongside `I`.
+
+Execution steps on approval:
+1. Pin characterization tests FIRST: existing dtype strings (`f2`, `e4`, `i`, `I`, `t`, `a`,
+   and comma-decorated `"a,t,f4,i"` == `"atf4i"`) render byte-identically.
+2. Add `F` (and `E` if approved) to `COLUMN_DTYPES` + `format_map` + new `_fmt_comma_float`
+   /`_fmt_comma_exp`; the tokenizer and comma-strip are UNCHANGED.
+3. Add the new + edge-case tests (negatives, non-numeric fallback, bare-`F` global precision,
+   `F`/`f`/`I`/`i` distinctness, CLI `--dtype "tF2"`).
+4. Sync README/API.md/CLI.md and add the CHANGELOG `[1.3.0]` entry; bump version to 1.3.0.
+5. Run the full suite and paste the ACTUAL runner output into the execution record (do not
+   claim a pass you did not run).
+
+Scope fence: this plan changes ONLY numeric-grouping dtype support and its docs/tests. It does
+NOT add currency/locale support, does NOT touch the tokenizer/comma-strip, and does NOT alter
+any other formatter's output.
+
+Commit and lifecycle: commit only the files changed by this work, path-scoped
+(`git commit -- <paths>`), never `git add -A`, never push. On completion move this IPD from
+`.agents/plans/pending/` to `.agents/plans/executed/` and set `Status: executed`.
