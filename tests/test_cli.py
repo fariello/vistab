@@ -422,21 +422,28 @@ class TestNoBidiCLI(unittest.TestCase):
         self.assertNotIn(self.LRI, r.stdout)
 
 
+@unittest.skipIf(sys.platform.startswith("win"),
+                 "ASCII-ambient is emulated via POSIX locale env vars; Windows uses a "
+                 "different stdio-encoding mechanism (codepage), so this POSIX regression "
+                 "is not reproducible by setting LC_ALL/PYTHONUTF8 there. The CLI's Windows "
+                 "path is covered by the rest of the suite.")
 class TestNonUTF8Environment(unittest.TestCase):
     """Regression: the CLI must not crash when stdin/stdout are bound to a non-UTF-8
-    codec (Windows cp1252, or a POSIX C/POSIX locale where stdout defaults to ASCII on
-    Python < 3.14). This was a live CI failure: box-drawing/CJK/RTL glyphs raised
+    codec, specifically a POSIX C/POSIX locale where stdout defaults to ASCII on
+    Python < 3.14. This was a live CI failure: box-drawing/CJK/RTL glyphs raised
     UnicodeEncodeError and the CLI emitted a traceback instead of a table.
     See release-review 20260717-191234 finding S3-CI1."""
 
     def _run_ascii_ambient(self, argv, input_text):
         import subprocess, os
         cli = os.path.join(os.path.dirname(__file__), "..", "src", "vistab.py")
-        # Emulate an older-Python CI runner: disable UTF-8 mode + C locale so the child's
-        # stdin/stdout default to ASCII. Do NOT set PYTHONIOENCODING here; the fix must come
-        # from the CLI reconfiguring its own streams, not from the ambient env.
-        env = {"PATH": os.environ.get("PATH", ""), "LC_ALL": "C", "LANG": "C",
-               "PYTHONUTF8": "0", "SYSTEMROOT": os.environ.get("SYSTEMROOT", "")}
+        # Emulate an older-Python runner where stdio defaults to ASCII: keep the real
+        # environment (so HOME/USERPROFILE etc. still resolve) and only OVERRIDE the locale
+        # and UTF-8-mode vars. Do NOT set PYTHONIOENCODING; the fix must come from the CLI
+        # reconfiguring its own streams, not from the ambient env.
+        env = dict(os.environ)
+        env.pop("PYTHONIOENCODING", None)
+        env.update({"LC_ALL": "C", "LANG": "C", "PYTHONUTF8": "0"})
         return subprocess.run([sys.executable, cli] + argv, capture_output=True,
                               text=True, encoding="utf-8", input=input_text, env=env)
 
