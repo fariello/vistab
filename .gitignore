@@ -36,3 +36,19 @@ tests/temp_home/
 
 # agent-workflows installer local backups
 .agent-workflows-installer-backups/
+
+# Agent scratch (inter-agent comms local box, temporary work)
+tmp/
+
+# Credentials / keys / secrets (never commit these)
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+.netrc
+.npmrc
+.pypirc
+service-account*.json
+credentials*.json
