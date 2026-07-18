@@ -16,6 +16,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   for non-numeric cells. Reachable from the CLI (`--dtype "F2"`). This closes the
   "commas AND decimals" gap without overloading the comma separator. Currency remains a
   documented callable (vistab does not guess a locale).
+- **Documented number formatting** across `README`, `docs/API.md`, and `docs/CLI.md`,
+  including the full column data-type code table, the precision suffix, and copy-paste
+  callable recipes for grouped decimals and currency (`$`, other currencies, accounting
+  negatives), noting vistab does not guess a locale.
+
+### Changed
+- **`set_cols_dtype` errors and CLI `--dtype` help now enumerate and explain every valid
+  data-type code** (a/t/i/I/f/F/e/E) from a single source of truth, so an invalid code produces
+  a self-documenting message instead of a bare list. The CLI format-error tip was also corrected
+  (previously misleading and omitting `I`).
 
 ### Fixed
 - **Import no longer fails on Python 3.9-3.13.** A return annotation used `typing.Set` without
