@@ -12,7 +12,7 @@ class TestEdge(unittest.TestCase):
             ["A", "B", "C"],
             ["1", "2"] # Missing 3rd boundary
         ])
-        
+
         table.add_row(["1"]) # Missing 2nd and 3rd boundaries
         out = table.draw()
         self.assertIn("A", out)
@@ -45,7 +45,7 @@ class TestEdge(unittest.TestCase):
             ["1", "2", "3"]
         ])
         out = table.draw()
-        self.assertNotIn("3", out) # 3 should be dropped because matrix is 2 cols 
+        self.assertNotIn("3", out) # 3 should be dropped because matrix is 2 cols
 
     def test_on_long_skip(self):
         """Test overflow elements skipped."""
@@ -57,7 +57,7 @@ class TestEdge(unittest.TestCase):
         ])
         out = table.draw()
         self.assertNotIn("1", out) # Entire row dropped by skip
-        
+
     def test_on_long_raise(self):
         """Test overflow elements raising bounds."""
         table = Vistab()
@@ -70,11 +70,11 @@ class TestEdge(unittest.TestCase):
         """Test mathematical break logic resolving huge contiguous block bounds safely."""
         from vistab import ColorAwareWrapper
         wrapper = ColorAwareWrapper()
-        
+
         long_word = "AAAAAAAAAAAAAAAAAAAA" # length 20
         res = wrapper.wrap(long_word, width=5)
         self.assertEqual(len(res.splitlines()), 4)
-        
+
         # Test ANSI chunking boundary mapping!
         ansi_long_word = "\033[1;31mAAAAA\033[0m\033[42mBBBBB\033[0m"
         res = wrapper.wrap(ansi_long_word, width=5)

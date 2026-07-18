@@ -18,21 +18,21 @@ class TestVistab(unittest.TestCase):
     def test_string_length_calculator(self):
         """Test calculating terminal lengths of strings containing ANSI codes."""
         calculator = StringLengthCalculator()
-        
+
         # Pure ASCII
         self.assertEqual(calculator.len("hello"), 5)
-        
+
         # With ANSI escape sequence (red text)
         colored_string = "\033[1;31mhello\033[0m"
         self.assertEqual(calculator.len(colored_string), 5)
-        
+
     def test_color_aware_wrapper(self):
         """Test text wrapping while taking ANSI codes into account."""
         wrapper = ColorAwareWrapper()
-        
+
         text = "This is \033[1;31mred\033[0m text"
         wrapped = wrapper.wrap(text, width=10)
-        
+
         # It should wrap after "This is", dropping the space
         self.assertIn("\n", wrapped)
         self.assertIn("\033[1;31mred\033[0m", wrapped)
@@ -54,11 +54,11 @@ class TestVistab(unittest.TestCase):
             ["1", "2", "3", "4", "5"],
             ["6", "7", "8", "9", "This is a very long string that should get truncated"]
         ])
-        
+
         table.set_max_rows(1)
         table.set_max_cols(3)
         out = table.draw()
-        
+
         self.assertIn("A", out)
         self.assertIn("C", out)
         self.assertNotIn("E", out) # Dropped by max_cols
@@ -70,38 +70,38 @@ class TestVistab(unittest.TestCase):
         table.set_cols_dtype(["t", "i", "f"])
         table.set_precision(2)
         table.add_rows([["Text", "Int", "Float"], ["ABC", 50.55, 3.14159]])
-        
+
         out = table.draw()
         self.assertIn("51", out)     # Int evaluates and rounds correctly (50.55 -> 51)
         self.assertIn("3.14", out)   # Precision formats float
-        
+
     def test_auto_dtype_inferences(self):
         """Test cascading data type inference for automatic bounds correctly formatting floats/sci over ints."""
         table = Vistab(style="none")
         table.set_precision(3)
         # Testing Mixed Decimal Inference
         table.add_rows([
-            ["3.0", "1.5", "101"], 
-            ["12", "1.2e-4", "202"], 
+            ["3.0", "1.5", "101"],
+            ["12", "1.2e-4", "202"],
             ["5", "10", "303"]
         ], header=False)
         out = table.draw()
-        
+
         # Column 0: Mixed whole numbers and parsed floats (3.0 vs 12). Should all be Floats (.000)
         self.assertIn("3.000", out)
         self.assertIn("12.000", out)
         self.assertIn("5.000", out)
-        
+
         # Column 1: Mixed explicit scientific notation (1.2e-4) vs floats (1.5). Should all be Scientific!
         self.assertIn("1.500e+00", out)
         self.assertIn("1.200e-04", out)
-        
+
         # Column 2: Pure integers logically exclusively. Should format exactly as purely string integers!
         self.assertIn("101", out)
         self.assertIn("202", out)
         self.assertIn("303", out)
         self.assertNotIn("101.000", out)
-        
+
     def test_inline_precision_overrides(self):
         """Test mapping decimals per column individually."""
         table = Vistab(style="none")
@@ -113,23 +113,23 @@ class TestVistab(unittest.TestCase):
 
         # Column 0: (i) Integer rounding safely
         self.assertIn("2", out)
-        
+
         # Column 1: (f2) Explicit decimal truncation bypassing the global n=1!
         self.assertIn("1.90", out)
 
         # Column 2: (e4) Exponent forcing 4 decimal points bypassing global n=1
         self.assertIn("1.9000e+00", out)
-        
+
         # Column 3: (a -> f1 inferred via global)
         self.assertIn("1.9", out)
-        
+
     def test_layout_modifiers(self):
         """Test structural colors applying within the ANSI boundaries."""
         table = Vistab(style="light")
         table.add_rows([["A", "B"], ["1", "2"]])
         table.set_table_style(bg="red")
         table.color_row(-1, bg="blue")
-        
+
         out = table.draw()
         # Verify the ANSI codes were actually mapped into the output
         self.assertIn("\033[41m", out) # Red background exists
@@ -180,7 +180,7 @@ class TestVistabColspan(unittest.TestCase):
         table = Vistab()
         table.set_header(["Name", ColSpan("Details", 2)])
         table.add_row(["Alice", ColSpan("Age: 25, City: Paris", 2)])
-        
+
         # Verify sizes and objects
         self.assertEqual(len(table._header), 3)
         self.assertEqual(table._header[1].value, "Details")
@@ -217,9 +217,9 @@ class TestVistabColspan(unittest.TestCase):
         table = Vistab(style="light")
         table.set_header(["Col1", ColSpan("Long Header Spanning Two Columns", 2)])
         table.add_row(["Short", ColSpan("This text is long enough to wrap across columns", 2)])
-        
+
         out = table.draw()
-        
+
         # Long header should wrap and layout without crashing
         self.assertIn("Long Header Spanning Two Columns", out)
         self.assertIn("This text is long enough to wrap across columns", out)
@@ -231,7 +231,7 @@ class TestVistabColspan(unittest.TestCase):
         table.set_header(["Col1", ColSpan("Spanned Header", 2)])
         table.add_row(["A", "B", "C"])
         out = table.draw()
-        
+
         # Verify that mid-line under "Spanned Header" (boundary index 2) has no junction
         # Let's inspect the hline separating the header from the first row.
         # Spanned Header covers columns 1 and 2, which means the boundary between col 1 and 2
@@ -438,10 +438,10 @@ class TestVistabColspan(unittest.TestCase):
         table.set_header(["SortKey", ColSpan("Spanned", 2)])
         table.add_row(["Beta", ColSpan("V1", 2)])
         table.add_row(["Alpha", ColSpan("V2", 2)])
-        
+
         table.sort_by(0)
         out = table.draw()
-        
+
         # Alpha row should sort before Beta
         alpha_idx = out.find("Alpha")
         beta_idx = out.find("Beta")
@@ -451,26 +451,26 @@ class TestVistabColspan(unittest.TestCase):
     def test_colspan_usability_and_validation(self):
         """Test comprehensive colspan validation and exception specifications."""
         from vistab import ColSpan
-        
+
         # 1. ColSpan instantiation and parameter aliases
         c1 = ColSpan("x", 2)
         self.assertEqual(c1.colspan, 2)
         self.assertEqual(c1.span, 2)
-        
+
         c2 = ColSpan("x", colspan=3)
         self.assertEqual(c2.colspan, 3)
-        
+
         c3 = ColSpan("x", span=4)
         self.assertEqual(c3.colspan, 4)
-        
+
         # Conflicting parameters
         with self.assertRaises(ValueError):
             ColSpan("x", colspan=2, span=3)
-            
+
         # colspan < 1
         with self.assertRaises(ValueError):
             ColSpan("x", colspan=0)
-            
+
         # colspan=1 is a no-op
         c_one = ColSpan("x", colspan=1)
         self.assertEqual(c_one.colspan, 1)
@@ -479,13 +479,13 @@ class TestVistabColspan(unittest.TestCase):
         table = Vistab()
         table.set_header(["C1", "C2", "C3"])
         table.add_row(["D1", "D2", "D3"])
-        
+
         # IndexError for out-of-range row_idx
         with self.assertRaises(IndexError):
             table.set_cell_span(5, 0, 2)
         with self.assertRaises(IndexError):
             table.set_cell_span(-5, 0, 2)
-            
+
         # IndexError for out-of-range col_idx
         with self.assertRaises(IndexError):
             table.set_cell_span(0, 5, 2)
@@ -495,24 +495,24 @@ class TestVistabColspan(unittest.TestCase):
             table.set_header_span(5, 2)
         with self.assertRaises(IndexError):
             table.set_header_span(-5, 2)
-            
+
         # Negative indexing support
         table.set_header_span(-3, 1) # no-op span=1 at first column
         table.set_cell_span(-1, -3, 1) # no-op span=1 at first column
-        
+
         # ValueError for bad colspan (< 1)
         with self.assertRaises(ValueError):
             table.set_cell_span(0, 0, 0)
         with self.assertRaises(ValueError):
             table.set_header_span(0, -1)
-            
+
         # 3. Transactional Integrity (Grid Unchanged on Failure)
         table2 = Vistab()
         table2.set_header(["Col1", "Col2", "Col3"])
         table2.add_row(["Data1", "Data2", "Data3"])
-        
+
         original_header_values = [c.value if hasattr(c, 'value') else c for c in table2._header]
-        
+
         # Overwrite non-empty cell raises ValueError when combine=None
         with self.assertRaises(ValueError) as ctx:
             table2.set_header_span(0, 2, combine=None)
@@ -520,20 +520,20 @@ class TestVistabColspan(unittest.TestCase):
         # Verify header is completely unchanged (no partial mutation)
         current_header_values = [c.value if hasattr(c, 'value') else c for c in table2._header]
         self.assertEqual(original_header_values, current_header_values)
-        
+
         # 4. Overlap & Placeholder target validation
         table3 = Vistab()
         table3.set_header(["Col1", "", "", "Col4"])
         table3.add_row(["Data1", "", "", ""])
-        
+
         # Set initial span on row 0, col 1 (span 2 -> covers indices 1, 2)
         table3.set_cell_span(0, 1, 2)
-        
+
         # Target index is placeholder target -> ValueError
         with self.assertRaises(ValueError) as ctx:
             table3.set_cell_span(0, 2, 2)
         self.assertIn("placeholder owned by column 1", str(ctx.exception))
-        
+
         # Overlap existing span -> ValueError
         with self.assertRaises(ValueError) as ctx:
             table3.set_cell_span(0, 0, 3)
@@ -544,67 +544,67 @@ class TestVistabColspan(unittest.TestCase):
         table4 = Vistab()
         table4.set_header(["Col1", "", "", ""])
         table4.add_row(["Data1", "", "", ""])
-        
+
         table4.set_cell_span(0, 1, 2)
         with self.assertRaises(ValueError):
             # Overlaps index 1 (which is owned by 1)
             table4.set_cell_span(0, 0, 3)
-            
+
         # Draw should render cleanly without KeyError crash
         self.assertIsNotNone(table4.draw())
 
     def test_colspan_combine_options_and_wrapping(self):
         """Test B1 (combine options: default merge, custom, strict, wrapping of merged values)."""
         from vistab import Vistab
-        
+
         # 1. Default merge combine=" "
         t1 = Vistab()
         t1.set_header(["A", "B", "C"])
         t1.add_row(["Alice", 25, "Paris"])
-        
+
         t1.set_cell_span(0, 0, 3) # default: merges "Alice", "25", "Paris" -> "Alice 25 Paris"
         self.assertEqual(t1._rows[0][0].value, "Alice 25 Paris")
         self.assertTrue(t1._rows[0][1].is_placeholder)
         self.assertTrue(t1._rows[0][2].is_placeholder)
-        
+
         # 2. combine="" (no separator)
         t2 = Vistab()
         t2.set_header(["A", "B"])
         t2.add_row(["Alice", "25"])
         t2.set_cell_span(0, 0, 2, combine="")
         self.assertEqual(t2._rows[0][0].value, "Alice25")
-        
+
         # 3. combine=", " (custom separator)
         t3 = Vistab()
         t3.set_header(["A", "B"])
         t3.add_row(["Alice", "25"])
         t3.set_cell_span(0, 0, 2, combine=", ")
         self.assertEqual(t3._rows[0][0].value, "Alice, 25")
-        
+
         # 4. TypeError for invalid combine type (e.g. integer)
         t4 = Vistab()
         t4.set_header(["A", "B"])
         t4.add_row(["Alice", "25"])
         with self.assertRaises(TypeError):
             t4.set_cell_span(0, 0, 2, combine=123)
-            
+
         # 5. Empty covered cells do not leave trailing separators
         t5 = Vistab()
         t5.set_header(["A", "B", "C"])
         t5.add_row(["Alice", "", ""])
         t5.set_cell_span(0, 0, 3, combine=", ")
         self.assertEqual(t5._rows[0][0].value, "Alice")
-        
+
         # 6. Merged value wrapping (R1)
         t6 = Vistab(style="light", padding=0)
         t6.set_cols_width([5, 5])
         t6.set_header(["Col1", "Col2"])
         t6.add_row(["ExtremelyLongWord", "AnotherOne"])
-        
+
         # Merge them (total width = 5 + 5 + separator width of 1 = 11)
         t6.set_cell_span(0, 0, 2, combine=" ")
         self.assertEqual(t6._rows[0][0].value, "ExtremelyLongWord AnotherOne")
-        
+
         out = t6.draw()
         # Verify it wrapped inside the combined block and does not crash or bleed
         self.assertIn("ExtremelyLo", out)

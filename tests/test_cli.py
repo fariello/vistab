@@ -69,7 +69,7 @@ class TestCLI(unittest.TestCase):
             if "Bob" in line: bob_idx = i
             elif "Alice" in line: alice_idx = i
             elif "Gabriel" in line: gab_idx = i
-        
+
         self.assertTrue(bob_idx < alice_idx < gab_idx)
 
     @patch('sys.stdout', new_callable=io.StringIO)
@@ -80,7 +80,7 @@ class TestCLI(unittest.TestCase):
         # Monkeypatch sys.stdin.isatty to False so vistab thinks it's a pipe
         with patch('sys.stdin.isatty', return_value=False):
             vistab.main()
-        
+
         output = mock_stdout.getvalue()
         self.assertIn("A", output)
         self.assertIn("3", output)
@@ -139,19 +139,19 @@ class TestCLI(unittest.TestCase):
     def test_cli_save_theme(self, mock_stdout):
         import vistab
         import tempfile
-        
+
         with tempfile.TemporaryDirectory() as tmpdir:
             with patch('os.path.expanduser', return_value=tmpdir):
                 with self.assertRaises(SystemExit) as e:
                     vistab.main()
                 self.assertEqual(e.exception.code, 0)
-                
+
             output = mock_stdout.getvalue()
             self.assertIn("Saved layout globally as 'testing_theme_temp'", output)
-            
+
             themes_path = os.path.join(tmpdir, ".config", "vistab", "themes.json")
             self.assertTrue(os.path.exists(themes_path))
-            
+
             import json
             with open(themes_path, "r") as f:
                 data = json.load(f)

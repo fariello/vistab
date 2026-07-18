@@ -27,21 +27,21 @@ def generate_test_data(rows, cols):
 
 def run_benchmark():
     print("=== VISTAB RENDERING BENCHMARK ===")
-    
+
     # 1k rows x 8 cols
     h1k, d1k = generate_test_data(1000, 8)
-    
+
     # 10k rows x 8 cols
     h10k, d10k = generate_test_data(10000, 8)
-    
+
     scenarios = [
         ("1k rows x 8 cols", h1k, d1k, 10),
         ("10k rows x 8 cols", h10k, d10k, 2)
     ]
-    
+
     for label, header, data, iterations in scenarios:
         print(f"\nScenario: {label} ({iterations} iterations)")
-        
+
         # --- COLD PATH (Fresh object each iteration) ---
         cold_times = []
         for _ in range(iterations):
@@ -51,11 +51,11 @@ def run_benchmark():
             t.draw()
             end = time.perf_counter()
             cold_times.append(end - start)
-            
+
         avg_cold = sum(cold_times) / iterations
         cold_rows_sec = len(data) / avg_cold
         print(f"  COLD path (fresh Vistab):  {avg_cold * 1000:.2f} ms/render | {cold_rows_sec:.2f} rows/sec")
-        
+
         # --- WARM PATH (Reused object) ---
         warm_times = []
         t_warm = Vistab(data, header=header, padding=1)
@@ -66,11 +66,11 @@ def run_benchmark():
             t_warm.draw()
             end = time.perf_counter()
             warm_times.append(end - start)
-            
+
         avg_warm = sum(warm_times) / iterations
         warm_rows_sec = len(data) / avg_warm
         print(f"  WARM path (reused Vistab): {avg_warm * 1000:.2f} ms/render | {warm_rows_sec:.2f} rows/sec")
-        
+
         # --- STREAMING PATH (streamed rows, default sample 100) ---
         stream_times = []
         for _ in range(iterations):

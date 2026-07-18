@@ -9,13 +9,13 @@ class TestVistabRegression(unittest.TestCase):
     Regression testing framework that captures CLI execution payloads
     and compares them against baseline gold-master ASCII structures.
     """
-    
+
     def setUp(self):
         self.tests_dir = Path(__file__).parent.absolute()
         self.data_dir = self.tests_dir / "data"
         self.fixtures_dir = self.tests_dir / "fixtures"
         self.cli_path = self.tests_dir.parent / "src" / "vistab.py"
-        
+
         # Ensure fixtures directory exists safely
         os.makedirs(self.fixtures_dir, exist_ok=True)
 
@@ -29,11 +29,11 @@ class TestVistabRegression(unittest.TestCase):
         os.makedirs(temp_home, exist_ok=True)
         env["HOME"] = str(temp_home)
         env["USERPROFILE"] = str(temp_home)
-        
+
         result = subprocess.run(
-            cmd, 
-            capture_output=True, 
-            text=True, 
+            cmd,
+            capture_output=True,
+            text=True,
             input=input_data,
             encoding="utf-8",
             env=env
@@ -42,35 +42,35 @@ class TestVistabRegression(unittest.TestCase):
 
     def _assert_against_fixture(self, name: str, output: str):
         """
-        Validates output against a saved fixture. 
+        Validates output against a saved fixture.
         If the fixture does not exist, it bootstraps it!
         """
         # Normalize absolute paths for cross-platform stability
         proj_root = str(self.tests_dir.parent)
         output = output.replace(proj_root.replace('\\', '/'), "<PROJECT_ROOT>")
         output = output.replace(proj_root, "<PROJECT_ROOT>")
-        
+
         # normalize Windows slashes to Linux slashes in the exact file strings printed by the CLI
         output = output.replace("<PROJECT_ROOT>\\tests\\temp_home\\.config\\vistab\\themes.json", "<PROJECT_ROOT>/tests/temp_home/.config/vistab/themes.json")
         output = output.replace("<PROJECT_ROOT>\\tests\\data\\small_5x5.csv", "<PROJECT_ROOT>/tests/data/small_5x5.csv")
         output = output.replace("<PROJECT_ROOT>\\tests\\data\\small_7x12.csv", "<PROJECT_ROOT>/tests/data/small_7x12.csv")
         output = output.replace("<PROJECT_ROOT>\\tests\\data\\completely_empty.csv", "<PROJECT_ROOT>/tests/data/completely_empty.csv")
         output = output.replace("<PROJECT_ROOT>\\tests\\data\\small_1x1.csv", "<PROJECT_ROOT>/tests/data/small_1x1.csv")
-        
+
         fixture_path = self.fixtures_dir / f"{name}.txt"
-        
+
         if not fixture_path.exists():
             with open(fixture_path, "w", encoding="utf-8") as f:
                 f.write(output)
             print(f"\n[BOOTSTRAP] Created new regression fixture: {fixture_path.name}")
             return
-            
+
         with open(fixture_path, "r", encoding="utf-8") as f:
             expected = f.read()
-            
+
         self.assertEqual(
-            output.replace('\r', ''), 
-            expected.replace('\r', ''), 
+            output.replace('\r', ''),
+            expected.replace('\r', ''),
             f"Regression failed! Output for '{name}' does not match the strict baseline."
         )
 
@@ -84,8 +84,8 @@ class TestVistabRegression(unittest.TestCase):
         """Test a heavily parameterized thematic dataset output."""
         db = self.data_dir / "small_7x12.csv"
         args = [
-            str(db), 
-            "--theme", "ocean-index", 
+            str(db),
+            "--theme", "ocean-index",
             "--align", "c",
             "--width", "60",
             "--table-bg-color", "bright_black"
@@ -113,21 +113,21 @@ class TestVistabRegression(unittest.TestCase):
         """Test the sequential CLI resolution targeting multiple physical files iteratively."""
         db1 = "small_1x1.csv"
         db2 = "small_5x5.csv"
-        
+
         cmd = ["python", str(self.cli_path), db1, db2, "--style", "heavy"]
         env = os.environ.copy()
         env["PYTHONIOENCODING"] = "utf-8"
-        
+
         temp_home = self.tests_dir / "temp_home"
         os.makedirs(temp_home, exist_ok=True)
         env["HOME"] = str(temp_home)
         env["USERPROFILE"] = str(temp_home)
-        
+
         result = subprocess.run(
             cmd, capture_output=True, text=True, encoding="utf-8", env=env, cwd=self.data_dir
         )
         out = result.stdout + result.stderr
-        
+
         self._assert_against_fixture("regression_pipeline_multi_file", out)
 
     def test_regression_api_dynamic_typing(self):
@@ -137,13 +137,13 @@ class TestVistabRegression(unittest.TestCase):
         table.set_cols_dtype(["t", "f", "i", "e"])
         table.set_precision(3)
         table.set_cols_align(["l", "r", "c", "r"])
-        
+
         table.add_rows([
             ["String", "Float", "Int", "Scientific"],
             ["Measurement A", 456.12356, 10.45, 0.0000000045],
             ["Measurement B", 12.3, 0.0, 4.2e-5]
         ])
-        
+
         out = table.draw()
         self._assert_against_fixture("regression_api_dynamic_typing", out)
 
@@ -158,7 +158,7 @@ class TestVistabRegression(unittest.TestCase):
             "col_-1": {"bg": "red"},
             "row_-1": {"fg": "black", "bg": "white"}
         }
-        
+
         table = Vistab().set_theme(custom_theme)
         table.add_rows([
             ["Index", "Metric", "Status"],
@@ -166,7 +166,7 @@ class TestVistabRegression(unittest.TestCase):
             ["2", "120ms", "DELAY"],
             ["3", "12ms", "OK"]
         ])
-        
+
         out = table.draw()
         self._assert_against_fixture("regression_api_theme_dictionary", out)
 
@@ -174,12 +174,12 @@ class TestVistabRegression(unittest.TestCase):
         """Test the structural execution capturing failures and routing exit conditions."""
         cmd = ["python", str(self.cli_path), "--theme", "completely_fake_theme_name"]
         result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
-        
+
         # Validate that the CLI terminates mapped with standard error state
         # Validate that the CLI terminates mapped with standard error state
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("error:", result.stderr.lower() + result.stdout.lower() + "error:") # Sometimes argparse puts errors in stdout or stderr
-        
+
     def test_regression_stream_stdin_clip(self):
         """Use stream via sys.stdin with narrow widths validating truncation."""
         raw_csv = "A,B\nVeryLongWordThatMightExceedTheClip,Normal\nShort,Here\n"
@@ -236,7 +236,7 @@ class TestVistabRegression(unittest.TestCase):
         def infinite_generator():
             yield ["Index", "Data"]
             for i in range(1, 5): yield [f"{i}", "X"]
-            
+
         table = Vistab(header=False, style="none")
         table.has_header = False
         table.set_max_rows(3)
@@ -267,7 +267,7 @@ class TestVistabRegression(unittest.TestCase):
         self._assert_against_fixture("regression_zero_data_matrices", out)
         db.unlink()
 
-        
+
 
     def test_regression_cli_show_code(self):
         """Test the emitted python instantiation payload maps structure variables correctly."""
@@ -279,8 +279,8 @@ class TestVistabRegression(unittest.TestCase):
         """Ensure parameterized thematic outputs evaluate structurally without collapsing or truncating."""
         db = self.data_dir / "small_7x12.csv"
         args = [
-            str(db), 
-            "--theme", "forest", 
+            str(db),
+            "--theme", "forest",
             "--padding", "4",
             "--no-hlines"
         ]
@@ -291,7 +291,7 @@ class TestVistabRegression(unittest.TestCase):
         """Ensure CLI configurations export and compile resolving thematic structures iteratively."""
         db = self.data_dir / "small_5x5.csv"
         out = self._run_cli([str(db), "--theme", "ocean", "--padding", "5", "--save-theme", "test_ocean_override"])
-        
+
         temp_themes_path = self.tests_dir / "temp_home" / ".config" / "vistab" / "themes.json"
         if temp_themes_path.exists():
             with open(temp_themes_path, "r", encoding="utf-8") as f:
@@ -345,10 +345,10 @@ class TestVistabRegression(unittest.TestCase):
                 table.set_theme(theme)
             if widths:
                 table.set_cols_width(widths)
-                
+
             table.set_header([1,2,3,4,5,6,7,8,9,10])
             table.set_title(f"Widths: {widths[0] if widths else 'Auto'}, Style: {style}, Theme: {theme}")
-            
+
             table.add_row(data)
             data = data[-2:] + data[:-2]
             table.add_row(data)
@@ -361,62 +361,62 @@ class TestVistabRegression(unittest.TestCase):
 
         w1 = [5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
         w2 = [12, 12, 12, 12, 12, 12, 12, 12, 12, 12]
-        
+
         mktable(w1, None, None)
         mktable(w2, None, None)
-        
+
         for style in ["none", "light", "ascii"]:
             mktable(w1, style, None)
             mktable(w2, style, None)
-            
+
         for theme in ["forest", "ocean-index"]:
             mktable(w1, "light", theme)
             mktable(w2, "light", theme)
-            
+
         mktable(w1, "light", "ocean-cols-index")
-        
+
         self._assert_against_fixture("regression_ansi_word_chunking_comprehensive", "\n".join(out))
 
 
     def test_regression_ansi_context_leak_prevention(self):
         """Validates that inner cell resets do not destroy active cell styling bounding padding structure."""
         from src.vistab import Vistab
-        
+
         table = Vistab()
         # Create a layout where cell 2 has a forest theme blue background.
         table.set_theme("forest")
         table.set_cols_width([15, 20])
-        
+
         # Test 1: Inject a stray reset code \033[0m right into the middle of the cell.
         # Test 2: Inject a cursor movement \033[A to verify it gets completely stripped.
         table.add_row([
             "Normal cell",
             "Starts bright \033[0mTries resetting \x1b[Aand moving"
         ])
-        
+
         out = table.draw()
-        
+
         # Verify cursor A got wiped:
         self.assertNotIn("\x1b[A", out)
         self.assertNotIn("\033[A", out)
-        
-        # The padding spaces at the end of cell 2 MUST be themed. 
+
+        # The padding spaces at the end of cell 2 MUST be themed.
         # Inside the generated string, the padding will have the active ANSI block re-appended.
-        
+
         self._assert_against_fixture("regression_ansi_context_leak_prevention", out)
 
 
     def test_regression_colspan_support(self):
         """Validates that colspans render correctly and maintain structural line suppression."""
         from src.vistab import Vistab, ColSpan
-        
+
         table = Vistab(style="light")
         table.set_header(["Name", ColSpan("Details Block", 2), "Status"])
         table.add_row(["Alice", ColSpan("Age: 25, Paris", 2), "Active"])
         table.add_row(["Bob", "Age: 30", "Berlin", "Inactive"])
-        
+
         out = table.draw()
-        
+
         self._assert_against_fixture("regression_colspan_support", out)
 
 if __name__ == '__main__':

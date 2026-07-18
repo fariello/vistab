@@ -9,10 +9,10 @@ class TestConfig(unittest.TestCase):
     def setUp(self):
         self.dummy_toml = ".vistab.toml"
         self.dummy_json = "themes.json"
-        
+
         with open(self.dummy_toml, "w", encoding="utf-8") as f:
             f.write("[vistab]\nstyle = \"double\"\npadding = 3\n")
-            
+
         with open(self.dummy_json, "w", encoding="utf-8") as f:
             json.dump({
                 "my_custom_theme": {
@@ -33,7 +33,7 @@ class TestConfig(unittest.TestCase):
         # We need to monkeypatch the internal vistab._load_config's Path instantiation
         # Let's patch the whole logic
         original_load = vistab.Vistab._load_config
-        
+
         def mock_load(self_instance):
             import sys
             try:
@@ -45,7 +45,7 @@ class TestConfig(unittest.TestCase):
                 return
             with open(".vistab.toml", "rb") as f:
                 data = tomllib.load(f)
-            
+
             cfg = data.get("vistab", {})
             if "style" in cfg: self_instance._style = cfg["style"]
             if "padding" in cfg: self_instance._pad = cfg["padding"]
@@ -61,7 +61,7 @@ class TestConfig(unittest.TestCase):
         import vistab
         with open(self.dummy_json, "r") as f:
             vistab.Vistab.THEMES.update(json.load(f))
-        
+
         table = Vistab()
         table.set_theme("my_custom_theme")
         self.assertEqual(table._style, "ascii")

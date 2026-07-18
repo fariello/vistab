@@ -2023,13 +2023,13 @@ class Vistab:
         """Set the column span of a specific header cell."""
         if not self._header:
             raise ValueError("Header must be set before applying spans.")
-        
+
         # Resolve negative col_idx
         if col_idx < 0:
             col_idx = len(self._header) + col_idx
         if col_idx >= len(self._header) or col_idx < 0:
             raise IndexError("Column index out of range.")
-            
+
         self._apply_span_to_list(self._header, col_idx, colspan, combine)
         return self
 
@@ -2039,13 +2039,13 @@ class Vistab:
             row_idx = len(self._rows) + row_idx
         if row_idx >= len(self._rows) or row_idx < 0:
             raise IndexError("Row index out of range.")
-            
+
         row_list = self._rows[row_idx]
         if col_idx < 0:
             col_idx = len(row_list) + col_idx
         if col_idx >= len(row_list) or col_idx < 0:
             raise IndexError("Column index out of range.")
-            
+
         self._apply_span_to_list(row_list, col_idx, colspan, combine)
         return self
 
@@ -2076,9 +2076,9 @@ class Vistab:
             curr_idx = col_idx + offset
             if curr_idx == col_idx:
                 continue
-            
+
             cell = row_list[curr_idx]
-            
+
             # 1. Overlap checks
             if isinstance(cell, VistabCell) and cell.colspan > 1 and not cell.is_placeholder:
                 raise ValueError(f"Span of {colspan} from column {col_idx} would overlap with an existing span starting at column {curr_idx}.")
@@ -2090,7 +2090,7 @@ class Vistab:
                             owner_idx = idx
                             break
                     raise ValueError(f"Span of {colspan} from column {col_idx} would overlap with an existing span starting at column {owner_idx}.")
-            
+
             # 2. Non-empty checks (only raise in strict mode combine=None)
             if combine is None:
                 val = cell.value if isinstance(cell, VistabCell) else cell
@@ -2103,21 +2103,21 @@ class Vistab:
             t_val = target_cell.value if isinstance(target_cell, VistabCell) else target_cell
             if t_val is not None and str(t_val).strip() != "":
                 parts.append(str(t_val))
-            
+
             for offset in range(1, colspan):
                 curr_idx = col_idx + offset
                 cell = row_list[curr_idx]
                 val = cell.value if isinstance(cell, VistabCell) else cell
                 if val is not None and str(val).strip() != "":
                     parts.append(str(val))
-            
+
             source_val = combine.join(parts)
         else:
             source_val = target_cell.value if isinstance(target_cell, VistabCell) else target_cell
 
         source_cell = VistabCell(source_val, colspan=colspan)
         row_list[col_idx] = source_cell
-        
+
         for offset in range(1, colspan):
             row_list[col_idx + offset] = VistabPlaceholderCell(source_cell)
 
@@ -2598,11 +2598,11 @@ class Vistab:
 
         n = self._precision
         dtype = self._dtype[i] if hasattr(self, '_dtype') else "a"
-        
+
         if isinstance(dtype, str) and len(dtype) > 1 and dtype[1:].isdigit():
             n = int(dtype[1:])
             dtype = dtype[0]
-            
+
         try:
             if callable(dtype):
                 return dtype(raw_val)
@@ -2917,23 +2917,23 @@ class Vistab:
 
     def _infer_auto_dtypes(self) -> None:
         """ upgrade 'a' (automatic) columns into strict numeric constraints.
-        
-        This prevents jagged decimal alignments (e.g. 10 mixed with 12.3456) by 
+
+        This prevents jagged decimal alignments (e.g. 10 mixed with 12.3456) by
         guaranteeing column-wide uniformity if the array is perfectly bounded.
         """
         if not self._rows:
             return
-            
+
         if not hasattr(self, "_dtype"):
             self._dtype = ["a"] * self._row_size
-            
+
         for c in range(self._row_size):
             if self._dtype[c] == "a":
                 valid_cells = 0
                 numeric_cells = 0
                 has_scientific = False
                 has_float = False
-                
+
                 for row in self._rows:
                     if c < len(row):
                         val = str(row[c]).strip()
@@ -2943,14 +2943,14 @@ class Vistab:
                                 clean_val = val.replace(",", "")
                                 f_val = float(clean_val)
                                 numeric_cells += 1
-                                
+
                                 if 'e' in clean_val.lower():
                                     has_scientific = True
                                 elif '.' in clean_val or f_val % 1 != 0:
                                     has_float = True
                             except ValueError:
                                 pass
-                                
+
                 if valid_cells > 0 and numeric_cells == valid_cells:
                     if has_scientific:
                         self._dtype[c] = "e"
@@ -2985,7 +2985,7 @@ class Vistab:
                     # Safely map the root type definition (extracting 'f' from 'f2')
                     dtype_val = self._dtype[c]
                     dtype_char = dtype_val[0] if isinstance(dtype_val, str) and len(dtype_val) > 0 else dtype_val
-                    
+
                     # Explicit numeric types physically lock right-alignment
                     if dtype_char in ("i", "I", "f", "e"):
                         self._align[c] = "r"
@@ -3116,7 +3116,7 @@ class Vistab:
                 cell_line = self._sanitize_destructive_ansi(cell_line)
                 if ansi_on:
                     cell_line = self._reassert_ansi_context(cell_line, ansi_on)
-                    
+
                 fill = w - self.vislen(cell_line)
 
                 if fill < 0:
@@ -3198,18 +3198,18 @@ class Vistab:
         col_idx = 0
         while col_idx < len(line):
             cell = line[col_idx]
-            
+
             if isinstance(cell, VistabPlaceholderCell) or (isinstance(cell, VistabCell) and cell.is_placeholder):
                 line_wrapped.append([])
                 col_idx += 1
                 continue
-                
+
             colspan = cell.colspan if isinstance(cell, VistabCell) else 1
             w = self._span_block_width(col_idx, colspan)
-            
+
             array = []
             do_wrap = self._get_active_wrap_control(row_idx, col_idx, isheader)
-            
+
             for c in str(cell).split('\n'):
                 if c.strip() == "" and do_wrap:
                     array.append("")
@@ -3770,7 +3770,7 @@ def main():
         verb = sys.argv[1].lower()
         if verb in ["show", "help", "demo"]:
             args_rest = sys.argv[2:]
-            
+
             alias_map = {
                 "caps": "capabilities",
                 "wrapping": "capabilities",
@@ -3779,12 +3779,12 @@ def main():
                 "spans": "span",
                 "adv": "advanced",
             }
-            
+
             subject = None
             if args_rest:
                 subject = args_rest[0].lower()
                 subject = alias_map.get(subject, subject)
-                
+
             if verb == "help":
                 if not subject:
                     sys.argv = [sys.argv[0], "--help"]
@@ -3799,7 +3799,7 @@ def main():
                     sys.stderr.write("  colors         Show advanced coordinate-based color parameters\n")
                     sys.stderr.write("  advanced       Show advanced streaming, sorting, and jagged matrix behaviors\n")
                     sys.exit(2)
-                    
+
             elif verb == "show":
                 valid_subjects = {
                     "styles": print_styles_list,
@@ -3831,7 +3831,7 @@ def main():
                     sys.stderr.write("Usage: vistab show <subject>\n\n")
                     _show_subject_lines(sys.stderr.write)
                     sys.exit(2)
-                    
+
             elif verb == "demo":
                 valid_subjects = {
                     "showcase": print_showcase_demo,
@@ -4334,13 +4334,13 @@ def main():
                     try:
                         with open(themes_file, "r") as f: tdb = json.load(f)
                     except Exception: tdb = {}
-                    
+
                     tdb[args.save_theme] = compiled_theme
-                    
+
                     fd, temp_path = tempfile.mkstemp(dir=config_dir, suffix=".json")
                     with os.fdopen(fd, "w", encoding="utf8") as f:
                         json.dump(tdb, f, indent=4)
-                    
+
                     os.replace(temp_path, themes_file)
                     print(f"[\033[32mSUCCESS\033[0m] Saved layout globally as '{args.save_theme}' in {themes_file}")
 

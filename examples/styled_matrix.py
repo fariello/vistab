@@ -13,7 +13,7 @@ from vistab import Vistab
 def main():
     table = Vistab(style="double")
     table.set_title("Vistab Complex Theme Mappings")
-    
+
     # Generate mock test matrix logic
     table.add_rows([
         ["Target Architecture", "Uptime", "Capacity", "Status"],
@@ -22,7 +22,7 @@ def main():
         ["Compute Cluster B", "14d", "15%", "Idle"],
         ["Edge Node Cache", "0d", "0%", "Offline"]
     ])
-    
+
     # Apply a fluid dictionary tracking specific targets explicit!
     custom_theme = {
         "padding": 3,
@@ -31,7 +31,7 @@ def main():
         "col_0": {"fg": "cyan"}, # Standard index columns
         "row_-1": {"fg": "red", "italic": True} # Dynamic styled failure logic
     }
-    
+
     # Pushing mappings
     table.set_theme(custom_theme)
     print(table.draw())
