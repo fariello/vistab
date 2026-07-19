@@ -1,0 +1,4 @@
+id,severity,remediation_risk,axis,persona,area,finding,evidence,proposed_action,disposition
+B1,Medium,Low,,QA,integration-correctness,"Integer formatting uses round() (banker's/half-to-even): i(0.5)=0, i(2.5)=2, i(3.5)=4; surprising + undocumented","src/vistab.py:2506,2514; reproduced","Choose+document rounding policy (recommend round-half-up); pin with tests",propose-now
+B2,Low,Low,,engineer,swallowed-error,"Malformed ~/.config/vistab/themes.json swallowed by except Exception: pass; custom themes silently fail to load","src/vistab.py:3762-3766","Warn to stderr (path+reason); continue without custom themes",propose-now
+B3,Low,Low,,QA,contract/None-handling,"None in numeric (i/f/a) column renders literal 'None' via FallbackToText","reproduced: i<-None -> 'None'","Render None in numeric columns as empty (or configurable placeholder)",propose-now
