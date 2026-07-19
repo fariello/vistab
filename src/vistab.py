@@ -96,6 +96,16 @@ import re  # Regular expressions for text processing
 import sys  # System-specific parameters and functions
 from typing import List, Optional, Iterable, Any, Iterator, Set  # Type hints for better code clarity
 from functools import reduce, lru_cache  # Higher-order function for performing cumulative operations
+from decimal import Decimal, ROUND_HALF_UP  # symmetric round-half-away-from-zero for integer formatting
+
+
+def _round_half_up(value: float) -> int:
+    """Round to the nearest integer, ties away from zero (2.5 -> 3, -2.5 -> -3).
+
+    Python's built-in round() uses banker's rounding (round-half-to-even), which surprises
+    users formatting numbers as integers. Decimal(str(value)) avoids binary float artifacts.
+    """
+    return int(Decimal(str(value)).quantize(Decimal(0), rounding=ROUND_HALF_UP))
 
 __all__ = ["Vistab", "ArraySizeError", "StringLengthCalculator", "ColSpan"]
 
@@ -2510,16 +2520,18 @@ class Vistab:
         """Integer formatting class-method.
 
         - x will be float-converted and then used.
+        - fractional values round half away from zero (2.5 -> 3, -2.5 -> -3).
         """
-        return str(int(round(cls._to_float(x))))
+        return str(_round_half_up(cls._to_float(x)))
 
     @classmethod
     def _fmt_comma_int(cls, x, **kw):
-        """Integer formatting class-method.
+        """Integer formatting class-method with thousands separators.
 
         - x will be float-converted and then used.
+        - fractional values round half away from zero (2.5 -> 3, -2.5 -> -3).
         """
-        return f"{int(round(cls._to_float(x))):,d}"
+        return f"{_round_half_up(cls._to_float(x)):,d}"
 
     @classmethod
     def _fmt_float(cls, x, **kw):
@@ -2610,6 +2622,11 @@ class Vistab:
         if isinstance(dtype, str) and len(dtype) > 1 and dtype[1:].isdigit():
             n = int(dtype[1:])
             dtype = dtype[0]
+
+        # None in a NUMERIC column renders as an empty cell, not the literal string "None"
+        # (B3). Text columns ('t') and callables keep full control over None.
+        if raw_val is None and isinstance(dtype, str) and dtype in ('a', 'i', 'I', 'f', 'F', 'e', 'E'):
+            return ""
 
         try:
             if callable(dtype):
@@ -3771,7 +3788,11 @@ def main():
         try:
             with open(themes_file, "r", encoding="utf8") as f:
                 Vistab.THEMES.update(json.load(f))
-        except Exception: pass
+        except Exception as theme_err:
+            # Do not silently swallow a broken config: tell the user their custom themes did not
+            # load and why, then continue with the built-in themes. (B2)
+            sys.stderr.write(f"[\033[1;33mWARN\033[0m] Could not load custom themes from "
+                             f"'{themes_file}': {theme_err}. Continuing with built-in themes.\n")
 
     # Pre-parse dispatch for subject/verb/object command grammar
     if len(sys.argv) > 1:

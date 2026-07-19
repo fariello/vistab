@@ -946,6 +946,26 @@ class TestColumnDtypes(unittest.TestCase):
         # grouped scientific renders without error and uses the requested precision
         self.assertEqual(self._cell("E2", 123456.789), "1.23e+05")
 
+    def test_int_rounding_is_half_up_symmetric(self):
+        """Integer codes round half AWAY FROM ZERO (not banker's/half-to-even). B1."""
+        for v, expect in [(0.5, "1"), (1.5, "2"), (2.5, "3"), (3.5, "4"),
+                          (-0.5, "-1"), (-1.5, "-2"), (-2.5, "-3"),
+                          (2.4, "2"), (2.6, "3")]:
+            self.assertEqual(self._cell("i", v), expect, f"i({v})")
+        # grouped int rounds the same way
+        self.assertEqual(self._cell("I", 2.5), "3")
+        self.assertEqual(self._cell("I", -2.5), "-3")
+
+    def test_none_renders_empty_in_numeric_columns(self):
+        """None in any numeric-code column renders as an empty cell, not 'None'. B3."""
+        for dt in ("a", "i", "I", "f", "F", "e", "E"):
+            self.assertEqual(self._cell(dt, None), "", f"None under {dt!r}")
+
+    def test_none_in_text_column_unchanged(self):
+        """A text column still renders None / the literal string 'None' as before. B3."""
+        self.assertEqual(self._cell("t", None), "None")
+        self.assertEqual(self._cell("t", "None"), "None")
+
     def test_bare_F_uses_global_precision(self):
         """Bare 'F' (no suffix) uses the global precision default, like bare 'f'.
         For a small value needing no grouping, 'F' and 'f' render identically."""

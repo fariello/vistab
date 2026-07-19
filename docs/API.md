@@ -121,8 +121,8 @@ Sets the per-column data type / formatting. Accepts a string (one code per colum
 *   **Codes**:
     * `'a'` = **auto**: pick the most appropriate type per column (the default). Cascades scientific -> float -> integer for uniform numeric columns.
     * `'t'` = **text**: no numeric coercion.
-    * `'i'` = **int**: `123456`.
-    * `'I'` = **int with thousands separators**: `123,456` (integer only; decimals are rounded away).
+    * `'i'` = **int**: `123456` (fractional values round half away from zero: `2.5` -> `3`, `-2.5` -> `-3`).
+    * `'I'` = **int with thousands separators**: `123,456` (integer only; decimals are rounded away, half away from zero: `2.5` -> `3`, `-2.5` -> `-3`).
     * `'f'` = **float**: fixed-point decimal, e.g. `123456.79`.
     * `'F'` = **float with thousands separators**: e.g. `123,456.79`.
     * `'e'` = **scientific/exponential**: e.g. `1.23e+05`.

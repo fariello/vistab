@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Integer columns now round half away from zero** (`2.5` -> `3`, `-2.5` -> `-3`) instead of
+  Python's default banker's rounding (round-half-to-even, which gave `2.5` -> `2`). Affects the
+  `i` and `I` data-type codes. This changes the rendered value only for exact `.5` inputs.
+- **`None` in a numeric column now renders as an empty cell** instead of the literal string
+  `"None"`. Affects the `a`/`i`/`I`/`f`/`F`/`e`/`E` codes; a text (`t`) column is unchanged.
+- **A malformed `themes.json` no longer fails silently.** vistab now prints a warning (with the
+  path and reason) to stderr and continues with the built-in themes, instead of swallowing the
+  error.
 - **Empty input no longer exits silently.** Piping empty data (or passing an empty file) now
   prints a short "no tabular data" guidance message to stderr and exits with code `1`, matching
   the documented exit semantics, instead of producing no output and exiting `0`.

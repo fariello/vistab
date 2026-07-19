@@ -459,6 +459,26 @@ class TestNonUTF8Environment(unittest.TestCase):
         self.assertIn("\u2502", r.stdout)                # a box-drawing vertical bar rendered
 
 
+class TestBrokenThemesConfig(unittest.TestCase):
+    """A malformed themes.json warns on stderr and the CLI still renders, rather than
+    silently swallowing the config error. Assess bugs B2."""
+
+    def test_malformed_themes_json_warns_and_continues(self):
+        import subprocess, os, tempfile, json
+        home = tempfile.mkdtemp()
+        cfgdir = os.path.join(home, ".config", "vistab")
+        os.makedirs(cfgdir)
+        with open(os.path.join(cfgdir, "themes.json"), "w") as f:
+            f.write("{ not valid json ")
+        e = dict(os.environ); e.pop("NO_COLOR", None); e["HOME"] = home; e["USERPROFILE"] = home
+        cli = os.path.join(os.path.dirname(__file__), "..", "src", "vistab.py")
+        r = subprocess.run([sys.executable, cli], capture_output=True, text=True,
+                           encoding="utf-8", input="A,B\n1,2\n", env=e)
+        self.assertEqual(r.returncode, 0)               # still renders
+        self.assertIn("Could not load custom themes", r.stderr)
+        self.assertIn("2", r.stdout)                    # the table rendered
+
+
 class TestEmptyInputExit(unittest.TestCase):
     """No-data input must not exit silently: it emits a guidance message and exits non-zero,
     matching FUNCTIONAL_SPEC's exit semantics (empty pipe -> exit 1). Assess self-documentation S1."""
