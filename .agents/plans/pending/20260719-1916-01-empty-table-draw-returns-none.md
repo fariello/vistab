@@ -4,11 +4,12 @@
 - Concern: bugs / correctness (API contract)
 - Scope: `Vistab.draw()` empty-table return value in `src/vistab.py`, plus the doc/annotation
   that describes its contract, at v1.2.1. Narrow: one return path and its documentation.
-- Status: to-review
+- Status: reviewed
 - Author: its_direct/pt3-claude-opus-4.8-1m-us
 
 ## Workflow history
 - 2026-07-19 created (its_direct/pt3-claude-opus-4.8-1m-us): discovered while probing degenerate
+- 2026-07-19 /plan-review (its_direct/pt3-claude-opus-4.8-1m-us): APPROVE WITH REVISIONS APPLIED; PR-E1..PR-E3. Verified every evidence claim against code (draw() bare return :2216-2217, annotation :2206, docstring :2211, API.md:234 '-> str', CLI guard :4466-4467, demo concat :3596, no Vistab dunder depends on draw()); reproduced None + stream()==[]. Fixes: PR-E1 resolved the dangling 'remove Optional import if unused' to a definitive keep (Optional used in ~dozens of signatures); PR-E2 named the anti-regression invariant (only the empty branch changes; 155 tests + zero fixture diff); PR-E3 added the downstream-safety check (demo concat now safe, CLI 'if drawn:' still prints nothing) and a test that a present-but-empty structure STILL draws a box. Open question resolved with human: return ''; also resolved the review question 'how to draw an empty box' (present-but-empty structure, already works) and required it be documented + pinned. Status -> reviewed.
   table shapes for the tests IPD (20260719-1530-01, finding T5). `Vistab().draw()` on a table
   with no header and no rows returns `None`, not a string. Filed as a bug-fix IPD to run BEFORE
   the tests IPD so T5 can pin the corrected behavior instead of a known-suspect `None`.
@@ -54,13 +55,22 @@ Severity = impact if left alone; Remediation Risk = Fix-Bar gate.
 
 No Blocker/High. No data loss. Single, well-understood defect.
 
+Plan-review verification (2026-07-19): every evidence claim above was checked against the code:
+`draw()` bare return at src/vistab.py:2216-2217, annotation `-> Optional[str]` at :2206, docstring
+at :2211; `docs/API.md:234` says `draw() -> str`; the CLI guard `drawn = table.draw(); if drawn:
+print(drawn)` at src/vistab.py:4466-4467; the demo concat `f"{...draw()}..."` at :3596; `draw()`
+returns `None` and `stream()` on empty yields `[]` (reproduced). No `__str__`/`__repr__` is defined
+on `Vistab` (the two `__str__` at :331 and :652 belong to VistabCell and an exception class and do
+not call `draw()`), so no dunder depends on the `None` return; `str(table)` uses default repr and is
+unaffected.
+
 ## Proposed changes (ordered, validatable)
 
 | Step | Source finding IDs | Change | Files | Remediation Risk | Validation |
 |------|--------------------|--------|-------|------------------|------------|
-| 1 | E1 | In `draw()`, change the empty-table early return from a bare `return` (None) to `return ""`. Update the annotation `def draw(self) -> Optional[str]:` to `-> str` and the docstring line "Returns None if there is no data to draw." to state it returns an empty string for an empty table. Remove the now-unnecessary `Optional` import ONLY if it is unused elsewhere (verify first; do not touch unrelated signatures). | src/vistab.py (`draw()` early return + signature/docstring) | Low | New API test: `Vistab().draw() == ""` (a `str`); `print(Vistab().draw())` prints a blank line, not `None`; existing suite stays green. |
+| 1 | E1 | In `draw()`, change the empty-table early return from a bare `return` (None) to `return ""`. Update the annotation `def draw(self) -> Optional[str]:` (src/vistab.py:2206) to `-> str` and the docstring line "Returns None if there is no data to draw." (src/vistab.py:2211) to state it returns an empty string for an empty table. Do NOT remove the `from typing import ... Optional ...` import (src/vistab.py:97): plan-review verified `Optional` is used in ~dozens of other signatures (constructors at :293, :882, etc.), so it stays. Touch ONLY the `draw()` early-return + its signature/docstring. | src/vistab.py (`draw()` early return :2216-2217 + signature :2206 + docstring :2211) | Low | New API test: `Vistab().draw() == ""` (a `str`); `print(Vistab().draw())` prints a blank line, not `None`; existing suite stays green. |
 | 2 | E1 | Simplify the CLI guard now that `draw()` never returns None: `drawn = table.draw(); if drawn: print(drawn)` still works correctly (`""` is falsy, so an empty table prints nothing) - keep it, but add a one-line comment that `""` is the empty-table sentinel, OR leave untouched. Do NOT change CLI empty-input behavior (it already exits 1 with guidance via a separate path; this branch is for a constructed-empty table). | src/vistab.py (CLI print site) | Low | CLI behavior unchanged: piping empty input still exits 1 with guidance (existing `TestEmptyInputExit` stays green); no new output for an empty constructed table. |
-| 3 | E1 | Add the corrected characterization test for the empty table (this is the case the tests IPD T5 deferred): `Vistab().draw()` returns `""` (type `str`). Place it with the other degenerate-shape tests (coordinate with the tests IPD so it is not duplicated). | tests/test_vistab.py | Low | Test passes; asserts return type is `str` and value is `""`. |
+| 3 | E1 | Add the corrected characterization tests: (a) `Vistab().draw()` returns `""` (type `str`) - the case the tests IPD T5 deferred; and (b) an anti-regression assertion that a present-but-empty structure STILL draws a box (`Vistab(style="light").set_header([""]).draw()` and `Vistab(header=False).add_row([""]).draw()` each produce the 3-line `┌──┐/│  │/└──┘`), so the truly-empty-vs-empty-box distinction is pinned. Place with the other degenerate-shape tests (coordinate with the tests IPD so it is not duplicated). | tests/test_vistab.py | Low | Tests pass; (a) return type `str` and value `""`; (b) empty-box render unchanged (byte-exact). |
 
 ## Deferred / out of scope (with reason)
 
@@ -80,6 +90,15 @@ No Blocker/High. No data loss. Single, well-understood defect.
 ## Required tests / validation
 
 - New test: `Vistab().draw() == ""` and `isinstance(Vistab().draw(), str)`.
+- Anti-regression invariant (rubric D): ONLY the empty-table return path changes. Every NON-empty
+  table's rendered output must be byte-identical. Mapped to the existing suite: all 155 tests
+  (unittest + pytest) stay green with ZERO fixture changes; a fixture diff would mean this touched
+  a non-empty path and is a regression to investigate, not to accept.
+- Downstream-safety check (rubric E): the demo concat `f"{...draw()}..."` (src/vistab.py:3596) is
+  now provably safe for empty tables (it would previously have raised on a `None`); and the CLI
+  guard `if drawn:` (src/vistab.py:4466-4467) still prints NOTHING for a constructed-empty table
+  (`""` is falsy). No CLI empty-INPUT behavior changes (that path exits 1 via a separate branch;
+  `TestEmptyInputExit` must stay green).
 - `python -m unittest discover tests/` and `pytest -q` green; paste the ACTUAL runner output.
 - No fixture changes (no rendered non-empty output changes; only the empty-table return value).
 - No em/en dashes.
@@ -87,7 +106,10 @@ No Blocker/High. No data loss. Single, well-understood defect.
 ## Spec / documentation sync
 
 - Update `docs/API.md` `draw() -> str` entry to note empty-table returns `""` (it already says
-  `-> str`, so the code is being brought INTO line with the doc; add the empty-table clause).
+  `-> str`, so the code is being brought INTO line with the doc; add the empty-table clause), AND
+  add a one-line "to draw an empty box, give the table a present-but-empty structure, e.g.
+  `Vistab().set_header([""])` or `add_row([""])`" note so the truly-empty-vs-empty-box distinction
+  is documented (from the review question).
 - Update the `draw()` docstring in `src/vistab.py`.
 - CHANGELOG `[Unreleased]` Fixed entry: "`draw()` now returns an empty string instead of `None`
   for an empty table, matching its documented `-> str` contract."
@@ -101,10 +123,23 @@ No Blocker/High. No data loss. Single, well-understood defect.
 
 ## Open questions
 
-- Empty-table return: `""` (recommended, matches `stream()` -> `[]` and the `-> str` doc) vs a
-  rendered "(empty)" placeholder (rejected as scope creep) vs keeping `None` but fixing the doc to
-  `Optional[str]` (rejected: `None` is the footgun the CLI already guards against, and README
-  teaches `print(t.draw())`). Recommend `""`. Confirm at review.
+- Empty-table return: RESOLVED (human, 2026-07-19 plan-review) -> **return `""`**. A table with NO
+  header and NO rows has no columns and no rows, so there is genuinely nothing to draw; `""` is the
+  correct "nothing in, nothing out" result. It matches `stream()` -> `[]` and the documented
+  `-> str` contract, and makes `print(t.draw())` print a blank line rather than the literal `None`.
+  Rejected alternatives: a rendered placeholder (scope creep - see the "how to draw an empty box"
+  note below, which already works via a present-but-empty structure), and keeping `None` with a doc
+  downgrade to `Optional[str]` (`None` is the footgun the CLI already guards against).
+
+- "What if someone WANTS an empty box?" (raised at review) - RESOLVED, no new API needed. An empty
+  box is a table with a PRESENT but empty structure, not a truly empty table, and it already renders
+  correctly today (verified at review):
+  - `Vistab(style="light").set_header([""]).draw()` -> `┌──┐` / `│  │` / `└──┘`
+  - `Vistab(header=False).add_row([""]).draw()` -> the same box.
+  So the contract is a clean, intuitive split: an empty structure (`Vistab().draw()`) yields `""`;
+  a present one-empty-cell structure yields a drawn box. This IPD must PRESERVE the existing empty-box
+  rendering (it only touches the no-header-and-no-rows branch), and the doc/CHANGELOG (Step / Spec
+  sync below) should state how to draw an empty box so users are not left guessing.
 
 ## Approval and execution gate
 
