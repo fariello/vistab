@@ -1,0 +1,3 @@
+id,severity,remediation_risk,axis,persona,area,finding,evidence,proposed_action,disposition
+S1,Low,Low,,novice,first-run/errors-that-teach,"Piped-but-empty stdin exits 0 silently; the no-data guidance only fires when stdin is a TTY, so an empty pipe gives no hint","src/vistab.py:4100-4112","Emit the no-data hint + non-zero exit when the resolved input yields zero rows",propose-now
+S2,Low,Low,,novice,examples-at-point-of-use,"Vistab class docstring opens with generic boilerplate before its Example block","src/vistab.py Vistab class docstring","Lead with purpose + runnable snippet (mirror module docstring)",propose-now
