@@ -4,11 +4,12 @@
 - Concern: documentation
 - Scope: whole project (README, docs/API.md, docs/CLI.md, FUNCTIONAL_SPEC.md, CHANGELOG.md,
   CONTRIBUTING.md, RELEASING.md, examples/)
-- Status: to-review
+- Status: reviewed
 - Author: its_direct/pt3-claude-opus-4.8-1m-us
 
 ## Workflow history
 - 2026-07-19 created (its_direct/pt3-claude-opus-4.8-1m-us): /assess documentation; proposed 6 changes.
+- 2026-07-19 /plan-review (its_direct/pt3-claude-opus-4.8-1m-us): APPROVE WITH REVISIONS APPLIED; PR-D1..PR-D3. All D1/D2/D4/D5 claims verified against repo evidence; added a cross-plan guard so the FUNCTIONAL_SPEC edit does not corrupt the correct exit-semantics line, a concrete CHANGELOG-Fixed requirement for D1, and an execution contract to the gate. Status -> reviewed.
 
 ## Goal
 
@@ -84,11 +85,24 @@ None deferred: every finding is Low Remediation Risk (docs-only edits). No findi
 This plan IS documentation sync. It changes no code and no behavior, so no code/test changes
 are required. It brings FUNCTIONAL_SPEC and the reference docs in line with shipped 1.2.1.
 
+CHANGELOG: add a brief `[Unreleased]`/next-version **Fixed** note that the docs corrected a
+documented-API inaccuracy (the `__init__` `header` default/type, D1), since CONTRIBUTING requires
+user-facing changes in the CHANGELOG and D1 corrects previously-shipped reference documentation.
+The pure additions (D2/D4/D5 new sections, D3 spec fill-in) do not each need a CHANGELOG line.
+
 ## Open questions
 
 - D3 (FUNCTIONAL_SPEC): confirm the spec is meant to enumerate the full public API surface
   (it currently reads that way). If the spec is intended as higher-level only, step 5 narrows
   to just noting the capability areas rather than the method list.
+
+- Cross-plan (added by plan-review 2026-07-19): while editing FUNCTIONAL_SPEC (D3, step 5) do
+  NOT touch the Exit Semantics line (`FUNCTIONAL_SPEC.md:46`), which states an empty pipe exits
+  `1`. That statement is CORRECT and intended; the current code wrongly exits `0`, and the
+  companion self-documentation IPD
+  (`.agents/plans/pending/20260719-1455-01-assess-self-documentation.md`, finding S1) fixes the
+  code to conform. Do not "reconcile" the spec down to the buggy behavior. This D3 edit is
+  scoped to the *Public API* section (section 4) only.
 
 ## Approval and execution gate
 
@@ -102,3 +116,13 @@ NOT auto-executed.
    corrects a previously-shipped inaccuracy.
 3. Then set the terminal `Status:` and `git mv` this IPD from `.agents/plans/pending/` to
    `.agents/plans/executed/`.
+
+Execution contract (added by plan-review 2026-07-19):
+- Scope fence: this plan edits ONLY the named docs (README, docs/API.md, docs/CLI.md,
+  FUNCTIONAL_SPEC.md section 4, and a CHANGELOG note). No source/test/behavior changes. Do NOT
+  touch FUNCTIONAL_SPEC.md:46 Exit Semantics (see the cross-plan open question).
+- Honesty: when reporting that validation ran (examples execute, coverage grep, link check),
+  paste the ACTUAL command output; never claim a check you did not run.
+- Commit path-scoped (`git commit -- <paths>`), never `git add -A`, never push.
+- Open questions resolved before execution: the D3 spec-scope question and the cross-plan
+  exit-semantics note.
