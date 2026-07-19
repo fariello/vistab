@@ -459,5 +459,39 @@ class TestNonUTF8Environment(unittest.TestCase):
         self.assertIn("\u2502", r.stdout)                # a box-drawing vertical bar rendered
 
 
+class TestEmptyInputExit(unittest.TestCase):
+    """No-data input must not exit silently: it emits a guidance message and exits non-zero,
+    matching FUNCTIONAL_SPEC's exit semantics (empty pipe -> exit 1). Assess self-documentation S1."""
+
+    def _run(self, argv, input_text=None):
+        import subprocess, os
+        e = dict(os.environ); e.pop("NO_COLOR", None)
+        cli = os.path.join(os.path.dirname(__file__), "..", "src", "vistab.py")
+        return subprocess.run([sys.executable, cli] + argv, capture_output=True,
+                              text=True, encoding="utf-8", input=input_text, env=e)
+
+    def test_empty_pipe_exits_1_with_guidance(self):
+        r = self._run([], input_text="")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("No tabular data", r.stderr)
+        self.assertIn("--help", r.stderr)
+
+    def test_nonempty_pipe_still_renders_and_exits_0(self):
+        r = self._run([], input_text="A,B\n1,2\n")
+        self.assertEqual(r.returncode, 0)
+        self.assertIn("1", r.stdout)
+
+    def test_empty_file_exits_1_with_guidance(self):
+        import tempfile, os
+        fd, path = tempfile.mkstemp(suffix=".csv"); os.close(fd)
+        open(path, "w").close()   # truly empty
+        try:
+            r = self._run([path])
+            self.assertEqual(r.returncode, 1)
+            self.assertIn("No tabular data", r.stderr)
+        finally:
+            os.remove(path)
+
+
 if __name__ == '__main__':
     unittest.main()

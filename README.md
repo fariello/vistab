@@ -22,6 +22,7 @@ print(t.draw())
 - **Coordinate Styling API**: Style rows, columns, headers, or specific cells via clean method chaining.
 - **Hierarchical Configuration**: Load table paddings and themes from localized configurations (`vistab.toml`).
 - **Data-Aware Engine**: Auto-wraps text, infers data types, and parses CSV formats natively.
+- **RTL-safe rendering**: Arabic/Hebrew and other right-to-left text is isolated so it does not flip the table grid, while still reading correctly inside its cell. On by default; toggle with `set_bidi()` (or `--no-bidi`).
 
 
 ## Showcase
@@ -163,6 +164,22 @@ A callable receives the raw cell value and returns the formatted string, so any 
 [format specification](https://docs.python.org/3/library/string.html#format-specification-mini-language)
 (grouping, precision, sign, fill/width) is available. Callables are a library-API feature; the
 CLI `--dtype` flag supports only the single-letter codes above.
+
+#### Right-to-left text (Arabic, Hebrew)
+
+When a cell contains right-to-left script, vistab wraps each cell's content in Unicode isolates
+so the terminal does not reorder the whole line and flip the columns; the RTL text still reads
+correctly right-to-left inside its cell. This is on by default and costs nothing for tables with
+no RTL content. Disable it (for terminals that mishandle isolates) with the library API or the
+CLI:
+
+```python
+table.set_bidi(False)   # library: turn off RTL isolation
+```
+
+```bash
+vistab data.csv --no-bidi
+```
 
 ### 4. Shorthand Styling & Native Formatting
 

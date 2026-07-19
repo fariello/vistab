@@ -25,8 +25,10 @@ The architecture is separated into the execution loop logic and the physical pro
 
 **Major Public APIs:**
 *   `Vistab(rows, header)`: The primary constructor routing standard lists into the mapping boundaries.
-*   `set_cols_dtype(arrays)`: Handles precise formatting modifications iteratively.
+*   `set_cols_dtype(arrays)`: Handles precise per-column formatting. Codes: `a` (auto), `t` (text), `i` (int), `I` (int with thousands separators), `f` (float), `F` (float with thousands separators), `e` (scientific), `E` (scientific with thousands separators), an optional precision suffix (e.g. `f2`, `F2`), or a per-column callable.
 *   `set_theme(theme)`: Resolves active dictionary style bindings across the target variables.
+*   `set_color(enabled=True)`: Enables/disables vistab's own ANSI styling output (also driven by `--no-color` / `NO_COLOR`).
+*   `set_bidi(enabled=True)`: Enables/disables Unicode LTR isolation of right-to-left cells so RTL content does not flip the table grid (also driven by `--no-bidi`). On by default.
 *   `draw()`: The output loop returning the finalized Unicode strings.
 *   `stream()`: Generates lines individually, resolving unbounded data flows.
 

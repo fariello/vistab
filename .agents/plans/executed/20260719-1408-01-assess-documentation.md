@@ -4,12 +4,15 @@
 - Concern: documentation
 - Scope: whole project (README, docs/API.md, docs/CLI.md, FUNCTIONAL_SPEC.md, CHANGELOG.md,
   CONTRIBUTING.md, RELEASING.md, examples/)
-- Status: reviewed
+- Status: executed
+- Approval: approved by maintainer 2026-07-19
 - Author: its_direct/pt3-claude-opus-4.8-1m-us
 
 ## Workflow history
 - 2026-07-19 created (its_direct/pt3-claude-opus-4.8-1m-us): /assess documentation; proposed 6 changes.
 - 2026-07-19 /plan-review (its_direct/pt3-claude-opus-4.8-1m-us): APPROVE WITH REVISIONS APPLIED; PR-D1..PR-D3. All D1/D2/D4/D5 claims verified against repo evidence; added a cross-plan guard so the FUNCTIONAL_SPEC edit does not corrupt the correct exit-semantics line, a concrete CHANGELOG-Fixed requirement for D1, and an execution contract to the gate. Status -> reviewed.
+- 2026-07-19 approved (maintainer): human GO to execute; Status -> approved.
+- 2026-07-19 executed (its_direct/pt3-claude-opus-4.8-1m-us): D1/D4/D2/D5/D3 applied to API.md/README/CLI.md/FUNCTIONAL_SPEC (sec 4 only; exit-semantics line untouched) + CHANGELOG [Unreleased]; suite 151 green, twine PASS. Status -> executed.
 
 ## Goal
 

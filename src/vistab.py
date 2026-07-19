@@ -680,11 +680,19 @@ class FallbackToText(Exception):
 
 
 class Vistab:
-    """
-    A class that provides functionality for creating and manipulating ASCII tables.
+    """Build aligned, color-aware text tables (ASCII/Unicode) for the terminal.
 
-    This class allows users to create, style, and manipulate text-based tables in ASCII format.
-    It supports various styles, borders, headers, and decorations to enhance the table presentation.
+    Quick start:
+
+        from vistab import Vistab
+        t = Vistab(header=["Name", "Age"])
+        t.add_row(["Sarah", 27])
+        t.set_cols_align(["l", "r"])
+        print(t.draw())
+
+    Add rows/headers, choose a style or theme, set per-column alignment/data types, and call
+    `draw()` to get the rendered string. Supports styles, borders, headers, decorations, column
+    spanning, CJK/RTL-correct widths, and color-aware word wrapping.
 
     Attributes:
     -----------
@@ -4165,8 +4173,13 @@ def main():
                 rows = list(reader)
 
             if not rows:
-                print(f"[\033[33mWARN\033[0m] The parsed stream '{source_name}' is empty.")
-                return
+                # Empty (non-streaming) input, e.g. an empty file. Report on stderr and exit
+                # non-zero rather than a silent WARN + success, consistent with the empty-pipe
+                # path and the documented exit semantics. (self-documentation IPD S1)
+                sys.stderr.write(f"[\033[1;31mERROR\033[0m] No tabular data found in '{source_name}'. "
+                                 "The input is empty.\n")
+                sys.stderr.write("Tip: run 'vistab --help' for usage, or 'from vistab import Vistab' to use the library.\n")
+                sys.exit(1)
 
         # Instantiate physical mapping structure
         table = Vistab(
@@ -4376,8 +4389,20 @@ def main():
                 sys.exit(0)
 
             if is_streaming:
+                emitted = False
                 for line in table.stream(reader, sample_size=args.stream_probe):
                     sys.stdout.write(line)
+                    emitted = True
+                if not emitted:
+                    # A stream (e.g. an empty pipe, or an upstream command that produced
+                    # nothing) yielded zero rows. Do not exit silently: emit the same no-data
+                    # guidance the TTY/no-input path uses and exit 1, matching the documented
+                    # exit semantics in FUNCTIONAL_SPEC ("an empty data pipe ... exits with
+                    # code 1"). (self-documentation IPD S1)
+                    sys.stderr.write("[\033[1;31mERROR\033[0m] No tabular data found on the input stream. "
+                                     "Please provide a file path argument or pipe non-empty data into STDIN.\n")
+                    sys.stderr.write("Tip: run 'vistab --help' for usage, or 'from vistab import Vistab' to use the library.\n")
+                    sys.exit(1)
             else:
                 drawn = table.draw()
                 if drawn: print(drawn)

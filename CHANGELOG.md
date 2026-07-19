@@ -7,6 +7,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), 
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **Empty input no longer exits silently.** Piping empty data (or passing an empty file) now
+  prints a short "no tabular data" guidance message to stderr and exits with code `1`, matching
+  the documented exit semantics, instead of producing no output and exiting `0`.
+- **Corrected the documented `Vistab(...)` constructor signature** in the API reference: the
+  `header` parameter defaults to `None` and accepts `Union[bool, Iterable]`, not `bool = True`.
+- Documented previously-undocumented public methods (`set_header_align`, `set_abnormal_row_style`)
+  and the `vistab show showcase` CLI subject; surfaced right-to-left (`set_bidi`) support in the
+  README; brought `FUNCTIONAL_SPEC` in line with the 1.2.x public API.
+
 ## [1.2.1] - 2026-07-17
 
 ### Added
@@ -70,7 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **License changed from BSD-3-Clause to Apache-2.0.** Now licensed under the Apache License 2.0
   (see `LICENSE` and the new `NOTICE`). Apache-2.0 requires redistributions and derivative works to
   retain the `NOTICE` file and display its attribution reasonably prominently ("Based on the original
-  vistab by Gabriele G. R. Fariello — https://github.com/fariello/vistab"), and adds an explicit
+  vistab by Gabriele G. R. Fariello, https://github.com/fariello/vistab"), and adds an explicit
   patent grant. Copyright holder normalized to the full legal name **Gabriele G. R. Fariello**.
 - **Theme API Standardization**: Promoted `set_theme()` as the official API; `apply_theme()` is deprecated (emits `DeprecationWarning`).
 - **Internal Cell Representation**: Row/header entries are now wrapped in `VistabCell` objects internally. While public API usage is unaffected, code that accesses the private `_rows` or `_header` structures directly must now use `str(cell)` to extract string values.

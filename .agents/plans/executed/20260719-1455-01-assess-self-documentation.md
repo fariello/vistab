@@ -4,12 +4,15 @@
 - Concern: self-documentation (learn-as-you-go / in-product clarity)
 - Scope: whole product surface (CLI help/usage/errors/first-run, library docstrings and
   error messages)
-- Status: reviewed
+- Status: executed
+- Approval: approved by maintainer 2026-07-19
 - Author: its_direct/pt3-claude-opus-4.8-1m-us
 
 ## Workflow history
 - 2026-07-19 created (its_direct/pt3-claude-opus-4.8-1m-us): /assess self-documentation; proposed 2 changes.
 - 2026-07-19 /plan-review (its_direct/pt3-claude-opus-4.8-1m-us): APPROVE WITH REVISIONS APPLIED; PR-S1..PR-S2. Verified S1/S2 claims; discovered FUNCTIONAL_SPEC.md:46 already mandates exit 1 on an empty pipe, so S1 is a SPEC-conformance fix (severity Low -> Medium, compat concern retracted, exit code resolved to 1); added the exit-code test, cross-plan sequencing note, and an execution contract. Status -> reviewed.
+- 2026-07-19 approved (maintainer): human GO to execute; Status -> approved.
+- 2026-07-19 executed (its_direct/pt3-claude-opus-4.8-1m-us): S1 (empty pipe/file -> exit 1 + guidance, spec-conformant) + S2 (class docstring purpose+example first) applied; 3 CLI tests added + zero-data fixture regenerated; suite 151 green. Status -> executed.
 
 ## Goal
 

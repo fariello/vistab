@@ -19,7 +19,7 @@ Negative indexing is universally supported for targeting structural coordinates.
 
 ## 1. Instantiation
 
-### `__init__(rows: list = None, header: bool = True, max_width: int = 0, alignment: str = None, style: str = None, padding: int = None, title: str = None, max_rows: int = 0, max_cols: int = 0, theme: Union[str, dict] = None)`
+### `__init__(rows: Iterable[Iterable] = None, header: Union[bool, Iterable] = None, max_width: int = 0, alignment: str = None, style: str = None, padding: int = None, title: str = None, max_rows: int = 0, max_cols: int = 0, theme: Union[str, dict] = None)`
 Initializes the Vistab framework.
 - **`rows`** `(List[List[Any]])`: 2D array of initial grid cell contents. 
 - **`header`** `(Union[bool, List[str]])`: Set to `False` to treat index `0` as standard data. Pass a textual list to force custom headers.
@@ -110,6 +110,9 @@ Evaluates explicit mappings resolving horizontal cell justification (`'l'=left`,
 
 ### `set_cols_valign(array: Union[str, List[str]])`
 Evaluates positional geometry mapping vertical alignments (`'t'=top`, `'m'=middle`, `'b'=bottom`). Can unpack single-string lists safely (e.g., `["mmbmt"]`).
+
+### `set_header_align(array: Union[str, List[str]])`
+Sets the horizontal alignment for the header row independently of the body columns (same codes as `set_cols_align`: `'l'`, `'c'`, `'r'`). Use this when the header should align differently from its data (e.g. centered headers over right-aligned numbers).
 
 ### `set_cols_dtype(array: Union[str, List[str]])`
 Sets the per-column data type / formatting. Accepts a string (one code per column, e.g.
@@ -204,6 +207,7 @@ table.set_theme({
 - `set_cell_style(row_idx: int, col_idx: int, fg=None, bg=None, **kwargs)`
 
 #### Algorithmic Zebra Matrix Striping
+- `set_abnormal_row_style(fg=None, bg=None, **kwargs)` - style applied to rows flagged abnormal by the jagged-row handlers (a short/long row that was padded or truncated), so malformed input is visually distinguishable. The CLI exposes this via `--mark-abnormal`.
 - `set_alternating_row_style(fg1=None, bg1=None, fg2=None, bg2=None, **kwargs)`
 - `set_alternating_col_style(fg1=None, bg1=None, fg2=None, bg2=None, **kwargs)`
 

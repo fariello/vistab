@@ -79,6 +79,7 @@ Visualize current capabilities and formatting styles. Flags remain supported as 
 - **`vistab show capabilities`** (alias: `show caps`, `show wrapping`, `--demo capabilities`): ANSI + CJK-safe word-wrapping and datatype-parsing conformance.
 - **`vistab show anatomy`** (alias: `--demo anatomy`): Labeled diagram of a table's parts (borders, header, cells) and coordinate styling.
 - **`vistab show span`** (alias: `show spans`, `demo span`, `--demo span`): Column-spanning demonstration with example code beneath each table.
+- **`vistab show showcase`** (alias: `demo showcase`, `--demo showcase`): The flagship demo, one curated table combining column spanning, a theme, CJK/Thai/Arabic/Hebrew content, ANSI color, and color-aware wrapping, with the Python that builds it. Honors `--no-color` and `--no-bidi`.
 
 Colors can be disabled globally with `--no-color` (or by setting the `NO_COLOR` environment variable); vistab then emits no styling escapes of its own, and a color-focused demo prints a `WARNING: colors turned off ...` notice to stderr so the monochrome output is not confusing.
 
