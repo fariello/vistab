@@ -1,0 +1,5 @@
+id,severity,remediation_risk,axis,persona,area,finding,evidence,proposed_action,disposition
+T1,Medium,Low,,testing,regression-protection,"Integer .5-boundary rounding unpinned (only 50.55->51 tested); banker's rounding could change silently","tests/test_vistab.py:75; src/vistab.py:2506,2514","Add characterization test for i/I of {0.5,1.5,2.5,3.5,-0.5,-1.5}",propose-now
+T2,Medium,Low,,testing,ci-measurement,"No coverage measured/reported; 80% only from ad-hoc run","no coverage in .github/workflows or pyproject","Add non-gating coverage signal (CONTRIBUTING recipe + optional CI print)",propose-now
+T3,Low,Low,,QA,edge-coverage,"_ansi_safe_clip (22 missed) has no direct CJK+ANSI boundary-clip test","coverage report _ansi_safe_clip","Add a direct clip test (CJK 2-wide + ANSI at boundary)",propose-now
+T4,Low,Low,,testing,streaming-branches,"stream+max_cols truncation and some _process_stream EOF branches uncovered (~30 lines)","coverage: _process_stream 30; src/vistab.py:2344-2364","Add stream max_cols-during-stream + empty/EOF tests",propose-now
