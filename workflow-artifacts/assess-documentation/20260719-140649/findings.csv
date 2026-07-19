@@ -1,0 +1,7 @@
+id,severity,remediation_risk,axis,persona,area,finding,evidence,proposed_action,disposition
+D1,Medium,Low,,engineer,accuracy,"__init__ doc signature says header: bool = True; real default is None and type is Union[bool, Iterable]; contradicts API.md line 25","docs/API.md:22 vs src/vistab.py __init__; API.md:25","Correct the signature to match code",propose-now
+D2,Medium,Low,,novice,completeness,"README never mentions RTL/set_bidi or grouped-number F/E dtype codes; only in API.md/CLI.md","README.md (0 hits set_bidi / backtick-F)","Add a short README subsection surfacing bidi + F/E codes",propose-now
+D3,Medium,Low,,engineer,completeness,"FUNCTIONAL_SPEC section 4 Public API predates 1.2.x: no set_bidi/set_color/F-E codes","FUNCTIONAL_SPEC.md sec 4","Update spec API section to include 1.2.x additions",propose-now
+D4,Low,Low,,engineer,completeness,"set_header_align and set_abnormal_row_style undocumented in API.md","docs/API.md grep both absent; src/vistab.py defs","Add API.md entries for both",propose-now
+D5,Low,Low,,novice,completeness,"CLI.md does not document the showcase subject of show/demo","docs/CLI.md 0 hits showcase; README has it","Document showcase subject in CLI.md",propose-now
+D6,Low,Low,,engineer,consistency,"API.md __init__ signature omits Optional/-> None typing (drift alongside D1)","docs/API.md:22","Fold into D1 signature fix",propose-now
