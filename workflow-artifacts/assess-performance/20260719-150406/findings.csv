@@ -1,0 +1,5 @@
+id,severity,remediation_risk,axis,persona,area,finding,evidence,proposed_action,disposition
+P1,Low,Low,,engineer,repeated-work,"_str rebuilds the constant 8-entry format_map dict every call (24000/render, ~6%)","src/vistab.py:2588-2600; cProfile _str 24000 calls","Hoist format_map to a build-once class/module constant",propose-now
+P2,Low,Low,,engineer,repeated-work,"Bidi gate _contains_rtl scans every cell each draw even for ASCII / set_bidi(False)","src/vistab.py:2263-2265,2394-2396","Skip scan when bidi off; single early-exit pass",propose-now
+P3,Low,Low,,engineer,repeated-work,"_get_spanned_boundaries walks rows even with no spans (2x per interior hline)","src/vistab.py:2671-2683,2725-2726","Table-level _has_spans fast path to short-circuit",propose-now
+P4,Medium,Low,,architect,measurement,"No committed benchmark baseline to prove improvement or catch regression","benchmarks/bench_render.py (no assertions/baseline)","Add a deterministic micro-benchmark harness (non-gating)",propose-now
