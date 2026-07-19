@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Faster rendering** via internal micro-optimizations (byte-identical output): the per-cell
+  data-type formatter map is built once instead of per cell, the span-boundary computation is
+  skipped for tables with no column spans, and the RTL bidi scan is skipped when bidi is
+  disabled. Measured ~17-29% faster on 1000-row scenarios. Added a `benchmarks/bench_render.py
+  --summary` harness (informational; also runs non-gating in CI).
+
 ### Fixed
 - **Integer columns now round half away from zero** (`2.5` -> `3`, `-2.5` -> `-3`) instead of
   Python's default banker's rounding (round-half-to-even, which gave `2.5` -> `2`). Affects the

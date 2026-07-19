@@ -5,12 +5,15 @@
 - Scope: whole library render path in `src/vistab.py` (draw / _draw_line / _splitit /
   _compute_cols_width / _str / bidi gate). Assesses SHIPPED 1.2.1 code (supersedes the
   2026-07-09 assess-performance, which reviewed the colspan DESIGN before implementation).
-- Status: reviewed
+- Status: executed
+- Approval: approved by maintainer 2026-07-19
 - Author: its_direct/pt3-claude-opus-4.8-1m-us
 
 ## Workflow history
 - 2026-07-19 created (its_direct/pt3-claude-opus-4.8-1m-us): /assess performance; proposed 4 changes.
 - 2026-07-19 /plan-review (its_direct/pt3-claude-opus-4.8-1m-us): APPROVE WITH REVISIONS APPLIED; PR-P1..PR-P3. Re-verified all findings on CURRENT code (post docs/self-doc/bugs IPDs): profile unchanged, findings valid. Refreshed stale line refs; added B3/B1 interaction guards to steps 2 and 4 (they edit _str and the bidi gate touched by the recent IPDs) and the dual draw+stream bidi-gate note; updated test baseline 146->155; added execution contract. Open questions resolved with human: benchmark = local + non-gating CI print, priority = execute now. Status -> reviewed.
+- 2026-07-19 approved (maintainer): human GO to execute now (P1-P4); Status -> approved.
+- 2026-07-19 executed (its_direct/pt3-claude-opus-4.8-1m-us): P4 benchmark harness (--summary) + non-gating CI job; P1 format_map built once; P3 _has_spans fast path; P2 bidi scan skipped when off (draw + stream). Byte-identical: 155 tests green, no fixture changed. Measured ~17-29% faster (plain 139->105, colspan 79->66, rtl 63->44 us/row). B1/B3/bidi guards verified. CONTRIBUTING + CHANGELOG updated. Status -> executed.
 
 ## Goal
 

@@ -2275,13 +2275,10 @@ class Vistab:
             self._compute_cols_width()
             self._check_align()
 
-            # Bidi gate: isolate cells only when bidi is on AND the table actually
-            # contains RTL content. One pass here keeps non-RTL tables byte-identical
-            # (and zero-cost) while _draw_line stays a tight loop.
-            self._bidi_active = bool(self._bidi) and (
-                any(_contains_rtl(str(c)) for c in self._header)
-                or any(_contains_rtl(str(c)) for row in self._rows for c in row)
-            )
+            # Per-draw render flags: bidi-active (isolate cells only when bidi is on AND the
+            # table has RTL; skip the scan entirely when bidi is off) and has-spans (skip the
+            # span-boundary walk for no-span tables). Byte-identical output.
+            self._compute_render_flags()
 
             out = ""
 
@@ -2405,14 +2402,11 @@ class Vistab:
         self._compute_cols_width()
         self._check_align()
 
-        # Bidi gate (streaming): decide from the sampled rows + header. This is best-effort
-        # for an unbounded stream (RTL that first appears only after the sample window will
-        # not retroactively toggle it), which is acceptable and matches how geometry itself
-        # is sampled here.
-        self._bidi_active = bool(self._bidi) and (
-            any(_contains_rtl(str(c)) for c in self._header)
-            or any(_contains_rtl(str(c)) for row in self._rows for c in row)
-        )
+        # Per-draw render flags (streaming): decided from the sampled rows + header. This is
+        # best-effort for an unbounded stream (RTL that first appears only after the sample
+        # window will not retroactively toggle it), which is acceptable and matches how geometry
+        # itself is sampled here. Same helper as draw() (bidi-active + has-spans).
+        self._compute_render_flags()
 
         # Yield the top structural bounds
         if self._title:
@@ -2596,6 +2590,52 @@ class Vistab:
             fn = cls._fmt_float
         return fn(x, **kw)
 
+    # Constant code -> formatter map, built once on first use (all formatters are classmethods,
+    # so the mapping never varies per instance or per call). See _str (P1: avoid rebuilding an
+    # 8-entry dict on every cell).
+    _FORMAT_MAP = None
+
+    @classmethod
+    def _get_format_map(cls):
+        if cls._FORMAT_MAP is None:
+            cls._FORMAT_MAP = {
+                'a': cls._fmt_auto,
+                'i': cls._fmt_int,
+                'I': cls._fmt_comma_int,
+                'f': cls._fmt_float,
+                'F': cls._fmt_comma_float,
+                'e': cls._fmt_exp,
+                'E': cls._fmt_comma_exp,
+                't': cls._fmt_text,
+            }
+        return cls._FORMAT_MAP
+
+    def _compute_render_flags(self):
+        """Set per-draw flags in a single pass over the cells (called by draw and stream).
+
+        - `_bidi_active` (P2): only scan cells for RTL when bidi is enabled; skip the whole
+          regex scan when `set_bidi(False)`. `any(...)` already short-circuits on the first hit.
+        - `_has_spans` (P3): whether any header/row cell is a real colspan cell, so the
+          span-boundary walk can be skipped for the common no-span table.
+        """
+        rows = self._rows
+        header = self._header or []
+
+        self._has_spans = any(
+            isinstance(c, VistabCell) and getattr(c, "colspan", 1) > 1 and not c.is_placeholder
+            for c in header
+        ) or any(
+            isinstance(c, VistabCell) and getattr(c, "colspan", 1) > 1 and not c.is_placeholder
+            for row in rows for c in row
+        )
+
+        if not self._bidi:
+            self._bidi_active = False
+        else:
+            self._bidi_active = any(_contains_rtl(str(c)) for c in header) or any(
+                _contains_rtl(str(c)) for row in rows for c in row
+            )
+
     def _str(self, i, x):
         """Handle string formatting of cell data.
 
@@ -2605,16 +2645,9 @@ class Vistab:
         """
         raw_val = x.value if isinstance(x, VistabCell) else x
 
-        format_map = {
-            'a': self._fmt_auto,
-            'i': self._fmt_int,
-            'I': self._fmt_comma_int,
-            'f': self._fmt_float,
-            'F': self._fmt_comma_float,
-            'e': self._fmt_exp,
-            'E': self._fmt_comma_exp,
-            't': self._fmt_text,
-        }
+        # The code -> formatter map is constant (all formatters are classmethods), so build it
+        # once and reuse it instead of reconstructing an 8-entry dict on every cell (P1).
+        format_map = self._get_format_map()
 
         n = self._precision
         dtype = self._dtype[i] if hasattr(self, '_dtype') else "a"
@@ -2697,6 +2730,11 @@ class Vistab:
         """Returns the set of column indices that are interior to a colspan block in the row."""
         spanned = set()
         if not row:
+            return spanned
+        # Fast path (P3): if the whole table has no spans, no row can have spanned interior
+        # boundaries. `_has_spans` is computed once per draw; when False, skip the per-row walk
+        # entirely (this method is called twice per interior hline).
+        if getattr(self, "_has_spans", True) is False:
             return spanned
         i = 0
         while i < len(row):

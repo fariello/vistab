@@ -32,6 +32,17 @@ python -m unittest discover tests/   # exactly what CI runs
 When you report that tests pass, paste the actual runner output. Do not claim a pass you did
 not run.
 
+### Performance benchmark
+
+For an informational render-speed check (microseconds per row for fixed scenarios), run:
+
+```bash
+python benchmarks/bench_render.py --summary
+```
+
+It is a developer tool, not a pass/fail gate (absolute timings vary by machine). CI runs it too
+but never fails on it. Use the before/after numbers to judge a performance change.
+
 ### Test across Python versions
 
 Some bugs only appear on the CI matrix (Python 3.9-3.13, ubuntu + windows), not on a single

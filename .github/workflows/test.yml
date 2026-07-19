@@ -30,3 +30,20 @@ jobs:
     - name: Run Vistab Standard Test Suite
       run: |
         python -m unittest discover tests/
+
+  benchmark:
+    # Informational only: prints render us/row for fixed scenarios. NEVER gates the build
+    # (absolute timings vary too much across runners); continue-on-error keeps it non-blocking.
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install .[dev]
+    - name: Render benchmark (informational, non-gating)
+      run: python benchmarks/bench_render.py --summary
