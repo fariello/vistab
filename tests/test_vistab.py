@@ -1003,5 +1003,24 @@ class TestColumnDtypes(unittest.TestCase):
             self.assertIsNotNone(t.draw())
 
 
+class TestEmptyTableDraw(unittest.TestCase):
+    """draw() honors its documented `-> str` contract on a truly empty table, and a
+    present-but-empty structure still draws a one-cell box (the []-vs-[''] distinction)."""
+
+    def test_truly_empty_table_returns_empty_string(self):
+        # No header and no rows: nothing to draw, returns "" (a str), never None.
+        result = Vistab().draw()
+        self.assertIsInstance(result, str)
+        self.assertEqual(result, "")
+
+    def test_present_but_empty_cell_still_draws_a_box(self):
+        # A single empty-string cell is a real one-cell structure and must render a box.
+        expected = ["\u250c\u2500\u2500\u2510", "\u2502  \u2502", "\u2514\u2500\u2500\u2518"]
+        self.assertEqual(Vistab(header=False).add_row([""]).draw().splitlines(), expected)
+        self.assertEqual(Vistab().set_header([""]).draw().splitlines(), expected)
+        # None in an auto-dtype column renders like "" (bugs-B3), so it draws the same box.
+        self.assertEqual(Vistab(header=False).add_row([None]).draw().splitlines(), expected)
+
+
 if __name__ == '__main__':
     unittest.main()

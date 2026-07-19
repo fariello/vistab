@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   --summary` harness (informational; also runs non-gating in CI).
 
 ### Fixed
+- **`draw()` now returns `""` instead of `None` for a truly empty table** (no header and no
+  rows), matching its documented `-> str` contract. This makes `print(table.draw())` and
+  `table.draw().splitlines()` safe for the empty case. A present-but-empty structure (for example
+  `set_header([""])` or `add_row([""])`) still draws an empty one-cell box.
 - **Integer columns now round half away from zero** (`2.5` -> `3`, `-2.5` -> `-3`) instead of
   Python's default banker's rounding (round-half-to-even, which gave `2.5` -> `2`). Affects the
   `i` and `I` data-type codes. This changes the rendered value only for exact `.5` inputs.

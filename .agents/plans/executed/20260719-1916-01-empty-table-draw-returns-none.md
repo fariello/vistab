@@ -4,12 +4,15 @@
 - Concern: bugs / correctness (API contract)
 - Scope: `Vistab.draw()` empty-table return value in `src/vistab.py`, plus the doc/annotation
   that describes its contract, at v1.2.1. Narrow: one return path and its documentation.
-- Status: reviewed
+- Status: executed
+- Approval: approved by maintainer 2026-07-19
 - Author: its_direct/pt3-claude-opus-4.8-1m-us
 
 ## Workflow history
 - 2026-07-19 created (its_direct/pt3-claude-opus-4.8-1m-us): discovered while probing degenerate
 - 2026-07-19 /plan-review (its_direct/pt3-claude-opus-4.8-1m-us): APPROVE WITH REVISIONS APPLIED; PR-E1..PR-E3. Verified every evidence claim against code (draw() bare return :2216-2217, annotation :2206, docstring :2211, API.md:234 '-> str', CLI guard :4466-4467, demo concat :3596, no Vistab dunder depends on draw()); reproduced None + stream()==[]. Fixes: PR-E1 resolved the dangling 'remove Optional import if unused' to a definitive keep (Optional used in ~dozens of signatures); PR-E2 named the anti-regression invariant (only the empty branch changes; 155 tests + zero fixture diff); PR-E3 added the downstream-safety check (demo concat now safe, CLI 'if drawn:' still prints nothing) and a test that a present-but-empty structure STILL draws a box. Open question resolved with human: return ''; also resolved the review question 'how to draw an empty box' (present-but-empty structure, already works) and required it be documented + pinned. Status -> reviewed.
+- 2026-07-19 approved (maintainer): human GO to execute (return '' for empty []); Status -> approved.
+- 2026-07-19 executed (its_direct/pt3-claude-opus-4.8-1m-us): draw() empty-table branch returns '' (annotation -> str, docstring updated); TestEmptyTableDraw added (Vistab().draw()=='' as str; ['']/set_header([''])/[None] still draw the one-cell box). docs/API.md + CHANGELOG [Unreleased] Fixed synced. Suite 155 -> 157 green (unittest + pytest), zero fixture changes; build + twine PASS. Status -> executed.
   table shapes for the tests IPD (20260719-1530-01, finding T5). `Vistab().draw()` on a table
   with no header and no rows returns `None`, not a string. Filed as a bug-fix IPD to run BEFORE
   the tests IPD so T5 can pin the corrected behavior instead of a known-suspect `None`.

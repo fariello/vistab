@@ -2203,18 +2203,20 @@ class Vistab:
         self._rows = []
         return self.add_rows(rows, header)
 
-    def draw(self) -> Optional[str]:
+    def draw(self) -> str:
         """Draw the table and return as an ASCII/Unicode string.
 
         Returns:
-            str: The fully rendered string representation of the table.
-                 Returns None if there is no data to draw.
+            str: The fully rendered string representation of the table. A truly empty
+                 table (no header and no rows) has nothing to draw and returns "". To
+                 draw an empty one-cell box instead, give the table a present-but-empty
+                 structure, e.g. ``Vistab().set_header([""])`` or ``add_row([""])``.
 
         Example:
             print(table.draw())
         """
         if not self._header and not self._rows:
-            return
+            return ""
 
         self._apply_sorting()
 

@@ -232,7 +232,9 @@ few terminals ignore isolates; use `set_bidi(False)` if yours does. Chainable.
 ## 7. Operational Properties & Outputs
 
 ### `draw() -> str`
-Computes all styling rules and boundary geometries to output the final multi-line string.
+Computes all styling rules and boundary geometries to output the final multi-line string. A truly
+empty table (no header and no rows) returns `""`. To draw an empty one-cell box instead, give the
+table a present-but-empty structure, e.g. `Vistab().set_header([""])` or `add_row([""])`.
 
 ### Properties
 - `table.has_header` `(bool)`: Disable header tracking without stripping matrix sizes.
