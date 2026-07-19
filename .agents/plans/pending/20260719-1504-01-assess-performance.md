@@ -5,11 +5,12 @@
 - Scope: whole library render path in `src/vistab.py` (draw / _draw_line / _splitit /
   _compute_cols_width / _str / bidi gate). Assesses SHIPPED 1.2.1 code (supersedes the
   2026-07-09 assess-performance, which reviewed the colspan DESIGN before implementation).
-- Status: to-review
+- Status: reviewed
 - Author: its_direct/pt3-claude-opus-4.8-1m-us
 
 ## Workflow history
 - 2026-07-19 created (its_direct/pt3-claude-opus-4.8-1m-us): /assess performance; proposed 4 changes.
+- 2026-07-19 /plan-review (its_direct/pt3-claude-opus-4.8-1m-us): APPROVE WITH REVISIONS APPLIED; PR-P1..PR-P3. Re-verified all findings on CURRENT code (post docs/self-doc/bugs IPDs): profile unchanged, findings valid. Refreshed stale line refs; added B3/B1 interaction guards to steps 2 and 4 (they edit _str and the bidi gate touched by the recent IPDs) and the dual draw+stream bidi-gate note; updated test baseline 146->155; added execution contract. Open questions resolved with human: benchmark = local + non-gating CI print, priority = execute now. Status -> reviewed.
 
 ## Goal
 
@@ -40,7 +41,13 @@ few small, profile-evidenced redundancies are worth removing; all are low risk.
 - `_str` rebuilds an 8-entry `format_map` dict on EVERY call; measured ~7.6ms per 1000x8x3
   render (~6% of that render) just constructing constant dicts.
 - The 1.2.1 bidi gate scans every cell with a regex (`_contains_rtl`) on every `draw()` even
-  for pure-ASCII tables (src/vistab.py:2263-2265 and the stream path 2394-2396).
+  for pure-ASCII tables (current lines `src/vistab.py:2281-2283` in `draw` and `2412-2414` in the
+  stream path).
+
+Line numbers RE-VERIFIED at plan-review (2026-07-19), after the documentation / self-documentation
+/ bugs IPDs landed: the profile was re-run on current code (total ~1.365s, `_str` still 24000
+calls, `_splitit`/`_draw_line` still lead) and is materially unchanged, so all findings remain
+valid. Only the cited line numbers moved; they are refreshed below.
 
 ## Findings
 
@@ -48,9 +55,9 @@ Severity = impact if left alone; Remediation Risk = Fix-Bar gate.
 
 | ID | Severity | Remediation Risk | Persona | Area | Finding | Evidence |
 |----|----------|------------------|---------|------|---------|----------|
-| P1 | Low | Low | engineer | allocation/repeated-work | `_str` rebuilds the constant `format_map` dict on every cell (24000 calls/render; ~6% of render time). It maps codes to bound methods and never varies per call. | src/vistab.py:2588-2600; profile `_str` 24000 calls |
-| P2 | Low | Low | engineer | repeated-work | The bidi gate runs a per-cell regex scan (`_contains_rtl`) over the ENTIRE table on every draw, even when no cell is RTL and even when `set_bidi(False)`. For ASCII tables this is pure overhead added in 1.2.1. | src/vistab.py:2263-2265, 2394-2396 |
-| P3 | Low | Low | engineer | repeated-work | `_get_spanned_boundaries` walks each row's cells to build a set even for tables with NO spans (called twice per interior hline). A table-level "has any span" fast path would skip it entirely in the common no-span case. | src/vistab.py:2671-2683, 2725-2726 |
+| P1 | Low | Low | engineer | allocation/repeated-work | `_str` rebuilds the constant `format_map` dict on every cell (24000 calls/render; ~6% of render time). It maps codes to bound methods and never varies per call. | src/vistab.py:2608 (`format_map = {`), `_str` at :2599; profile 24000 calls |
+| P2 | Low | Low | engineer | repeated-work | The bidi gate runs a per-cell regex scan (`_contains_rtl`) over the ENTIRE table on every draw, even when no cell is RTL and even when `set_bidi(False)`. For ASCII tables this is pure overhead added in 1.2.1. | src/vistab.py:2281-2283 (draw), 2412-2414 (stream); `_contains_rtl` at :174 |
+| P3 | Low | Low | engineer | repeated-work | `_get_spanned_boundaries` walks each row's cells to build a set even for tables with NO spans (called twice per interior hline). A table-level "has any span" fast path would skip it entirely in the common no-span case. | src/vistab.py:2696 (def), 2750-2751 (callers) |
 | P4 | Medium | Low | architect/stakeholder | measurement | There is no committed performance baseline/benchmark that CI or a developer can run to PROVE an optimization helped or catch a regression. `benchmarks/bench_render.py` prints ad-hoc timings but asserts nothing and is not wired to anything. Without it, P1-P3 (and future changes) are unverifiable. | benchmarks/bench_render.py (no assertions/baseline) |
 
 No Blocker/High findings. No quadratic paths, no I/O/network/concurrency issues.
@@ -60,9 +67,9 @@ No Blocker/High findings. No quadratic paths, no I/O/network/concurrency issues.
 | Step | Source finding IDs | Change | Files | Remediation Risk | Validation |
 |------|--------------------|--------|-------|------------------|------------|
 | 1 | P4 | Establish a small, deterministic micro-benchmark (extend `benchmarks/bench_render.py` or add a `benchmarks/baseline.py`) that renders fixed sizes and reports us/row, so P1-P3 can be measured before/after. Do NOT gate CI on absolute timings (machine-variance); it is a developer tool + optional informational check. | benchmarks/ | Low | Running it prints stable us/row for fixed inputs; used as the before/after harness for steps 2-4. |
-| 2 | P1 | Hoist the `format_map` to a class/module-level constant (built once), keyed to the bound methods via `getattr(self, ...)` or a static map resolved in `_str`. Output must be byte-identical. | src/vistab.py:2579-2600 | Low | Full suite byte-identical (146+ tests, fixtures unchanged); benchmark shows a small render speedup. |
-| 3 | P3 | Compute a table-level `_has_spans` flag once per draw (from the already-known cell metadata) and short-circuit `_get_spanned_boundaries` (return the empty set) when false. Byte-identical for both spanned and unspanned tables. | src/vistab.py:2671-2683 and the hline callers | Low | Colspan fixtures + non-span fixtures byte-identical; benchmark shows reduced calls for no-span tables. |
-| 4 | P2 | Skip the per-cell RTL regex scan when `self._bidi` is False, and short-circuit the scan on the first RTL hit (it already uses `any(...)`, but confirm it stops early and is not run when bidi is disabled). Optionally reuse the single pass rather than scanning header and body separately. Output byte-identical (isolates only added when RTL present, unchanged). | src/vistab.py:2263-2265, 2394-2396 | Low | RTL tests unchanged (isolates still present for RTL); ASCII render with `set_bidi(False)` does zero RTL scanning; benchmark shows ASCII render is no slower than pre-1.2.1 baseline. |
+| 2 | P1 | Hoist the `format_map` to a class/module-level constant (built once), resolved in `_str` (`src/vistab.py:2599`, dict at `:2608`). Output must be byte-identical. INTERACTION GUARD (bugs IPD B3): `_str` now has an early `return ""` for `raw_val is None` in a numeric column, placed BEFORE the `format_map` lookup; preserve that branch and its ordering when hoisting. | src/vistab.py:2599-2632 | Low | Full suite byte-identical (currently 155 tests) and all golden fixtures unchanged; the B3 None-empty and B1 rounding tests still pass; benchmark shows a small render speedup. |
+| 3 | P3 | Compute a table-level `_has_spans` flag once per draw (from the already-known cell metadata) and short-circuit `_get_spanned_boundaries` (return the empty set) when false. Byte-identical for both spanned and unspanned tables. | src/vistab.py:2696-2708 (def) and callers :2750-2751 | Low | Colspan fixtures + non-span fixtures byte-identical; benchmark shows reduced calls for no-span tables. |
+| 4 | P2 | Skip the per-cell RTL regex scan when `self._bidi` is False (short-circuit before the `any(...)`), and confirm the `any(...)` already stops on the first RTL hit. Optionally fold the header + body scans into a single pass. Output byte-identical (isolates only added when RTL present, unchanged). INTERACTION GUARD: this gate exists in TWO places that must both be updated identically, the `draw()` path (`src/vistab.py:2281-2283`) and the streaming path (`:2412-2414`); the streaming path is exercised by the CLI/stdin tests, so verify both. | src/vistab.py:2281-2283, 2412-2414 | Low | RTL tests unchanged (isolates still present for RTL); ASCII render with `set_bidi(False)` does zero RTL scanning; both draw and stream paths verified; benchmark shows ASCII render is no slower than pre-1.2.1 baseline. |
 
 ## Deferred / out of scope (with reason)
 
@@ -80,9 +87,11 @@ is no evidence of cost that would justify that complexity.
 
 ## Required tests / validation
 
-- Byte-identical output guarantee: the FULL existing suite (unit + regression fixtures) must
-  stay green and unchanged after steps 2-4 (these are pure internal optimizations; any fixture
-  diff is a regression, not an improvement).
+- Byte-identical output guarantee: the FULL existing suite (currently 155 tests: unit +
+  regression fixtures) must stay green and unchanged after steps 2-4 (these are pure internal
+  optimizations; any fixture diff is a regression, not an improvement). In particular the recently
+  added B1 (round-half-up), B3 (None -> empty), bidi, and empty-input tests must all still pass,
+  since steps 2 and 4 edit the same `_str` / bidi-gate code those changes introduced.
 - The benchmark (step 1) run before and after steps 2-4, reporting us/row for fixed 1000x8 and
   a colspan and an RTL case, to show the intended reduction without absolute-time CI gating.
 - `python -m pytest` / `unittest discover` green; no em/en dashes introduced.
@@ -95,12 +104,11 @@ CONTRIBUTING.)
 
 ## Open questions
 
-- P4: should the benchmark be purely a local developer tool, or an informational (non-gating)
-  CI job? Recommend local tool + optional non-gating CI, since GitHub runners are too noisy for
-  absolute-time assertions. Confirm.
-- Priority: is render speed a real user pain today (e.g. very large tables in a hot loop), or is
-  this pre-emptive hygiene? The measured cost is modest (~130 us/row); if no user is hurting,
-  P1-P4 are low-priority polish and could wait. The plan is safe either way.
+- P4 benchmark scope: RESOLVED (human, 2026-07-19 plan-review) -> **local developer tool PLUS a
+  non-gating CI step that prints us/row** (never fails on absolute timing; runners are too noisy).
+- Priority: RESOLVED (human, 2026-07-19 plan-review) -> **execute now**. Acknowledged that the
+  changes are low-value micro-optimizations on an already-adequate (linear) render; approved to
+  proceed because they are byte-identical and low risk.
 
 ## Approval and execution gate
 
@@ -113,3 +121,13 @@ auto-executed.
    first), verify byte-identical output + measured improvement.
 3. Then set the terminal `Status:` and `git mv` this IPD from `.agents/plans/pending/` to
    `.agents/plans/executed/`.
+
+Execution contract (added by plan-review 2026-07-19):
+- Scope fence: this plan makes ONLY internal, byte-identical-output performance changes to
+  `_str` (format_map hoist), the span-boundary fast path, the bidi gate, and adds a benchmark
+  harness. NO public API, CLI, rendered-output, or exit-behavior change. Preserve the B1/B3
+  behavior living in the same code (interaction guards in steps 2 and 4).
+- Honesty: paste the ACTUAL runner output (`python -m unittest discover tests/`) AND the
+  actual before/after benchmark numbers; never claim an unrun pass or an unmeasured speedup.
+- Commit path-scoped (`git commit -- <paths>`), never `git add -A`, never push.
+- Resolve the two open questions (benchmark local-vs-CI; priority) before or at execution.
