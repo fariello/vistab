@@ -32,6 +32,17 @@ python -m unittest discover tests/   # exactly what CI runs
 When you report that tests pass, paste the actual runner output. Do not claim a pass you did
 not run.
 
+### Coverage
+
+For a line-coverage figure (informational, not a gate):
+
+```bash
+coverage run --source=src -m unittest discover tests/ && coverage report
+```
+
+`coverage` is in the `[dev]` extra (`pip install .[dev]`). CI runs the same command in a
+non-gating job that prints the number but never fails the build; there is no coverage threshold.
+
 ### Performance benchmark
 
 For an informational render-speed check (microseconds per row for fixed scenarios), run:

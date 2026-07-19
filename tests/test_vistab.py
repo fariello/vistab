@@ -1,3 +1,4 @@
+import re
 import unittest
 from vistab import Vistab, StringLengthCalculator, ColorAwareWrapper, ArraySizeError
 
@@ -1001,6 +1002,127 @@ class TestColumnDtypes(unittest.TestCase):
             t = Vistab(); t.set_header(["A"]); t.add_row(["1"])
             t.set_cols_dtype([code])
             self.assertIsNotNone(t.draw())
+
+
+class TestHalfBoundaryRounding(unittest.TestCase):
+    """Pin integer-column rounding at .5 boundaries: round half AWAY from zero (bugs-B1)."""
+
+    def _int(self, val, code):
+        t = Vistab(style="none")
+        t.set_header(["x"]); t.add_row([val]); t.set_cols_dtype([code])
+        return t.draw().splitlines()[-1].strip()
+
+    def test_half_boundaries_round_away_from_zero(self):
+        cases = {0.5: "1", 1.5: "2", 2.5: "3", 3.5: "4",
+                 -0.5: "-1", -1.5: "-2", -2.5: "-3"}
+        for val, expected in cases.items():
+            for code in ("i", "I"):
+                with self.subTest(val=val, code=code):
+                    self.assertEqual(self._int(val, code), expected)
+
+
+class TestAnsiSafeClip(unittest.TestCase):
+    """Clipping a CJK (2-wide) + ANSI cell at a narrow boundary keeps geometry intact."""
+
+    _ANSI = re.compile(r"\x1b\[[0-9;]*m")
+
+    def test_cjk_plus_ansi_clip_preserves_width_and_escapes(self):
+        limit = 12
+        t = Vistab(style="light", max_width=limit)
+        t.on_wrap_conflict = "clip"
+        t.set_header(["col"])
+        t.add_row(["\x1b[31m\u4e2d\u6587\u5b57\u7b26abc\x1b[0m"])  # red CJK + ascii
+        out = t.draw()
+        widths = [len(self._ANSI.sub("", line)) for line in out.splitlines()]
+        # No line exceeds the boundary (no half 2-wide glyph pushed it over).
+        self.assertLessEqual(max(widths), limit)
+        # Every ANSI escape that appears is well-formed (no severed sequence).
+        for frag in self._ANSI.findall(out):
+            self.assertRegex(frag, r"^\x1b\[[0-9;]*m$")
+
+
+class TestDegenerateShapes(unittest.TestCase):
+    """Byte-exact renders for degenerate minimal-table shapes (single list = one ROW;
+    list of lists = ROWS). Auto-dtype, so None renders like "" (bugs-B3). The truly-empty
+    []-vs-[''] distinction is covered by TestEmptyTableDraw; not duplicated here."""
+
+    def _lines(self, table):
+        return table.draw().splitlines()
+
+    # --- 5a: single cell (1x1) ---
+    def test_1x1_empty_with_header(self):
+        self.assertEqual(self._lines(Vistab(style="light").set_header([""])),
+                         ["\u250c\u2500\u2500\u2510", "\u2502  \u2502", "\u2514\u2500\u2500\u2518"])
+
+    def test_1x1_empty_no_header(self):
+        self.assertEqual(self._lines(Vistab(style="light", header=False).add_row([""])),
+                         ["\u250c\u2500\u2500\u2510", "\u2502  \u2502", "\u2514\u2500\u2500\u2518"])
+
+    def test_1x1_word_with_header(self):
+        t = Vistab(style="light"); t.set_header(["H"]); t.add_row(["word"])
+        self.assertEqual(self._lines(t),
+                         ["\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2510", "\u2502  H   \u2502",
+                          "\u251c\u2500\u2500\u2500\u2500\u2500\u2500\u2524", "\u2502 word \u2502",
+                          "\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2518"])
+
+    def test_1x1_word_no_header(self):
+        self.assertEqual(self._lines(Vistab(style="light", header=False).add_row(["word"])),
+                         ["\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2510", "\u2502 word \u2502",
+                          "\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2518"])
+
+    def test_1x1_none_matches_empty(self):
+        empty = self._lines(Vistab(style="light", header=False).add_row([""]))
+        self.assertEqual(self._lines(Vistab(style="light", header=False).add_row([None])), empty)
+
+    # --- 5b: single row of two cells (no header), 4-way word perms ---
+    def test_1row_2cells_word_perms_no_header(self):
+        expected = {
+            ("", ""): ["\u250c\u2500\u2500\u252c\u2500\u2500\u2510", "\u2502  \u2502  \u2502", "\u2514\u2500\u2500\u2534\u2500\u2500\u2518"],
+            ("w1", ""): ["\u250c\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2510", "\u2502 w1 \u2502  \u2502", "\u2514\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2518"],
+            ("", "w2"): ["\u250c\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2510", "\u2502  \u2502 w2 \u2502", "\u2514\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2518"],
+            ("w1", "w2"): ["\u250c\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2510", "\u2502 w1 \u2502 w2 \u2502", "\u2514\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2518"],
+        }
+        for (a, b), exp in expected.items():
+            with self.subTest(a=a, b=b):
+                self.assertEqual(self._lines(Vistab(style="light", header=False).add_row([a, b])), exp)
+
+    def test_1row_2cells_none_matches_empty_no_header(self):
+        empty = self._lines(Vistab(style="light", header=False).add_row(["", ""]))
+        self.assertEqual(self._lines(Vistab(style="light", header=False).add_row([None, None])), empty)
+
+    def test_1row_2cells_colspan_no_header(self):
+        from vistab import ColSpan
+        self.assertEqual(self._lines(Vistab(style="light", header=False).add_row(["x", ColSpan("yz", 2)])),
+                         ["\u250c\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2510",
+                          "\u2502 x \u2502 yz  \u2502",
+                          "\u2514\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2518"])
+
+    # --- 5c: single column, two rows (no header), 4-way word perms ---
+    def test_1col_2rows_word_perms_no_header(self):
+        expected = {
+            ("", ""): ["\u250c\u2500\u2500\u2510", "\u2502  \u2502", "\u251c\u2500\u2500\u2524", "\u2502  \u2502", "\u2514\u2500\u2500\u2518"],
+            ("w1", ""): ["\u250c\u2500\u2500\u2500\u2500\u2510", "\u2502 w1 \u2502", "\u251c\u2500\u2500\u2500\u2500\u2524", "\u2502    \u2502", "\u2514\u2500\u2500\u2500\u2500\u2518"],
+            ("", "w2"): ["\u250c\u2500\u2500\u2500\u2500\u2510", "\u2502    \u2502", "\u251c\u2500\u2500\u2500\u2500\u2524", "\u2502 w2 \u2502", "\u2514\u2500\u2500\u2500\u2500\u2518"],
+            ("w1", "w2"): ["\u250c\u2500\u2500\u2500\u2500\u2510", "\u2502 w1 \u2502", "\u251c\u2500\u2500\u2500\u2500\u2524", "\u2502 w2 \u2502", "\u2514\u2500\u2500\u2500\u2500\u2518"],
+        }
+        for (a, b), exp in expected.items():
+            with self.subTest(a=a, b=b):
+                self.assertEqual(self._lines(Vistab(style="light", header=False).add_rows([[a], [b]], header=False)), exp)
+
+    def test_1col_2rows_none_matches_empty_no_header(self):
+        empty = self._lines(Vistab(style="light", header=False).add_rows([[""], [""]], header=False))
+        self.assertEqual(self._lines(Vistab(style="light", header=False).add_rows([[None], [None]], header=False)), empty)
+
+    # --- 5d: other degenerate shapes ---
+    def test_whitespace_only_cell(self):
+        self.assertEqual(self._lines(Vistab(style="light", header=False).add_row(["   "])),
+                         ["\u250c\u2500\u2500\u2500\u2500\u2500\u2510", "\u2502     \u2502", "\u2514\u2500\u2500\u2500\u2500\u2500\u2518"])
+
+    def test_multiline_cell_1x1(self):
+        t = Vistab(style="light"); t.set_header(["H"]); t.add_row(["a\nb"])
+        self.assertEqual(self._lines(t),
+                         ["\u250c\u2500\u2500\u2500\u2510", "\u2502 H \u2502", "\u251c\u2500\u2500\u2500\u2524",
+                          "\u2502 a \u2502", "\u2502 b \u2502", "\u2514\u2500\u2500\u2500\u2518"])
 
 
 class TestEmptyTableDraw(unittest.TestCase):

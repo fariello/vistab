@@ -30,7 +30,7 @@ Issues = "https://github.com/fariello/vistab/issues"
 
 [project.optional-dependencies]
 cjk = ["cjkwrap"]
-dev = ["pytest"]
+dev = ["pytest", "coverage"]
 
 [project.scripts]
 vistab = "vistab:main"

@@ -78,5 +78,36 @@ class TestVistabStreamAndJagged(unittest.TestCase):
         self.assertIn("Data4", output)
         self.assertNotIn("Data5", output)
 
+    def test_stream_max_cols_truncates_during_stream(self):
+        """set_max_cols narrower than the data truncates columns while streaming."""
+        table = Vistab(header=False)
+        table.has_header = False
+        table.set_max_cols(2)
+
+        rows = [["A", "B", "C", "D"], ["E", "F", "G", "H"]]
+        output = "\n".join(table.stream(rows, sample_size=1))
+
+        # Kept columns render; dropped columns do not.
+        self.assertIn("A", output)
+        self.assertIn("F", output)
+        self.assertNotIn("C", output)
+        self.assertNotIn("H", output)
+
+    def test_stream_empty_iterable_yields_no_lines(self):
+        """An empty stream yields no lines and does not crash."""
+        table = Vistab(header=False)
+        table.has_header = False
+        self.assertEqual(list(table.stream(iter([]), sample_size=2)), [])
+
+    def test_stream_eof_before_sample_fills(self):
+        """Fewer rows than sample_size (EOF before the sample window fills) still draws."""
+        table = Vistab(header=False)
+        table.has_header = False
+        lines = list(table.stream(iter([["only", "row"]]), sample_size=10))
+        output = "\n".join(lines)
+        self.assertIn("only", output)
+        self.assertIn("row", output)
+
+
 if __name__ == '__main__':
     unittest.main()
