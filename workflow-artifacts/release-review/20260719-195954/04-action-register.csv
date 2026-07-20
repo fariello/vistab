@@ -1,0 +1,4 @@
+id,source_findings,section,status,description,remediation_risk,files,commit,validation,reason_not_done,next_step
+20260719-195954-S6-A1,20260719-195954-S6-REL1,6,deferred,"Version bump + CHANGELOG finalization for the next release",Low,CHANGELOG.md pyproject.toml src/vistab.py,,"n/a (not executed)","Requires a human version-number decision (1.3.0 vs 1.2.x); release-notes/version choice is the user's, not the reviewer's",Present in Go/No-Go; run /release-notes or bump on user's instruction
+20260719-195954-S6-A2,20260719-195954-S6-CI1,6,deferred,"Add Python 3.14 to CI matrix",Low,.github/workflows/test.yml,,"n/a","Optional enhancement; 3.14 GitHub runner availability uncertain; not release-blocking",Optional; user decides
+20260719-195954-S2-A3,20260719-195954-S2-LSP1,2,wont_do,"Full type-annotation cleanup",Medium,src/vistab.py,,"n/a","Complexity axis: touches many public signatures, risks changing typed public contract; cosmetic only",Future typing pass if desired
