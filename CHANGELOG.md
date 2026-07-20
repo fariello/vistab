@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-07-19
+
 ### Changed
 - **Faster rendering** via internal micro-optimizations (byte-identical output): the per-cell
   data-type formatter map is built once instead of per cell, the span-boundary computation is

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vistab"
-version = "1.2.1"
+version = "1.3.0"
 description = "Beautiful terminal ASCII/Unicode tables: themes, column spanning, color-aware wrapping, and CJK/RTL-correct widths"
 authors = [
     { name = "Gabriele G. R. Fariello", email = "gfariello@fariel.com" }
@@ -23,9 +23,9 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://github.com/fariello/vistab"
-Documentation = "https://github.com/fariello/vistab/blob/v1.2.1/docs/API.md"
+Documentation = "https://github.com/fariello/vistab/blob/v1.3.0/docs/API.md"
 Source = "https://github.com/fariello/vistab"
-Changelog = "https://github.com/fariello/vistab/blob/v1.2.1/CHANGELOG.md"
+Changelog = "https://github.com/fariello/vistab/blob/v1.3.0/CHANGELOG.md"
 Issues = "https://github.com/fariello/vistab/issues"
 
 [project.optional-dependencies]

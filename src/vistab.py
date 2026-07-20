@@ -111,7 +111,7 @@ __all__ = ["Vistab", "ArraySizeError", "StringLengthCalculator", "ColSpan"]
 
 __author__ = 'Gabriele Fariello <gfariello@fariel.com>'
 __license__ = 'BSD 3-Clause 2026'
-__version__ = '1.2.1'
+__version__ = '1.3.0'
 
 # Column data-type codes: the single source of truth. Each entry is (code, short label,
 # explanation). Used by set_cols_dtype validation/errors, the CLI --dtype help, and the CLI
